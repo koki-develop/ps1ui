@@ -1,0 +1,32 @@
+/* Palette hexes are mirrored in .storybook/poiuiTheme.ts — see note there. */
+:root {
+  --poiui-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo,
+    Monaco, "Cascadia Mono", Consolas, monospace;
+
+  --poiui-color-bg: #0b0f14;
+  --poiui-color-surface: #0f1520;
+  --poiui-color-border: #21262d;
+  --poiui-color-border-strong: #30363d;
+  --poiui-color-fg: #c7d5df;
+  --poiui-color-fg-muted: #8b98a5;
+  --poiui-color-fg-subtle: #484f58;
+  --poiui-color-primary: #7ee787;
+  --poiui-color-primary-hover: #56d364;
+  --poiui-color-primary-fg: #0b0f14;
+  --poiui-color-accent: #ffa657;
+  --poiui-color-focus-ring-soft: color-mix(
+    in srgb,
+    var(--poiui-color-primary) 14%,
+    transparent
+  );
+
+  --poiui-radius-md: 3px;
+  --poiui-radius-lg: 4px;
+
+  --poiui-space-2: 8px;
+  --poiui-space-5: 24px;
+
+  --poiui-font-size-sm: 13px;
+
+  --poiui-transition-fast: 120ms ease;
+}

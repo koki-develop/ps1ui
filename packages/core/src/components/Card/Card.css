@@ -1,0 +1,10 @@
+.poiui-card {
+  background: var(--poiui-color-surface);
+  border: 1px solid var(--poiui-color-border);
+  border-radius: var(--poiui-radius-lg);
+  padding: var(--poiui-space-5);
+  color: var(--poiui-color-fg);
+  font-family: var(--poiui-font-mono);
+  font-size: var(--poiui-font-size-sm);
+  line-height: 1.6;
+}

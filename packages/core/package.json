@@ -18,9 +18,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm build:js && pnpm build:css",
+    "build": "pnpm check && pnpm build:js && pnpm build:css",
     "build:js": "tsdown",
     "build:css": "postcss src/styles/index.css -o dist/styles.css",
+    "check": "pnpm typecheck && pnpm check:palette",
+    "check:palette": "node scripts/check-palette-sync.mjs",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -47,5 +49,8 @@
     "tsdown": "0.22.4",
     "typescript": "7.0.2",
     "vite": "8.1.4"
+  },
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.2.8"
   }
 }

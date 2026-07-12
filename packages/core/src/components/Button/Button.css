@@ -1,2 +1,58 @@
 .poiui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--poiui-space-2);
+  font-family: var(--poiui-font-mono);
+  font-size: var(--poiui-font-size-sm);
+  font-weight: 500;
+  line-height: 1;
+  padding: 7px 14px;
+  border-radius: var(--poiui-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--poiui-transition-fast),
+    border-color var(--poiui-transition-fast),
+    color var(--poiui-transition-fast);
+}
+
+.poiui-button:focus-visible {
+  outline: none;
+  border-color: var(--poiui-color-primary);
+  box-shadow: 0 0 0 3px var(--poiui-color-focus-ring-soft);
+}
+
+.poiui-button:disabled {
+  cursor: not-allowed;
+}
+
+.poiui-button--primary {
+  background: var(--poiui-color-primary);
+  color: var(--poiui-color-primary-fg);
+  border-color: var(--poiui-color-primary);
+  font-weight: 600;
+}
+.poiui-button--primary:hover:not(:disabled) {
+  background: var(--poiui-color-primary-hover);
+  border-color: var(--poiui-color-primary-hover);
+}
+.poiui-button--primary:disabled {
+  background: transparent;
+  color: var(--poiui-color-fg-subtle);
+  border-color: var(--poiui-color-border);
+}
+
+.poiui-button--secondary {
+  background: transparent;
+  color: var(--poiui-color-fg);
+  border-color: var(--poiui-color-border-strong);
+}
+.poiui-button--secondary:hover:not(:disabled) {
+  border-color: var(--poiui-color-primary);
+  background: color-mix(in srgb, var(--poiui-color-primary) 6%, transparent);
+}
+.poiui-button--secondary:disabled {
+  color: var(--poiui-color-fg-subtle);
+  border-color: var(--poiui-color-border);
 }

@@ -1,0 +1,32 @@
+.poiui-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--poiui-font-mono);
+  font-size: var(--poiui-font-size-sm);
+  line-height: 1.4;
+  color: var(--poiui-color-fg);
+  background: var(--poiui-color-bg);
+  border: 1px solid var(--poiui-color-border-strong);
+  border-radius: var(--poiui-radius-md);
+  padding: 7px 12px;
+  transition: border-color var(--poiui-transition-fast),
+    box-shadow var(--poiui-transition-fast);
+}
+
+.poiui-input::placeholder {
+  color: var(--poiui-color-fg-subtle);
+}
+
+.poiui-input:focus {
+  outline: none;
+  border-color: var(--poiui-color-primary);
+  box-shadow: 0 0 0 3px var(--poiui-color-focus-ring-soft);
+}
+
+.poiui-input:disabled {
+  cursor: not-allowed;
+  color: var(--poiui-color-fg-subtle);
+  border-color: var(--poiui-color-border);
+  background: var(--poiui-color-surface);
+}
