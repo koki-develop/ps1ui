@@ -1,4 +1,45 @@
 {
   "name": "@poiui/core",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm build:js && pnpm build:css",
+    "build:js": "tsdown",
+    "build:css": "postcss src/styles/index.css -o dist/styles.css",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "autoprefixer": "10.5.2",
+    "postcss": "8.5.16",
+    "postcss-cli": "11.0.1",
+    "postcss-import": "16.1.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "tsdown": "0.22.4",
+    "typescript": "7.0.2"
+  }
 }
