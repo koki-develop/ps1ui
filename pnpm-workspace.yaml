@@ -1,4 +1,5 @@
 packages:
   - "packages/*"
+saveExact: true
 allowBuilds:
   esbuild: true
