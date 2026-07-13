@@ -31,5 +31,5 @@ jobs:
           - run: pnpm --filter @ps1ui/core lint
           - run: pnpm --filter @ps1ui/core fmt:check
       - run: pnpm --filter @ps1ui/core build
-      - run: pnpm --filter @ps1ui/core exec playwright instal
+      - run: pnpm --filter @ps1ui/core exec playwright install
       - run: pnpm --filter @ps1ui/core test
