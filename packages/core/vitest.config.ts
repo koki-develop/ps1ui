@@ -11,5 +11,10 @@ export default defineConfig({
       instances: [{ browser: "chromium" }],
       headless: true,
     },
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.stories.tsx", "src/**/*.test.tsx"],
+    },
   },
 });

@@ -32,6 +32,7 @@
     "check:palette": "node scripts/check-palette-sync.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -45,6 +46,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.3",
     "@vitest/browser-playwright": "4.1.10",
+    "@vitest/coverage-v8": "4.1.10",
     "autoprefixer": "10.5.2",
     "oxfmt": "0.58.0",
     "oxlint": "1.73.0",
