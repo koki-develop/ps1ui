@@ -1,7 +1,8 @@
 /* Palette hexes are mirrored in .storybook/poiuiTheme.ts — see note there. */
 :root {
-  --poiui-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo,
-    Monaco, "Cascadia Mono", Consolas, monospace;
+  --poiui-font-mono:
+    "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono", Consolas,
+    monospace;
 
   --poiui-color-bg: #0b0f14;
   --poiui-color-surface: #0f1520;
@@ -14,11 +15,7 @@
   --poiui-color-primary-hover: #56d364;
   --poiui-color-primary-fg: #0b0f14;
   --poiui-color-accent: #ffa657;
-  --poiui-color-focus-ring-soft: color-mix(
-    in srgb,
-    var(--poiui-color-primary) 14%,
-    transparent
-  );
+  --poiui-color-focus-ring-soft: color-mix(in srgb, var(--poiui-color-primary) 14%, transparent);
   --poiui-shadow-focus-ring: 0 0 0 3px var(--poiui-color-focus-ring-soft);
 
   --poiui-radius-md: 3px;

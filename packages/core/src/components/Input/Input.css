@@ -10,7 +10,8 @@
   border: 1px solid var(--poiui-color-border-strong);
   border-radius: var(--poiui-radius-md);
   padding: 7px 12px;
-  transition: border-color var(--poiui-transition-fast),
+  transition:
+    border-color var(--poiui-transition-fast),
     box-shadow var(--poiui-transition-fast);
 }
 

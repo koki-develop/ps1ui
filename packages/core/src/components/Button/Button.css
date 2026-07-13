@@ -12,7 +12,8 @@
   border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
-  transition: background var(--poiui-transition-fast),
+  transition:
+    background var(--poiui-transition-fast),
     border-color var(--poiui-transition-fast),
     color var(--poiui-transition-fast);
 }

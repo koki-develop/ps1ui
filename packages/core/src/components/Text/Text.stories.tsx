@@ -86,7 +86,6 @@ export const Truncate: Story = {
   args: {
     truncate: true,
     style: { maxWidth: 200 },
-    children:
-      "this is a long line of text that will be truncated with an ellipsis",
+    children: "this is a long line of text that will be truncated with an ellipsis",
   },
 };

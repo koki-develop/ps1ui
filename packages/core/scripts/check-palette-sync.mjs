@@ -3,20 +3,15 @@ import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
 
-const stripComments = (source) =>
-  source.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+const stripComments = (source) => source.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
-const tokensCss = stripComments(
-  readFileSync(path.join(root, "src/styles/tokens.css"), "utf-8"),
-);
-const themeTs = stripComments(
-  readFileSync(path.join(root, ".storybook/poiuiTheme.ts"), "utf-8"),
-);
+const tokensCss = stripComments(readFileSync(path.join(root, "src/styles/tokens.css"), "utf-8"));
+const themeTs = stripComments(readFileSync(path.join(root, ".storybook/poiuiTheme.ts"), "utf-8"));
 
 const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
-const MALFORMED_HEX = /#[0-9a-fA-F]{9,}|#[0-9a-fA-F]{5}(?![0-9a-fA-F])|#[0-9a-fA-F]{7}(?![0-9a-fA-F])/g;
-const extract = (source) =>
-  new Set([...source.matchAll(HEX)].map((m) => m[0].toLowerCase()));
+const MALFORMED_HEX =
+  /#[0-9a-fA-F]{9,}|#[0-9a-fA-F]{5}(?![0-9a-fA-F])|#[0-9a-fA-F]{7}(?![0-9a-fA-F])/g;
+const extract = (source) => new Set([...source.matchAll(HEX)].map((m) => m[0].toLowerCase()));
 const findMalformed = (source, file) =>
   [...source.matchAll(MALFORMED_HEX)].map((m) => ({ file, hex: m[0] }));
 
@@ -41,12 +36,8 @@ if (orphaned.length > 0) {
     "poiuiTheme.ts references hex(es) not declared in tokens.css:",
     orphaned.join(", "),
   );
-  console.error(
-    "Update tokens.css or fix poiuiTheme.ts so both files share the same palette.",
-  );
+  console.error("Update tokens.css or fix poiuiTheme.ts so both files share the same palette.");
   process.exit(1);
 }
 
-console.log(
-  "theme hex subset check ok (semantic slot mapping is not verified)",
-);
+console.log("theme hex subset check ok (semantic slot mapping is not verified)");

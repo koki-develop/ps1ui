@@ -2,14 +2,7 @@ import { createElement } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 import { cx } from "../../utils/cx";
 
-export type TextElement =
-  | "p"
-  | "span"
-  | "div"
-  | "label"
-  | "strong"
-  | "em"
-  | "small";
+export type TextElement = "p" | "span" | "div" | "label" | "strong" | "em" | "small";
 
 export type TextVariant = "body" | "muted" | "subtle" | "primary" | "accent";
 export type TextSize = "xs" | "sm" | "md" | "lg" | "xl";

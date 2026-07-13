@@ -7,12 +7,7 @@ export type ButtonProps = ComponentProps<"button"> & {
   variant?: ButtonVariant;
 };
 
-export function Button({
-  className,
-  variant = "primary",
-  type = "button",
-  ...rest
-}: ButtonProps) {
+export function Button({ className, variant = "primary", type = "button", ...rest }: ButtonProps) {
   const classes = cx("poiui-button", `poiui-button--${variant}`, className);
   return <button {...rest} type={type} className={classes} />;
 }

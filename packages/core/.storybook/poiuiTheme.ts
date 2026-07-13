@@ -19,10 +19,8 @@ export const poiuiTheme = create({
   appBorderColor: "#21262d",
   appBorderRadius: 3,
 
-  fontBase:
-    '"JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, monospace',
-  fontCode:
-    '"JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, monospace',
+  fontBase: '"JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, monospace',
+  fontCode: '"JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, monospace',
 
   textColor: "#c7d5df",
   textInverseColor: "#0b0f14",

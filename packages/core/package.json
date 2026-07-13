@@ -2,6 +2,9 @@
   "name": "@poiui/core",
   "version": "0.0.0",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -14,9 +17,9 @@
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm check && pnpm build:js && pnpm build:css",
     "build:js": "tsdown",
@@ -32,12 +35,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
+  "dependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.2.8"
   },
   "devDependencies": {
     "@storybook/addon-docs": "10.5.0",
@@ -62,7 +61,8 @@
     "vitest": "4.1.10",
     "vitest-browser-react": "2.2.0"
   },
-  "dependencies": {
-    "@fontsource-variable/jetbrains-mono": "^5.2.8"
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

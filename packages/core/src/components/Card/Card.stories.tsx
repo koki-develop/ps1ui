@@ -18,17 +18,11 @@ export const Default: Story = {
     style: { maxWidth: 360 },
     children: (
       <>
-        <Text
-          as="div"
-          variant="accent"
-          weight="semibold"
-          style={{ marginBottom: 6 }}
-        >
+        <Text as="div" variant="accent" weight="semibold" style={{ marginBottom: 6 }}>
           welcome to poiui
         </Text>
         <Text as="p" variant="muted" style={{ marginBottom: 18 }}>
-          A dev-focused React UI kit. Monospace type, dark ground,
-          terminal-adjacent aesthetic.
+          A dev-focused React UI kit. Monospace type, dark ground, terminal-adjacent aesthetic.
         </Text>
         <div style={{ display: "flex", gap: 8 }}>
           <Button variant="primary">try it</Button>
