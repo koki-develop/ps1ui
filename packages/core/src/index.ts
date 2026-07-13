@@ -6,3 +6,12 @@ export type { InputProps } from "./components/Input/Input";
 
 export { Card } from "./components/Card/Card";
 export type { CardProps } from "./components/Card/Card";
+
+export { Text } from "./components/Text/Text";
+export type {
+  TextElement,
+  TextProps,
+  TextSize,
+  TextVariant,
+  TextWeight,
+} from "./components/Text/Text";

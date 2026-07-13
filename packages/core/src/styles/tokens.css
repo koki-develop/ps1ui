@@ -26,7 +26,11 @@
   --poiui-space-2: 8px;
   --poiui-space-5: 24px;
 
+  --poiui-font-size-xs: 11px;
   --poiui-font-size-sm: 13px;
+  --poiui-font-size-md: 15px;
+  --poiui-font-size-lg: 18px;
+  --poiui-font-size-xl: 22px;
 
   --poiui-transition-fast: 120ms ease;
 }

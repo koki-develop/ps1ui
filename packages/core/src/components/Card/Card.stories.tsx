@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Button } from "../Button/Button";
+import { Text } from "../Text/Text";
 import { Card } from "./Card";
 
 const meta = {
@@ -17,13 +18,18 @@ export const Default: Story = {
     style: { maxWidth: 360 },
     children: (
       <>
-        <div style={{ color: "var(--poiui-color-accent)", marginBottom: 6 }}>
+        <Text
+          as="div"
+          variant="accent"
+          weight="semibold"
+          style={{ marginBottom: 6 }}
+        >
           welcome to poiui
-        </div>
-        <p style={{ margin: "0 0 18px", color: "var(--poiui-color-fg-muted)" }}>
+        </Text>
+        <Text as="p" variant="muted" style={{ marginBottom: 18 }}>
           A dev-focused React UI kit. Monospace type, dark ground,
           terminal-adjacent aesthetic.
-        </p>
+        </Text>
         <div style={{ display: "flex", gap: 8 }}>
           <Button variant="primary">try it</Button>
           <Button variant="secondary">docs</Button>
