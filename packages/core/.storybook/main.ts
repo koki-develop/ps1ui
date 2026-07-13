@@ -11,7 +11,11 @@ const fontsourceRoot = path.dirname(
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
   stories: ["../src/**/*.stories.@(ts|tsx|mdx)"],
-  addons: ["@storybook/addon-docs"],
+  addons: [
+    "@storybook/addon-docs",
+    "@storybook/addon-vitest",
+    "@storybook/addon-a11y",
+  ],
   staticDirs: [{ from: fontsourceRoot, to: "/fonts/jetbrains-mono" }],
   typescript: {
     reactDocgen: "react-docgen",

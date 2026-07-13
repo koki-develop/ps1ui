@@ -8,6 +8,9 @@ import { ps1uiTheme } from "./ps1uiTheme";
 const preview: Preview = {
   tags: ["autodocs"],
   parameters: {
+    a11y: {
+      test: "error",
+    },
     backgrounds: {
       default: "ps1ui",
       options: {
