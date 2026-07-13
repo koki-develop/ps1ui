@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - parallel:
-          - run: pnpm --filter @poiui/core lint
-          - run: pnpm --filter @poiui/core fmt:check
-      - run: pnpm --filter @poiui/core build
-      - run: pnpm --filter @poiui/core test
+          - run: pnpm --filter @ps1ui/core lint
+          - run: pnpm --filter @ps1ui/core fmt:check
+      - run: pnpm --filter @ps1ui/core build
+      - run: pnpm --filter @ps1ui/core test

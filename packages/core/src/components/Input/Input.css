@@ -1,33 +1,33 @@
-.poiui-input {
+.ps1ui-input {
   display: block;
   width: 100%;
   box-sizing: border-box;
-  font-family: var(--poiui-font-mono);
-  font-size: var(--poiui-font-size-sm);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
   line-height: 1.4;
-  color: var(--poiui-color-fg);
-  background: var(--poiui-color-bg);
-  border: 1px solid var(--poiui-color-border-strong);
-  border-radius: var(--poiui-radius-md);
+  color: var(--ps1ui-color-fg);
+  background: var(--ps1ui-color-bg);
+  border: 1px solid var(--ps1ui-color-border-strong);
+  border-radius: var(--ps1ui-radius-md);
   padding: 7px 12px;
   transition:
-    border-color var(--poiui-transition-fast),
-    box-shadow var(--poiui-transition-fast);
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
 }
 
-.poiui-input::placeholder {
-  color: var(--poiui-color-fg-subtle);
+.ps1ui-input::placeholder {
+  color: var(--ps1ui-color-fg-subtle);
 }
 
-.poiui-input:focus {
+.ps1ui-input:focus {
   outline: none;
-  border-color: var(--poiui-color-primary);
-  box-shadow: var(--poiui-shadow-focus-ring);
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
 }
 
-.poiui-input:disabled {
+.ps1ui-input:disabled {
   cursor: not-allowed;
-  color: var(--poiui-color-fg-subtle);
-  border-color: var(--poiui-color-border);
-  background: var(--poiui-color-surface);
+  color: var(--ps1ui-color-fg-subtle);
+  border-color: var(--ps1ui-color-border);
+  background: var(--ps1ui-color-surface);
 }

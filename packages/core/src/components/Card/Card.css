@@ -1,10 +1,10 @@
-.poiui-card {
-  background: var(--poiui-color-surface);
-  border: 1px solid var(--poiui-color-border);
-  border-radius: var(--poiui-radius-lg);
-  padding: var(--poiui-space-5);
-  color: var(--poiui-color-fg);
-  font-family: var(--poiui-font-mono);
-  font-size: var(--poiui-font-size-sm);
+.ps1ui-card {
+  background: var(--ps1ui-color-surface);
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-lg);
+  padding: var(--ps1ui-space-5);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
   line-height: 1.6;
 }

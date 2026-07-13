@@ -8,6 +8,6 @@ export type ButtonProps = ComponentProps<"button"> & {
 };
 
 export function Button({ className, variant = "primary", type = "button", ...rest }: ButtonProps) {
-  const classes = cx("poiui-button", `poiui-button--${variant}`, className);
+  const classes = cx("ps1ui-button", `ps1ui-button--${variant}`, className);
   return <button {...rest} type={type} className={classes} />;
 }

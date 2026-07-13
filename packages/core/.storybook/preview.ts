@@ -3,19 +3,19 @@ import type { Preview } from "@storybook/react-vite";
 import "@fontsource-variable/jetbrains-mono";
 import "../src/styles/index.css";
 
-import { poiuiTheme } from "./poiuiTheme";
+import { ps1uiTheme } from "./ps1uiTheme";
 
 const preview: Preview = {
   tags: ["autodocs"],
   parameters: {
     backgrounds: {
-      default: "poiui",
+      default: "ps1ui",
       options: {
-        poiui: { name: "poiui", value: "#0b0f14" },
+        ps1ui: { name: "ps1ui", value: "#0b0f14" },
       },
     },
     docs: {
-      theme: poiuiTheme,
+      theme: ps1uiTheme,
     },
     controls: {
       matchers: {

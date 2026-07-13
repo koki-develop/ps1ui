@@ -4,6 +4,6 @@ import { cx } from "../../utils/cx";
 export type CardProps = ComponentProps<"div">;
 
 export function Card({ className, ...rest }: CardProps) {
-  const classes = cx("poiui-card", className);
+  const classes = cx("ps1ui-card", className);
   return <div {...rest} className={classes} />;
 }

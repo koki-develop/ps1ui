@@ -22,13 +22,13 @@ export const Default: Story = {
 
 export const Filled: Story = {
   args: {
-    defaultValue: "hello@poiui.dev",
+    defaultValue: "hello@ps1ui.dev",
   },
 };
 
 export const Disabled: Story = {
   args: {
-    defaultValue: "hello@poiui.dev",
+    defaultValue: "hello@ps1ui.dev",
     disabled: true,
   },
 };

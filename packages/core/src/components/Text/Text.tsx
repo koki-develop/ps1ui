@@ -42,12 +42,12 @@ export function Text<E extends TextElement = "p">({
 }: TextProps<E>) {
   const tag = as ?? "p";
   const classes = cx(
-    "poiui-text",
-    `poiui-text--${variant}`,
-    `poiui-text--size-${size}`,
-    weight && `poiui-text--weight-${weight}`,
-    truncate && "poiui-text--truncate",
-    truncate && INLINE_TEXT_ELEMENTS[tag] && "poiui-text--truncate-inline",
+    "ps1ui-text",
+    `ps1ui-text--${variant}`,
+    `ps1ui-text--size-${size}`,
+    weight && `ps1ui-text--weight-${weight}`,
+    truncate && "ps1ui-text--truncate",
+    truncate && INLINE_TEXT_ELEMENTS[tag] && "ps1ui-text--truncate-inline",
     className,
   );
 

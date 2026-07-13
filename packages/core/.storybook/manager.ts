@@ -1,7 +1,7 @@
 import { addons } from "storybook/manager-api";
 
-import { poiuiTheme } from "./poiuiTheme";
+import { ps1uiTheme } from "./ps1uiTheme";
 
 addons.setConfig({
-  theme: poiuiTheme,
+  theme: ps1uiTheme,
 });

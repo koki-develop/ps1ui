@@ -3,11 +3,11 @@ import { create } from "storybook/theming";
 // Palette hexes duplicate src/styles/tokens.css — the Storybook manager
 // iframe runs outside the preview and cannot read the library's CSS
 // variables, so it must be mirrored here. Keep in sync when tokens change.
-export const poiuiTheme = create({
+export const ps1uiTheme = create({
   base: "dark",
 
-  brandTitle: "poiui",
-  brandUrl: "https://github.com/koki-develop/poiui",
+  brandTitle: "ps1ui",
+  brandUrl: "https://github.com/koki-develop/ps1ui",
 
   colorPrimary: "#7ee787",
   colorSecondary: "#7ee787",

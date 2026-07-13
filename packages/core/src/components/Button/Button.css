@@ -1,59 +1,59 @@
-.poiui-button {
+.ps1ui-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--poiui-space-2);
-  font-family: var(--poiui-font-mono);
-  font-size: var(--poiui-font-size-sm);
+  gap: var(--ps1ui-space-2);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
   font-weight: 500;
   line-height: 1;
   padding: 7px 14px;
-  border-radius: var(--poiui-radius-md);
+  border-radius: var(--ps1ui-radius-md);
   border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
   transition:
-    background var(--poiui-transition-fast),
-    border-color var(--poiui-transition-fast),
-    color var(--poiui-transition-fast);
+    background var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    color var(--ps1ui-transition-fast);
 }
 
-.poiui-button:focus-visible {
+.ps1ui-button:focus-visible {
   outline: none;
-  border-color: var(--poiui-color-primary);
-  box-shadow: var(--poiui-shadow-focus-ring);
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
 }
 
-.poiui-button:disabled {
+.ps1ui-button:disabled {
   cursor: not-allowed;
 }
 
-.poiui-button--primary {
-  background: var(--poiui-color-primary);
-  color: var(--poiui-color-primary-fg);
-  border-color: var(--poiui-color-primary);
+.ps1ui-button--primary {
+  background: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-fg);
+  border-color: var(--ps1ui-color-primary);
   font-weight: 600;
 }
-.poiui-button--primary:hover:not(:disabled) {
-  background: var(--poiui-color-primary-hover);
-  border-color: var(--poiui-color-primary-hover);
+.ps1ui-button--primary:hover:not(:disabled) {
+  background: var(--ps1ui-color-primary-hover);
+  border-color: var(--ps1ui-color-primary-hover);
 }
-.poiui-button--primary:disabled {
+.ps1ui-button--primary:disabled {
   background: transparent;
-  color: var(--poiui-color-fg-subtle);
-  border-color: var(--poiui-color-border);
+  color: var(--ps1ui-color-fg-subtle);
+  border-color: var(--ps1ui-color-border);
 }
 
-.poiui-button--secondary {
+.ps1ui-button--secondary {
   background: transparent;
-  color: var(--poiui-color-fg);
-  border-color: var(--poiui-color-border-strong);
+  color: var(--ps1ui-color-fg);
+  border-color: var(--ps1ui-color-border-strong);
 }
-.poiui-button--secondary:hover:not(:disabled) {
-  border-color: var(--poiui-color-primary);
-  background: color-mix(in srgb, var(--poiui-color-primary) 6%, transparent);
+.ps1ui-button--secondary:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+  background: color-mix(in srgb, var(--ps1ui-color-primary) 6%, transparent);
 }
-.poiui-button--secondary:disabled {
-  color: var(--poiui-color-fg-subtle);
-  border-color: var(--poiui-color-border);
+.ps1ui-button--secondary:disabled {
+  color: var(--ps1ui-color-fg-subtle);
+  border-color: var(--ps1ui-color-border);
 }

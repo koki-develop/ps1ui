@@ -19,7 +19,7 @@ export const Default: Story = {
     children: (
       <>
         <Text as="div" variant="accent" weight="semibold" style={{ marginBottom: 6 }}>
-          welcome to poiui
+          welcome to ps1ui
         </Text>
         <Text as="p" variant="muted" style={{ marginBottom: 18 }}>
           A dev-focused React UI kit. Monospace type, dark ground, terminal-adjacent aesthetic.

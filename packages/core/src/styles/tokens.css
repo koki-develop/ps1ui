@@ -1,34 +1,34 @@
-/* Palette hexes are mirrored in .storybook/poiuiTheme.ts — see note there. */
+/* Palette hexes are mirrored in .storybook/ps1uiTheme.ts — see note there. */
 :root {
-  --poiui-font-mono:
+  --ps1ui-font-mono:
     "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono", Consolas,
     monospace;
 
-  --poiui-color-bg: #0b0f14;
-  --poiui-color-surface: #0f1520;
-  --poiui-color-border: #21262d;
-  --poiui-color-border-strong: #30363d;
-  --poiui-color-fg: #c7d5df;
-  --poiui-color-fg-muted: #8b98a5;
-  --poiui-color-fg-subtle: #484f58;
-  --poiui-color-primary: #7ee787;
-  --poiui-color-primary-hover: #56d364;
-  --poiui-color-primary-fg: #0b0f14;
-  --poiui-color-accent: #ffa657;
-  --poiui-color-focus-ring-soft: color-mix(in srgb, var(--poiui-color-primary) 14%, transparent);
-  --poiui-shadow-focus-ring: 0 0 0 3px var(--poiui-color-focus-ring-soft);
+  --ps1ui-color-bg: #0b0f14;
+  --ps1ui-color-surface: #0f1520;
+  --ps1ui-color-border: #21262d;
+  --ps1ui-color-border-strong: #30363d;
+  --ps1ui-color-fg: #c7d5df;
+  --ps1ui-color-fg-muted: #8b98a5;
+  --ps1ui-color-fg-subtle: #484f58;
+  --ps1ui-color-primary: #7ee787;
+  --ps1ui-color-primary-hover: #56d364;
+  --ps1ui-color-primary-fg: #0b0f14;
+  --ps1ui-color-accent: #ffa657;
+  --ps1ui-color-focus-ring-soft: color-mix(in srgb, var(--ps1ui-color-primary) 14%, transparent);
+  --ps1ui-shadow-focus-ring: 0 0 0 3px var(--ps1ui-color-focus-ring-soft);
 
-  --poiui-radius-md: 3px;
-  --poiui-radius-lg: 4px;
+  --ps1ui-radius-md: 3px;
+  --ps1ui-radius-lg: 4px;
 
-  --poiui-space-2: 8px;
-  --poiui-space-5: 24px;
+  --ps1ui-space-2: 8px;
+  --ps1ui-space-5: 24px;
 
-  --poiui-font-size-xs: 11px;
-  --poiui-font-size-sm: 13px;
-  --poiui-font-size-md: 15px;
-  --poiui-font-size-lg: 18px;
-  --poiui-font-size-xl: 22px;
+  --ps1ui-font-size-xs: 11px;
+  --ps1ui-font-size-sm: 13px;
+  --ps1ui-font-size-md: 15px;
+  --ps1ui-font-size-lg: 18px;
+  --ps1ui-font-size-xl: 22px;
 
-  --poiui-transition-fast: 120ms ease;
+  --ps1ui-transition-fast: 120ms ease;
 }
