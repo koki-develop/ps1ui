@@ -11,12 +11,6 @@ const preview: Preview = {
     a11y: {
       test: "error",
     },
-    backgrounds: {
-      default: "ps1ui",
-      options: {
-        ps1ui: { name: "ps1ui", value: "#0b0f14" },
-      },
-    },
     docs: {
       theme: ps1uiTheme,
     },
