@@ -4,5 +4,6 @@ export default defineConfig({
   entry: ["src/index.ts"],
   dts: true,
   clean: true,
+  sourcemap: true,
   target: "es2022",
 });
