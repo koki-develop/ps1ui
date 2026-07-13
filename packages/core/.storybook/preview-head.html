@@ -1,3 +1,9 @@
+<!--
+  Storybook's built-in base-preview-head.html hardcodes `background-color: white` on
+  `.sb-preparing-story` / `.sb-preparing-docs` — story-switch overlay elements at
+  z-index 2147483647 that would flash white over the ps1ui dark canvas during transitions.
+  Override them alongside html/body so the theme background is applied at all times.
+-->
 <style>
   html,
   body,

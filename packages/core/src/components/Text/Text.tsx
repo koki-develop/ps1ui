@@ -16,6 +16,12 @@ type TextOwnProps<E extends TextElement> = {
   truncate?: boolean;
 };
 
+// Deliberate exception to the general "use ComponentProps<'tag'>" rule other components follow.
+// With the polymorphic `as` prop, TypeScript cannot narrow the `ref` prop's type against the
+// resolved element E — allowing `ref` here would silently accept mismatched ref types
+// (e.g. a ref typed for HTMLParagraphElement on `<Text as="span" ref={…} />`). Keeping `ref`
+// out of the prop type entirely is safer than a misleading loose type; don't switch this
+// to ComponentProps for consistency with the other components.
 export type TextProps<E extends TextElement = "p"> = TextOwnProps<E> &
   Omit<ComponentPropsWithoutRef<E>, keyof TextOwnProps<E>>;
 
