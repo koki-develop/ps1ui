@@ -1,5 +1,14 @@
+# pnpm
 node_modules/
-dist/
-storybook-static/
 .pnpm-store/
+
+# build
 *.tgz
+dist/
+
+# storybook
+storybook-static/
+
+# vitest
+.vitest-attachments/
+__screenshots__/
