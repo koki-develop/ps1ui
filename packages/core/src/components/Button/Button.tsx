@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { cx } from "../../utils/cx";
 
 export type ButtonVariant = "primary" | "secondary";
 
@@ -12,8 +13,6 @@ export function Button({
   type = "button",
   ...rest
 }: ButtonProps) {
-  const classes = ["poiui-button", `poiui-button--${variant}`, className]
-    .filter(Boolean)
-    .join(" ");
+  const classes = cx("poiui-button", `poiui-button--${variant}`, className);
   return <button {...rest} type={type} className={classes} />;
 }

@@ -21,7 +21,7 @@
 .poiui-input:focus {
   outline: none;
   border-color: var(--poiui-color-primary);
-  box-shadow: 0 0 0 3px var(--poiui-color-focus-ring-soft);
+  box-shadow: var(--poiui-shadow-focus-ring);
 }
 
 .poiui-input:disabled {

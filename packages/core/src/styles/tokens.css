@@ -19,6 +19,7 @@
     var(--poiui-color-primary) 14%,
     transparent
   );
+  --poiui-shadow-focus-ring: 0 0 0 3px var(--poiui-color-focus-ring-soft);
 
   --poiui-radius-md: 3px;
   --poiui-radius-lg: 4px;

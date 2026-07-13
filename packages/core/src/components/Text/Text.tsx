@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import type { ComponentPropsWithoutRef } from "react";
+import { cx } from "../../utils/cx";
 
 export type TextElement =
   | "p"
@@ -47,7 +48,7 @@ export function Text<E extends TextElement = "p">({
   ...rest
 }: TextProps<E>) {
   const tag = as ?? "p";
-  const classes = [
+  const classes = cx(
     "poiui-text",
     `poiui-text--${variant}`,
     `poiui-text--size-${size}`,
@@ -55,9 +56,7 @@ export function Text<E extends TextElement = "p">({
     truncate && "poiui-text--truncate",
     truncate && INLINE_TEXT_ELEMENTS[tag] && "poiui-text--truncate-inline",
     className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  );
 
   return createElement(tag, { ...rest, className: classes });
 }
