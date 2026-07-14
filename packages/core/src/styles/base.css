@@ -1,6 +1,311 @@
 @import "@fontsource-variable/jetbrains-mono";
 @import "./tokens.css";
 
+/* ==========================================================================
+ * Reset
+ * --------------------------------------------------------------------------
+ * Included in base.css (and therefore in styles.css) so consumers who commit
+ * fully to the PS1 UI look get a consistent baseline across browsers.
+ *
+ * NEVER duplicate any of these rules in components.css — that entry is for
+ * consumers embedding PS1 UI into a foreign design system, where a global
+ * reset would collide with the host system. The invariant is enforced by
+ * scripts/check-css-split.mjs at build time.
+ *
+ * Consumer heads-up: raw semantic tags rendered outside PS1 UI's own
+ * components lose their UA appearance under this reset — a bare <a> paints
+ * with inherited color/no underline (route through <Anchor>), a bare <h1>
+ * collapses to body text (route through <Heading>), a bare <button> has no
+ * chrome (route through <Button>), <img> becomes block (breaks inline avatar
+ * layouts unless you set display:inline explicitly), <ul>/<ol> lose their
+ * bullets. Locked in by src/styles/reset.test.tsx.
+ * ========================================================================== */
+
+/* Box model + border baseline. Applied to `*` only — NOT to ::before/::after
+   /::backdrop/::file-selector-button. Pseudo-elements with border-drawn
+   glyphs (the classic rotated-L checkmark, tooltip carets, radio-dot rings)
+   need the initial `box-sizing: content-box` so their declared width/height
+   sit INSIDE the border. Josh Comeau's reset excludes pseudos for this
+   exact reason; Tailwind Preflight includes them but then has to document
+   the "authors doing border tricks must override" caveat. We pick the
+   Comeau side because ps1ui components (Checkbox) already use the trick.
+   Locked in by reset.test.tsx's "reset does not touch pseudos" block. */
+* {
+  box-sizing: border-box;
+  border: 0 solid;
+}
+
+body,
+blockquote,
+dl,
+dd,
+figure,
+fieldset,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+menu,
+ol,
+p,
+pre,
+ul {
+  margin: 0;
+}
+
+fieldset,
+legend,
+menu,
+ol,
+ul {
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  tab-size: 4;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Heading responsibility belongs to <Heading>; raw h1..h6 inherit so a bare
+   <h1> outside <Heading> doesn't blow up to the UA default. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+}
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  vertical-align: middle;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Anchor responsibility belongs to <Anchor>; raw <a> inherits color/decoration
+   so it doesn't paint as UA blue underline against the dark canvas. */
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* UA still refuses to inherit font/color into form controls in 2026.
+   Inherit font-feature-settings / font-variation-settings too so JetBrains
+   Mono Variable's axes stay live inside <input> / <textarea>. */
+button,
+input,
+optgroup,
+select,
+textarea,
+::file-selector-button {
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background-color: transparent;
+  border-radius: 0;
+  opacity: 1;
+}
+
+:where(select:is([multiple], [size])) optgroup {
+  font-weight: bolder;
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+button,
+input:where([type="button"], [type="reset"], [type="submit"]),
+::file-selector-button {
+  appearance: button;
+  -webkit-appearance: button;
+}
+
+button {
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+}
+
+::placeholder {
+  opacity: 1;
+  color: color-mix(in oklab, currentcolor 55%, transparent);
+}
+
+::-webkit-date-and-time-value {
+  min-height: 1lh;
+  text-align: inherit;
+}
+
+::-webkit-datetime-edit {
+  display: inline-flex;
+  padding: 0;
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+  height: auto;
+}
+
+/* number spinner: Chromium is already handled by ::-webkit-inner/outer-spin-button
+   { appearance: none } above. Firefox needs its own vendor prefix — the unprefixed
+   `appearance: textfield` is deprecated per CSS UI Level 4 (moved to compatibility
+   appendix) and dropped by Tailwind v4 Preflight, so we omit it. */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+[type="search"] {
+  -webkit-appearance: textfield;
+  outline-offset: -2px;
+}
+
+::-webkit-search-decoration,
+::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+:-moz-focusring:where(:not(iframe)) {
+  outline: auto;
+}
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+small {
+  font-size: 80%;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--ps1ui-font-mono);
+  font-size: 1em;
+}
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+q::before,
+q::after {
+  content: "";
+}
+
+/* Keeps sub/sup from expanding the parent line-height. */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+table {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+hr {
+  height: 0;
+  color: inherit;
+  border-top: 1px solid;
+}
+
+summary {
+  display: list-item;
+}
+
+/* [hidden] would lose to `display: flex` etc. without this. */
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+/* ==========================================================================
+ * Ambient environment
+ * --------------------------------------------------------------------------
+ * `background`/`color`/`font-family` intentionally live on `html`, not `body`.
+ * Rationale: the reset above zeros `body { margin }`, but the browser still
+ * paints the area beyond `body` (macOS/iOS rubber-band overscroll region,
+ * horizontal-scroll overflow, viewport slack) using the canvas root's
+ * background — which is `html`. If these rules were on `body`, that overscroll
+ * area would reveal the light UA default and flash white on scroll. `color`
+ * and `font-family` cascade down to `body` and descendants naturally.
+ * ========================================================================== */
+
 html {
   background: var(--ps1ui-color-bg);
   color: var(--ps1ui-color-fg);

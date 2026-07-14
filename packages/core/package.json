@@ -35,7 +35,7 @@
     "check": "pnpm typecheck && pnpm check:palette && pnpm check:languages",
     "check:palette": "node scripts/check-palette-sync.mjs",
     "check:languages": "node scripts/check-languages.mjs",
-    "check:dist": "node scripts/check-dist-registrations.mjs",
+    "check:dist": "node scripts/check-dist-registrations.mjs && node scripts/check-css-split.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -54,7 +54,11 @@
    rectangle, then rotates 45deg so it reads as a ✓. `:not(:indeterminate)` makes
    precedence explicit for the mixed DOM state (both .checked and .indeterminate
    true) so the indeterminate bar wins without relying on source order. Uses
-   `currentColor` so the disabled state can dim the mark by changing `color`. */
+   `currentColor` so the disabled state can dim the mark by changing `color`.
+   Depends on the pseudo's initial `box-sizing: content-box` so the 2px borders
+   sit OUTSIDE the 4×8 content — base.css's reset intentionally excludes pseudo
+   elements from its `box-sizing: border-box` block for exactly this pattern.
+   Rendered geometry locked in by Checkbox.contrast.test.tsx. */
 .ps1ui-checkbox:checked:not(:indeterminate)::after {
   content: "";
   position: absolute;
