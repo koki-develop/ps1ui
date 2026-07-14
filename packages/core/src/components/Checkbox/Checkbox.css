@@ -1,0 +1,93 @@
+.ps1ui-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+  font-family: var(--ps1ui-font-mono);
+  color: var(--ps1ui-color-primary-fg);
+  background: var(--ps1ui-color-bg);
+  border: 1px solid var(--ps1ui-color-border-strong);
+  border-radius: var(--ps1ui-radius-md);
+  cursor: pointer;
+  transition:
+    background var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+}
+
+.ps1ui-checkbox:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-checkbox:focus-visible {
+  outline: none;
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-checkbox:checked,
+.ps1ui-checkbox:indeterminate {
+  background: var(--ps1ui-color-primary);
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-checkbox:checked:hover:not(:disabled),
+.ps1ui-checkbox:indeterminate:hover:not(:disabled) {
+  background: var(--ps1ui-color-primary-hover);
+  border-color: var(--ps1ui-color-primary-hover);
+}
+
+.ps1ui-checkbox:checked:active:not(:disabled),
+.ps1ui-checkbox:indeterminate:active:not(:disabled) {
+  background: var(--ps1ui-color-primary-active);
+  border-color: var(--ps1ui-color-primary-active);
+}
+
+/* Checkmark: classic rotated-L trick — draws the right + bottom border of a small
+   rectangle, then rotates 45deg so it reads as a ✓. `:not(:indeterminate)` makes
+   precedence explicit for the mixed DOM state (both .checked and .indeterminate
+   true) so the indeterminate bar wins without relying on source order. Uses
+   `currentColor` so the disabled state can dim the mark by changing `color`. */
+.ps1ui-checkbox:checked:not(:indeterminate)::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border-style: solid;
+  border-color: currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ps1ui-checkbox:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.ps1ui-checkbox:disabled {
+  cursor: not-allowed;
+  color: var(--ps1ui-color-fg-subtle);
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}
+
+.ps1ui-checkbox:disabled:checked,
+.ps1ui-checkbox:disabled:indeterminate {
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}
