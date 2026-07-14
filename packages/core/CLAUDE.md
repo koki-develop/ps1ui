@@ -20,15 +20,33 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 Tests run in real Chromium via **Vitest Browser Mode** (`@vitest/browser-playwright` + `vitest-browser-react`). If Chromium is missing on a fresh clone: `pnpm exec playwright install chromium`.
 
 Two Vitest projects (`vitest.config.ts`):
+
 - **`unit`** — `<Component>.test.tsx` files sitting next to each component
 - **`storybook`** — every `.stories.tsx` becomes a test via `@storybook/addon-vitest`'s `storybookTest()` plugin. `@storybook/addon-a11y` runs axe on each story, and `parameters.a11y.test: "error"` in `preview.tsx` makes violations fail the test (not just warn).
 
 Gotchas:
+
 - `render()` from `vitest-browser-react` is **async** — always `await render(...)`.
 - Assertions use `await expect.element(locator).toBeVisible()` etc.; interactions are also awaited: `await locator.click()`.
 - Browser Mode isolates state per **file**, not per test — don't rely on cross-test isolation of module-level side effects.
 - For the `storybook` project, do **not** add a manual `test.include` or a `setProjectAnnotations()` setup file — `storybookTest()` indexes stories from `.storybook/main.ts`'s `stories` glob and auto-applies preview annotations. Adding either breaks it.
 - Both `@storybook/addon-vitest` and `@storybook/addon-a11y` must be listed in `.storybook/main.ts`'s `addons` for a11y checks and interaction panels to wire in.
+
+### A11y assertions in unit tests
+
+`addon-a11y` runs axe on each story's initial render only. For **dynamic states** (post-click, error/loading, focus-visible) and for tests that have no matching story, use the direct helper:
+
+```ts
+import { expectNoAxeViolations } from "../../testing/axe";
+
+const screen = await render(<Button>Toggle</Button>);
+await screen.getByRole("button").click();
+await expectNoAxeViolations(screen.container);
+```
+
+- `src/testing/axe.ts` is a thin wrapper around `axe-core`'s `axe.run` — no `vitest-axe` (that wrapper is unmaintained).
+- `src/testing/**` is not re-exported from `src/index.ts`, so it never ships in `dist/`.
+- Pass an options object as the second arg to disable specific rules or scope the run — `{ rules: { "color-contrast": { enabled: false } } }`.
 
 ## Component authoring
 
@@ -39,6 +57,7 @@ Each component lives in `src/components/<Name>/` with a four-file set:
 ```
 
 Conventions:
+
 - Ultra-thin native-element wrappers. Type props as `ComponentProps<"tag"> & { extras }` and spread `...rest` straight onto the element (this also lets a caller's `ref` flow through — do not "fix" to `ComponentPropsWithoutRef`).
 - Build `className` with the shared `cx(...)` helper (`src/utils/cx.ts`). Don't reinline `[…].filter(Boolean).join(" ")`.
 - CSS class naming: `ps1ui-<component>` base, `ps1ui-<component>--<modifier>` for variants. When a component has multiple orthogonal axes, namespace them per axis (e.g. `ps1ui-text--size-sm`, `ps1ui-text--weight-bold`) so they combine unambiguously.

@@ -1,5 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
+import { expectNoAxeViolations } from "../../testing/axe";
 import { Button } from "./Button";
 
 test("renders as a button by default", async () => {
@@ -34,4 +35,16 @@ test("fires onClick when clicked", async () => {
   const screen = await render(<Button onClick={onClick}>Tap</Button>);
   await screen.getByRole("button", { name: "Tap" }).click();
   expect(onClick).toHaveBeenCalledTimes(1);
+});
+
+test("has no accessibility violations on initial render", async () => {
+  const screen = await render(<Button>Accessible label</Button>);
+  await expectNoAxeViolations(screen.container);
+});
+
+test("has no accessibility violations after being clicked (dynamic state)", async () => {
+  const screen = await render(<Button aria-pressed="false">Toggle</Button>);
+  const button = screen.getByRole("button", { name: "Toggle" });
+  await button.click();
+  await expectNoAxeViolations(screen.container);
 });
