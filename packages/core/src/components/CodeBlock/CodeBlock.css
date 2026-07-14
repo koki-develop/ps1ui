@@ -10,6 +10,11 @@
   line-height: 1.6;
   overflow-x: auto;
   tab-size: 2;
+  /* Explicit `left` (not `start`) — <pre> defaults to text-align: inherit, so a
+     consumer that centers text on an ancestor would center each code line too.
+     `left` (rather than `start`) is deliberate: source code is inherently LTR
+     and should stay left-aligned even inside an RTL context. */
+  text-align: left;
 }
 
 .ps1ui-codeblock:focus-visible {

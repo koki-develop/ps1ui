@@ -5,7 +5,7 @@
 
 import "../../styles/index.css";
 
-import { describe, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import { CodeBlock } from "./CodeBlock";
@@ -36,6 +36,33 @@ const CASES = [
   { name: "html (markup)", language: "markup", code: HTML_SAMPLE },
   { name: "diff", language: "diff", code: DIFF_SAMPLE },
 ] as const;
+
+describe("CodeBlock layout", () => {
+  test("resists inherited text-align (stays left-aligned inside a centered container)", async () => {
+    // <pre>'s default `text-align: inherit` would let a centered ancestor push
+    // each code line to the center — semantically wrong for source code and
+    // visually broken. .ps1ui-codeblock pins `text-align: left` explicitly.
+    const screen = await render(
+      <div style={{ textAlign: "center" }}>
+        <CodeBlock data-testid="cb">short</CodeBlock>
+      </div>,
+    );
+    const el = screen.getByTestId("cb").element();
+    expect(getComputedStyle(el).textAlign).toBe("left");
+  });
+
+  test("stays left-aligned inside an RTL container (does not flip to right)", async () => {
+    // `text-align: start` would mean "right" under `dir=rtl`, which is wrong for
+    // code. The rule uses `left` specifically to survive RTL contexts.
+    const screen = await render(
+      <div dir="rtl">
+        <CodeBlock data-testid="cb">short</CodeBlock>
+      </div>,
+    );
+    const el = screen.getByTestId("cb").element();
+    expect(getComputedStyle(el).textAlign).toBe("left");
+  });
+});
 
 describe("CodeBlock contrast", () => {
   describe("on --ps1ui-color-bg (page canvas)", () => {
