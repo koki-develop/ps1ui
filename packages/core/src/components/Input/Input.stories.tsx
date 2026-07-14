@@ -22,12 +22,14 @@ export const Default: Story = {
 
 export const Filled: Story = {
   args: {
+    "aria-label": "email address",
     defaultValue: "hello@ps1ui.dev",
   },
 };
 
 export const Disabled: Story = {
   args: {
+    "aria-label": "email address",
     defaultValue: "hello@ps1ui.dev",
     disabled: true,
   },
