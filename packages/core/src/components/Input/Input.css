@@ -19,6 +19,10 @@
   color: var(--ps1ui-color-fg-subtle);
 }
 
+.ps1ui-input:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+}
+
 .ps1ui-input:focus {
   outline: none;
   border-color: var(--ps1ui-color-primary);
