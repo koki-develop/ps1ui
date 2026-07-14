@@ -38,6 +38,10 @@
   background: var(--ps1ui-color-primary-hover);
   border-color: var(--ps1ui-color-primary-hover);
 }
+.ps1ui-button--primary:active:not(:disabled) {
+  background: var(--ps1ui-color-primary-active);
+  border-color: var(--ps1ui-color-primary-active);
+}
 .ps1ui-button--primary:disabled {
   background: transparent;
   color: var(--ps1ui-color-fg-subtle);
@@ -52,6 +56,10 @@
 .ps1ui-button--secondary:hover:not(:disabled) {
   border-color: var(--ps1ui-color-primary);
   background: color-mix(in srgb, var(--ps1ui-color-primary) 6%, transparent);
+}
+.ps1ui-button--secondary:active:not(:disabled) {
+  border-color: var(--ps1ui-color-primary-active);
+  background: color-mix(in srgb, var(--ps1ui-color-primary-active) 10%, transparent);
 }
 .ps1ui-button--secondary:disabled {
   color: var(--ps1ui-color-fg-subtle);

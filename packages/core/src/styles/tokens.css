@@ -15,6 +15,7 @@
   --ps1ui-color-fg-subtle: #7a8593;
   --ps1ui-color-primary: #7ee787;
   --ps1ui-color-primary-hover: #56d364;
+  --ps1ui-color-primary-active: #3fb950;
   --ps1ui-color-primary-fg: #0b0f14;
   --ps1ui-color-accent: #ffa657;
   --ps1ui-color-focus-ring-soft: color-mix(in srgb, var(--ps1ui-color-primary) 14%, transparent);
