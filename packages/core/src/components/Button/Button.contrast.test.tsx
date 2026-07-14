@@ -3,7 +3,7 @@
 // `CSS.forcePseudoState` to put the button into :hover / :active / :focus-visible
 // so axe's color-contrast rule sees the resolved colors of those transient states.
 
-import "../../styles/index.css";
+import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";

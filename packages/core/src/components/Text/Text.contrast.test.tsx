@@ -2,7 +2,7 @@
 // component CSS and wraps each case in the ps1ui background / surface so axe's
 // color-contrast rule can compute real ratios.
 
-import "../../styles/index.css";
+import "../../styles/styles.css";
 
 import { describe, test } from "vitest";
 import { render } from "vitest-browser-react";

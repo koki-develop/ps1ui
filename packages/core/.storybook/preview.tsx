@@ -1,7 +1,7 @@
 import type { Preview } from "@storybook/react-vite";
 
 import "@fontsource-variable/jetbrains-mono";
-import "../src/styles/index.css";
+import "../src/styles/styles.css";
 
 import { ps1uiTheme } from "./ps1uiTheme";
 

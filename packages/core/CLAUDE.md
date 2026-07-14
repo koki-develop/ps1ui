@@ -4,7 +4,7 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 
 ## Commands
 
-- `pnpm build` — `check` + `build:js` (`tsdown` → `dist/index.mjs` + `.d.mts`) + `build:css` (postcss → `dist/styles.css`) + `check:dist`
+- `pnpm build` — `check` + `build:js` (`tsdown` → `dist/index.mjs` + `.d.mts`) + `build:css` (postcss → `dist/styles.css` + `dist/base.css` + `dist/components.css`) + `check:dist`
 - `pnpm check` — `typecheck` + `check:palette` + `check:languages`
 - `pnpm typecheck` — `tsc --noEmit`
 - `pnpm check:palette` — see "Palette sync" below
@@ -68,7 +68,7 @@ For keyboard tests use `userEvent` from vitest's browser context: `import { user
 
   `src/testing/axe.ts` is a thin wrapper around `axe-core`'s `axe.run` — no `vitest-axe` (that wrapper is unmaintained). `src/testing/**` is not re-exported from `src/index.ts`, so it never ships in `dist/`. Pass an options object as the second arg to disable specific rules or scope the run — `{ rules: { "color-contrast": { enabled: false } } }`.
 
-- **Contrast regression tests** (`*.contrast.test.tsx`) — a middle layer that imports `src/styles/index.css` and wraps each variant in `--ps1ui-color-bg` / `--ps1ui-color-surface` so axe's `color-contrast` rule computes real ratios. Add one when a token change would risk regressing WCAG AA. **Introducing a new (fg-token, bg-token) pair not already covered by `Text.contrast.test.tsx`** (e.g. a new component using its own accent bg) means adding a matching contrast test for that pair — Storybook covers it visually, but the middle layer is what runs fast on every save.
+- **Contrast regression tests** (`*.contrast.test.tsx`) — a middle layer that imports `src/styles/styles.css` and wraps each variant in `--ps1ui-color-bg` / `--ps1ui-color-surface` so axe's `color-contrast` rule computes real ratios. Add one when a token change would risk regressing WCAG AA. **Introducing a new (fg-token, bg-token) pair not already covered by `Text.contrast.test.tsx`** (e.g. a new component using its own accent bg) means adding a matching contrast test for that pair — Storybook covers it visually, but the middle layer is what runs fast on every save.
 
 - **Storybook stories** — **visual** a11y. `addon-a11y` runs axe on each story's initial render against the actual rendered output (CSS applied, dark canvas). `parameters.a11y.test: "error"` in `preview.tsx` makes violations fail the test. Add a story for any visually-distinct combination (new variant × background, new state) so the storybook project auto-picks it up.
 
@@ -94,7 +94,10 @@ Conventions:
 ## Design tokens & CSS build
 
 - All design tokens live in `src/styles/tokens.css` as CSS custom properties (`--ps1ui-*`). Single source of truth for colors, spacing, radius, font, transitions.
-- `src/styles/index.css` is the CSS entry point: JetBrains Mono fontsource → `tokens.css` → each component's CSS.
+- Three CSS entry points, all built via `build:css`:
+  - `src/styles/styles.css` — the full canvas (imports `base.css` + `components.css`). Default for consumers who fully commit to the PS1 UI look.
+  - `src/styles/base.css` — JetBrains Mono fontsource + `tokens.css` + `html { bg / color / font-family }` + `::selection`. Sets the ambient environment. Rules live on `html` (not `body`) so the viewport including scroll-overrun areas is painted and body's UA 8px margin doesn't leak the light UA default; `color` / `font-family` cascade down naturally.
+  - `src/styles/components.css` — `tokens.css` + each component's CSS. Component visuals only; no page-canvas styles. For consumers embedding PS1 UI components into a foreign design system.
 - PostCSS inlines **only relative (`./`, `../`) `@import`s**. Bare specifiers stay raw so the consumer's bundler resolves them (inlining them would break packages' internal `url()` paths). **New first-party CSS imports must use a relative path** or they'll silently fail to inline. See the comment in `postcss.config.mjs`.
 
 ### Palette sync
@@ -104,7 +107,10 @@ Storybook's manager UI theme (`.storybook/ps1uiTheme.ts`) runs in an iframe outs
 ## Package exports (`package.json`)
 
 - `.` → `dist/index.mjs` + `dist/index.d.mts` — **ESM only, no CJS**
-- `./styles.css` → `dist/styles.css` — **consumers must import this separately**; the JS entry does not inject styles
+- `./styles.css` → `dist/styles.css` — full canvas (base + components), the standard consumer import
+- `./base.css` → `dist/base.css` — canvas-only (root `<html>` bg/color/font + selection); pair with `./components.css` or use alone if you only want the ambient PS1 UI environment
+- `./components.css` → `dist/components.css` — components-only; import when embedding PS1 UI components into another design system without touching the page canvas
+- The JS entry does **not** inject styles — consumers must import one of the above CSS entries themselves
 - `sideEffects: ["**/*.css", "**/CodeBlock/refractor.ts", "dist/index.mjs"]` prevents bundlers from tree-shaking the CSS import and CodeBlock's `refractor.register(...)` calls
 - React / React DOM are peer deps (`^18 || ^19`); `@fontsource-variable/jetbrains-mono` is a regular dep because the CSS `@import`s it directly
 

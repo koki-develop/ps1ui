@@ -17,6 +17,8 @@
       "default": "./dist/index.mjs"
     },
     "./styles.css": "./dist/styles.css",
+    "./base.css": "./dist/base.css",
+    "./components.css": "./dist/components.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -25,7 +27,7 @@
   "scripts": {
     "build": "pnpm check && pnpm build:js && pnpm build:css && pnpm check:dist",
     "build:js": "tsdown",
-    "build:css": "postcss src/styles/index.css -o dist/styles.css",
+    "build:css": "postcss src/styles/styles.css src/styles/base.css src/styles/components.css --dir dist/",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",

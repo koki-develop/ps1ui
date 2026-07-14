@@ -3,7 +3,7 @@
 // as many distinct Prism token classes as possible so every --ps1ui-code-* value is
 // exercised at least once against both --ps1ui-color-bg and --ps1ui-color-surface.
 
-import "../../styles/index.css";
+import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";

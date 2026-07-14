@@ -1,0 +1,13 @@
+@import "@fontsource-variable/jetbrains-mono";
+@import "./tokens.css";
+
+html {
+  background: var(--ps1ui-color-bg);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+}
+
+::selection {
+  background: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-fg);
+}
