@@ -4,10 +4,12 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 
 ## Commands
 
-- `pnpm build` — `check` + `build:js` (`tsdown` → `dist/index.mjs` + `.d.mts`) + `build:css` (postcss → `dist/styles.css`)
-- `pnpm check` — `typecheck` + `check:palette`
+- `pnpm build` — `check` + `build:js` (`tsdown` → `dist/index.mjs` + `.d.mts`) + `build:css` (postcss → `dist/styles.css`) + `check:dist`
+- `pnpm check` — `typecheck` + `check:palette` + `check:languages`
 - `pnpm typecheck` — `tsc --noEmit`
 - `pnpm check:palette` — see "Palette sync" below
+- `pnpm check:languages` — verifies every language name in `CodeBlockLanguage` (`src/components/CodeBlock/refractor.ts`) is actually registered by refractor at runtime
+- `pnpm check:dist` — post-build check that `dist/index.mjs` still registers every CodeBlock extension language, catching tree-shaking regressions from the `sideEffects` field
 - `pnpm lint` / `pnpm lint:fix` — `oxlint`
 - `pnpm fmt` / `pnpm fmt:check` — `oxfmt`
 - `pnpm test` — Vitest in watch mode; `pnpm test run` for one-shot
@@ -103,7 +105,7 @@ Storybook's manager UI theme (`.storybook/ps1uiTheme.ts`) runs in an iframe outs
 
 - `.` → `dist/index.mjs` + `dist/index.d.mts` — **ESM only, no CJS**
 - `./styles.css` → `dist/styles.css` — **consumers must import this separately**; the JS entry does not inject styles
-- `sideEffects: ["**/*.css"]` prevents bundlers from tree-shaking the CSS import
+- `sideEffects: ["**/*.css", "**/CodeBlock/refractor.ts", "dist/index.mjs"]` prevents bundlers from tree-shaking the CSS import and CodeBlock's `refractor.register(...)` calls
 - React / React DOM are peer deps (`^18 || ^19`); `@fontsource-variable/jetbrains-mono` is a regular dep because the CSS `@import`s it directly
 
 ## TypeScript
