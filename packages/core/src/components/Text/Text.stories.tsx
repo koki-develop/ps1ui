@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { Card } from "../Card/Card";
 import { Input } from "../Input/Input";
 import { Text } from "./Text";
 
@@ -88,4 +89,18 @@ export const Truncate: Story = {
     style: { maxWidth: 200 },
     children: "this is a long line of text that will be truncated with an ellipsis",
   },
+};
+
+export const OnSurface: Story = {
+  render: () => (
+    <Card style={{ maxWidth: 360 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <Text variant="body">body — default foreground on surface</Text>
+        <Text variant="muted">muted — secondary foreground on surface</Text>
+        <Text variant="subtle">subtle — least emphasis on surface</Text>
+        <Text variant="primary">primary — accent green on surface</Text>
+        <Text variant="accent">accent — accent orange on surface</Text>
+      </div>
+    </Card>
+  ),
 };

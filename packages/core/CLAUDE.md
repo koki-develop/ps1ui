@@ -32,21 +32,47 @@ Gotchas:
 - For the `storybook` project, do **not** add a manual `test.include` or a `setProjectAnnotations()` setup file — `storybookTest()` indexes stories from `.storybook/main.ts`'s `stories` glob and auto-applies preview annotations. Adding either breaks it.
 - Both `@storybook/addon-vitest` and `@storybook/addon-a11y` must be listed in `.storybook/main.ts`'s `addons` for a11y checks and interaction panels to wire in.
 
-### A11y assertions in unit tests
+### Test authoring conventions
 
-`addon-a11y` runs axe on each story's initial render only. For **dynamic states** (post-click, error/loading, focus-visible) and for tests that have no matching story, use the direct helper:
+Every `<Component>.test.tsx` groups tests into 5 concern-axes via `describe` (skip axes that don't apply):
+
+1. **rendering** — correct DOM tag, default attributes
+2. **class composition** — base class, variant/size/weight classes, `className` merge
+3. **passthrough** — native attrs (`id`, `data-*`, `aria-*`), `disabled`, `style`
+4. **interaction** — `onClick`/`onChange`/keyboard handlers (omit for non-interactive components)
+5. **a11y** — a `test.for(cases)` matrix over `variant × state`
+
+Use `test.for(...)` with `$field` name templates for every enumerable axis (variants, sizes, weights, types). Declare the source array with `satisfies` so the compiler catches drift:
 
 ```ts
-import { expectNoAxeViolations } from "../../testing/axe";
-
-const screen = await render(<Button>Toggle</Button>);
-await screen.getByRole("button").click();
-await expectNoAxeViolations(screen.container);
+const VARIANTS = ["primary", "secondary"] as const satisfies readonly ButtonVariant[];
 ```
 
-- `src/testing/axe.ts` is a thin wrapper around `axe-core`'s `axe.run` — no `vitest-axe` (that wrapper is unmaintained).
-- `src/testing/**` is not re-exported from `src/index.ts`, so it never ships in `dist/`.
-- Pass an options object as the second arg to disable specific rules or scope the run — `{ rules: { "color-contrast": { enabled: false } } }`.
+Adding a new variant to `ButtonVariant` now fails compilation until the array is updated, so a11y matrices stay exhaustive by construction.
+
+For keyboard tests use `userEvent` from vitest's browser context: `import { userEvent } from "vitest/browser"` then `await userEvent.keyboard("{Enter}")`. Dispatching a raw `KeyboardEvent` won't trigger native button behavior.
+
+### Three layers of a11y coverage
+
+- **Unit tests** (`*.test.tsx`) — **semantic** a11y: ARIA attributes, label associations, state changes. CSS is NOT loaded here, so `color-contrast` is not checked. Use `expectNoAxeViolations` for dynamic states unreachable from a static story (post-click, focused, invalid).
+
+  ```ts
+  import { expectNoAxeViolations } from "../../testing/axe";
+
+  const screen = await render(<Button>Toggle</Button>);
+  await screen.getByRole("button").click();
+  await expectNoAxeViolations(screen.container);
+  ```
+
+  `src/testing/axe.ts` is a thin wrapper around `axe-core`'s `axe.run` — no `vitest-axe` (that wrapper is unmaintained). `src/testing/**` is not re-exported from `src/index.ts`, so it never ships in `dist/`. Pass an options object as the second arg to disable specific rules or scope the run — `{ rules: { "color-contrast": { enabled: false } } }`.
+
+- **Contrast regression tests** (`*.contrast.test.tsx`) — a middle layer that imports `src/styles/index.css` and wraps each variant in `--ps1ui-color-bg` / `--ps1ui-color-surface` so axe's `color-contrast` rule computes real ratios. Add one when a token change would risk regressing WCAG AA. **Introducing a new (fg-token, bg-token) pair not already covered by `Text.contrast.test.tsx`** (e.g. a new component using its own accent bg) means adding a matching contrast test for that pair — Storybook covers it visually, but the middle layer is what runs fast on every save.
+
+- **Storybook stories** — **visual** a11y. `addon-a11y` runs axe on each story's initial render against the actual rendered output (CSS applied, dark canvas). `parameters.a11y.test: "error"` in `preview.tsx` makes violations fail the test. Add a story for any visually-distinct combination (new variant × background, new state) so the storybook project auto-picks it up.
+
+### Coverage
+
+`vitest.config.ts` sets `coverage.thresholds: { statements/branches/functions/lines: 100 }`. `pnpm test:coverage` fails if any drop below. Keep it that way — this library is thin enough that 100% is achievable and any regression is a real gap.
 
 ## Component authoring
 
