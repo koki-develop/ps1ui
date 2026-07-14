@@ -31,6 +31,8 @@
   --ps1ui-font-size-md: 15px;
   --ps1ui-font-size-lg: 18px;
   --ps1ui-font-size-xl: 22px;
+  --ps1ui-font-size-2xl: 26px;
+  --ps1ui-font-size-3xl: 32px;
 
   --ps1ui-transition-fast: 120ms ease;
 }

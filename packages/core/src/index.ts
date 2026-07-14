@@ -18,3 +18,12 @@ export type {
   TextVariant,
   TextWeight,
 } from "./components/Text/Text";
+
+export { Heading } from "./components/Heading/Heading";
+export type {
+  HeadingElement,
+  HeadingLevel,
+  HeadingProps,
+  HeadingSize,
+  HeadingWeight,
+} from "./components/Heading/Heading";
