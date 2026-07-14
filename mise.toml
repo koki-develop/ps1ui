@@ -1,5 +1,12 @@
 [tools]
 node = "24.18.0"
 pnpm = "11.11.0"
+lefthook = "2.1.10"
 
 "npm:ui-ux-pro-max-cli" = "2.10.2"
+
+[tasks.bootstrap]
+run = [
+  "pnpm install",
+  "lefthook install",
+]
