@@ -14,7 +14,10 @@ test("resolves silently when the container is accessible", async () => {
 test("throws an Error listing every violation with rule id and helpUrl", async () => {
   const screen = await render(
     <div>
+      {/* Deliberately inaccessible markup to exercise the runtime axe check below. */}
+      {/* oxlint-disable-next-line jsx-a11y/alt-text */}
       <img src="broken.png" />
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label */}
       <button type="button" />
     </div>,
   );
@@ -33,6 +36,7 @@ test("throws an Error listing every violation with rule id and helpUrl", async (
 });
 
 test("honours a caller-supplied rules override that disables a rule", async () => {
+  // oxlint-disable-next-line jsx-a11y/alt-text -- deliberately inaccessible; exercises the override below
   const screen = await render(<img src="broken.png" />);
   await expectNoAxeViolations(screen.container, {
     rules: { "image-alt": { enabled: false } },
