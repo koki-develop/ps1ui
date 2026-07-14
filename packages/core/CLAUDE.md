@@ -74,7 +74,11 @@ For keyboard tests use `userEvent` from vitest's browser context: `import { user
 
 ### Coverage
 
-`vitest.config.ts` sets `coverage.thresholds: { statements/branches/functions/lines: 100 }`. `pnpm test:coverage` fails if any drop below. Keep it that way — this library is thin enough that 100% is achievable and any regression is a real gap.
+Two dimensions — line and behavioral.
+
+**Line:** `vitest.config.ts` sets `coverage.thresholds: { statements/branches/functions/lines: 100 }`. `pnpm test:coverage` fails if any drop below. Keep it that way — this library is thin enough that 100% is achievable and any regression is a real gap.
+
+**Behavioral:** 100% lines is not behavior coverage — a `:hover` rule executed by an a11y visual test can pass without asserting that the color actually shifted. **YOU MUST add a direct assertion for every observable behavior a change introduces or alters** — CSS state transitions, computed styles, classes, DOM attributes, event handlers. Use `getComputedStyle` behind `withForcedPseudoState` (`src/testing/pseudo-state.ts`) for CSS-state assertions; derive expected colors from CSS vars via probe elements rather than hardcoding hex. If a behavior is genuinely untestable, note the reason in a comment before shipping — silent omission is not an option.
 
 ## Component authoring
 
