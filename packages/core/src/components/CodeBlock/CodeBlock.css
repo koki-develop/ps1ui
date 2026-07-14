@@ -15,6 +15,15 @@
      `left` (rather than `start`) is deliberate: source code is inherently LTR
      and should stay left-aligned even inside an RTL context. */
   text-align: left;
+  /* Force LTR text flow so code renders identically inside `<html dir="rtl">` /
+     `<div dir="rtl">` ancestors — the character order and the horizontal scroll
+     direction both stay consistent with what a developer expects from code. */
+  direction: ltr;
+  /* Explicit `pre` overrides consumer reset CSS that globally sets
+     `pre { white-space: pre-wrap; }` — wrapping would defeat overflow-x: auto
+     and collapse the scrollable-region focus semantics. Per-instance opt-in
+     to wrapping is still possible via `style={{ whiteSpace: "pre-wrap" }}`. */
+  white-space: pre;
 }
 
 .ps1ui-codeblock:focus-visible {

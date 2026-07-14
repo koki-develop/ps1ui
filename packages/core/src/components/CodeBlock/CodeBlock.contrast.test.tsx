@@ -62,6 +62,41 @@ describe("CodeBlock layout", () => {
     const el = screen.getByTestId("cb").element();
     expect(getComputedStyle(el).textAlign).toBe("left");
   });
+
+  test("forces LTR direction even inside an RTL ancestor", async () => {
+    // Without an explicit `direction: ltr`, code inside `<div dir="rtl">` would
+    // inherit RTL — character flow reverses at the paragraph level and the
+    // horizontal scrollbar starts on the right. Both are wrong for source code.
+    const screen = await render(
+      <div dir="rtl">
+        <CodeBlock data-testid="cb">short</CodeBlock>
+      </div>,
+    );
+    const el = screen.getByTestId("cb").element();
+    expect(getComputedStyle(el).direction).toBe("ltr");
+  });
+
+  test("pins white-space to `pre` so a consumer reset can't collapse overflow-x", async () => {
+    // A global consumer rule like `pre { white-space: pre-wrap; }` would soft-
+    // wrap lines and make overflow-x: auto never trigger. We beat that on
+    // specificity (class beats tag). Per-instance opt-in via `style={{ whiteSpace: ... }}`
+    // still works because inline style outranks the class rule.
+    const screen = await render(<CodeBlock data-testid="cb">short</CodeBlock>);
+    const el = screen.getByTestId("cb").element();
+    expect(getComputedStyle(el).whiteSpace).toBe("pre");
+  });
+
+  test("allows per-instance opt-in to wrapping via inline style", async () => {
+    // Consumers who DO want a wrapped code block on narrow viewports must be
+    // able to override the default without fighting our rule.
+    const screen = await render(
+      <CodeBlock data-testid="cb" style={{ whiteSpace: "pre-wrap" }}>
+        short
+      </CodeBlock>,
+    );
+    const el = screen.getByTestId("cb").element();
+    expect(getComputedStyle(el).whiteSpace).toBe("pre-wrap");
+  });
 });
 
 describe("CodeBlock contrast", () => {
