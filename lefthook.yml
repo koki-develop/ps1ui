@@ -1,0 +1,19 @@
+pre-commit:
+  commands:
+    gitleaks:
+      glob: "**/*"
+      run: gitleaks git --pre-commit --staged
+    oxfmt:
+      root: "packages/core/"
+      glob:
+        - "*.{js,mjs,ts,tsx}"
+        - "**/*.{js,mjs,ts,tsx}"
+      run: pnpm exec oxfmt {staged_files}
+      stage_fixed: true
+    oxlint:
+      root: "packages/core/"
+      glob:
+        - "*.{js,mjs,ts,tsx}"
+        - "**/*.{js,mjs,ts,tsx}"
+      run: pnpm exec oxlint --fix {staged_files}
+      stage_fixed: true
