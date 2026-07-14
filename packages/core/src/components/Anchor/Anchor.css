@@ -1,0 +1,47 @@
+.ps1ui-anchor {
+  font-family: var(--ps1ui-font-mono);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  border-radius: var(--ps1ui-radius-md);
+  cursor: pointer;
+  transition:
+    color var(--ps1ui-transition-fast),
+    text-decoration-color var(--ps1ui-transition-fast);
+}
+
+/* outline (not box-shadow) so a wrapping inline anchor renders as connected fragments
+   per line-box instead of two disjoint rectangles. Modern browsers follow border-radius. */
+.ps1ui-anchor:focus-visible {
+  outline: 2px solid var(--ps1ui-color-primary);
+  outline-offset: 2px;
+}
+
+/* text-decoration-color defaults to currentColor, so setting only `color` per state
+   also shifts the underline. subtle's default intentionally decouples the two — the
+   underline is dimmer than the text — hence the explicit override there. */
+.ps1ui-anchor--primary {
+  color: var(--ps1ui-color-primary);
+}
+.ps1ui-anchor--primary:hover {
+  color: var(--ps1ui-color-primary-hover);
+}
+.ps1ui-anchor--primary:active {
+  color: var(--ps1ui-color-primary-active);
+}
+
+.ps1ui-anchor--subtle {
+  color: inherit;
+  text-decoration-color: var(--ps1ui-color-fg-subtle);
+}
+/* Reset text-decoration-color to currentColor so the underline follows the
+   hover/active color shift; without this it would stay pinned to fg-subtle
+   from the base rule. */
+.ps1ui-anchor--subtle:hover {
+  color: var(--ps1ui-color-primary);
+  text-decoration-color: currentColor;
+}
+.ps1ui-anchor--subtle:active {
+  color: var(--ps1ui-color-primary-active);
+  text-decoration-color: currentColor;
+}

@@ -2,10 +2,12 @@
 // a11y only, no CSS loaded), this file imports the real component CSS and uses CDP
 // `CSS.forcePseudoState` to put the button into :hover / :active / :focus-visible
 // so axe's color-contrast rule sees the resolved colors of those transient states.
+// The sanity check that forcePseudoState actually shifts styles lives once in
+// src/testing/pseudo-state.test.tsx.
 
 import "../../styles/styles.css";
 
-import { describe, expect, test } from "vitest";
+import { describe, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import { withForcedPseudoState } from "../../testing/pseudo-state";
@@ -17,26 +19,6 @@ const STATES = ["default", "hover", "active", "focus-visible"] as const;
 const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
 
 describe("Button contrast", () => {
-  // Sanity: prove CDP forcePseudoState actually shifts computed styles in this
-  // environment. If Blink or the tester-iframe wiring regresses, this fails loudly
-  // BEFORE the matrix below silently passes with no state ever forced.
-  test("CDP forcePseudoState changes computed styles", async () => {
-    const screen = await render(
-      <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
-        <Button data-testid="sanity" variant="primary" style={{ transition: "none" }}>
-          x
-        </Button>
-      </div>,
-    );
-    const btn = screen.container.querySelector<HTMLButtonElement>('[data-testid="sanity"]');
-    if (!btn) throw new Error("sanity button not found");
-    const baseBg = getComputedStyle(btn).backgroundColor;
-    await withForcedPseudoState('[data-testid="sanity"]', ["hover"], async () => {
-      const hoverBg = getComputedStyle(btn).backgroundColor;
-      expect(hoverBg).not.toBe(baseBg);
-    });
-  });
-
   test.for(CASES)(
     "variant=$variant / state=$state passes WCAG contrast",
     async ({ variant, state }) => {
