@@ -7,7 +7,9 @@
   ],
   "type": "module",
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "**/CodeBlock/refractor.ts",
+    "dist/index.mjs"
   ],
   "exports": {
     ".": {
@@ -21,15 +23,17 @@
     "access": "public"
   },
   "scripts": {
-    "build": "pnpm check && pnpm build:js && pnpm build:css",
+    "build": "pnpm check && pnpm build:js && pnpm build:css && pnpm check:dist",
     "build:js": "tsdown",
     "build:css": "postcss src/styles/index.css -o dist/styles.css",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "check": "pnpm typecheck && pnpm check:palette",
+    "check": "pnpm typecheck && pnpm check:palette && pnpm check:languages",
     "check:palette": "node scripts/check-palette-sync.mjs",
+    "check:languages": "node scripts/check-languages.mjs",
+    "check:dist": "node scripts/check-dist-registrations.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -37,7 +41,9 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@fontsource-variable/jetbrains-mono": "^5.2.8"
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "hast-util-to-jsx-runtime": "2.3.6",
+    "refractor": "5.0.0"
   },
   "devDependencies": {
     "@storybook/addon-a11y": "10.5.0",

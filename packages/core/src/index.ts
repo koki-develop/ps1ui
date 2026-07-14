@@ -13,6 +13,9 @@ export type { LabelProps } from "./components/Label/Label";
 export { Card } from "./components/Card/Card";
 export type { CardProps } from "./components/Card/Card";
 
+export { CodeBlock } from "./components/CodeBlock/CodeBlock";
+export type { CodeBlockLanguage, CodeBlockProps } from "./components/CodeBlock/CodeBlock";
+
 export { Text } from "./components/Text/Text";
 export type {
   TextElement,

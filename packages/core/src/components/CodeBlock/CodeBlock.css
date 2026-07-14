@@ -1,0 +1,102 @@
+.ps1ui-codeblock {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--ps1ui-color-surface);
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-lg);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.6;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+.ps1ui-codeblock:focus-visible {
+  outline: none;
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-codeblock code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+}
+
+/* Prism token classes, mapped to ps1ui code palette (see tokens.css).
+   Refractor emits hast <span class="token <type>"> nodes; keep this list
+   in sync with the token types produced by Prism grammars. */
+.ps1ui-codeblock .token.comment,
+.ps1ui-codeblock .token.prolog,
+.ps1ui-codeblock .token.doctype,
+.ps1ui-codeblock .token.cdata {
+  color: var(--ps1ui-code-comment);
+  font-style: italic;
+}
+
+.ps1ui-codeblock .token.punctuation,
+.ps1ui-codeblock .token.operator {
+  color: var(--ps1ui-code-punctuation);
+}
+
+.ps1ui-codeblock .token.property,
+.ps1ui-codeblock .token.tag,
+.ps1ui-codeblock .token.symbol {
+  color: var(--ps1ui-code-tag);
+}
+
+.ps1ui-codeblock .token.attr-name {
+  color: var(--ps1ui-code-attr);
+}
+
+.ps1ui-codeblock .token.string,
+.ps1ui-codeblock .token.char,
+.ps1ui-codeblock .token.url,
+.ps1ui-codeblock .token.attr-value,
+.ps1ui-codeblock .token.regex {
+  color: var(--ps1ui-code-string);
+}
+
+/* diff: line-level markers get their own hue so "+" reads as added (green) and
+   "-" reads as removed (rose). Distinct from tag/string groups on purpose. */
+.ps1ui-codeblock .token.inserted {
+  color: var(--ps1ui-code-inserted);
+}
+.ps1ui-codeblock .token.deleted {
+  color: var(--ps1ui-code-deleted);
+}
+
+.ps1ui-codeblock .token.number,
+.ps1ui-codeblock .token.boolean,
+.ps1ui-codeblock .token.constant,
+.ps1ui-codeblock .token.entity {
+  color: var(--ps1ui-code-constant);
+}
+
+.ps1ui-codeblock .token.class-name,
+.ps1ui-codeblock .token.builtin {
+  color: var(--ps1ui-code-type);
+}
+
+.ps1ui-codeblock .token.function,
+.ps1ui-codeblock .token.method {
+  color: var(--ps1ui-code-function);
+}
+
+.ps1ui-codeblock .token.keyword,
+.ps1ui-codeblock .token.selector,
+.ps1ui-codeblock .token.atrule,
+.ps1ui-codeblock .token.important {
+  color: var(--ps1ui-code-keyword);
+}
+
+.ps1ui-codeblock .token.important,
+.ps1ui-codeblock .token.bold {
+  font-weight: 600;
+}
+
+.ps1ui-codeblock .token.italic {
+  font-style: italic;
+}

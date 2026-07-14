@@ -21,6 +21,23 @@
   --ps1ui-color-focus-ring-soft: color-mix(in srgb, var(--ps1ui-color-primary) 14%, transparent);
   --ps1ui-shadow-focus-ring: 0 0 0 3px var(--ps1ui-color-focus-ring-soft);
 
+  /* Syntax-highlight palette for CodeBlock. Every value is verified ≥ 4.5:1 vs
+     BOTH --ps1ui-color-bg and --ps1ui-color-surface by CodeBlock.contrast.test.tsx. */
+  --ps1ui-code-comment: #7a8593;
+  --ps1ui-code-string: #f0c880;
+  --ps1ui-code-keyword: #ff7b95;
+  --ps1ui-code-function: #79c0ff;
+  --ps1ui-code-constant: #ffa657;
+  --ps1ui-code-type: #5eead4;
+  --ps1ui-code-tag: #ff9587;
+  --ps1ui-code-attr: #ffdc99;
+  --ps1ui-code-punctuation: #7a8593;
+  /* Diff-specific: green = added, rose = removed. Kept separate from tag/string so
+     the semantic overlap doesn't leak between grammars (a removed diff line has
+     nothing to do with an HTML <tag>, and an added line isn't a string literal). */
+  --ps1ui-code-inserted: #7ee787;
+  --ps1ui-code-deleted: #ff8896;
+
   --ps1ui-radius-md: 3px;
   --ps1ui-radius-lg: 4px;
 
