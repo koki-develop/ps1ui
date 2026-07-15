@@ -38,7 +38,10 @@
     "check:dist": "node scripts/check-dist-registrations.mjs && node scripts/check-css-split.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:ci": "vitest run --project unit --project storybook",
     "test:coverage": "vitest run --coverage",
+    "test:vrt": "vitest run --project vrt",
+    "test:vrt:update": "vitest run --project vrt -u",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

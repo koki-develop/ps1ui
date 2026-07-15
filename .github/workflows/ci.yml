@@ -32,4 +32,7 @@ jobs:
           - run: pnpm --filter @ps1ui/core fmt:check
       - run: pnpm --filter @ps1ui/core build
       - run: pnpm --filter @ps1ui/core exec playwright install
-      - run: pnpm --filter @ps1ui/core test
+      # Scoped to `unit` + `storybook` — the `vrt` project needs Linux
+      # baselines seeded first (planned in a follow-up VRT workflow); running
+      # it here would hard-fail on missing references.
+      - run: pnpm --filter @ps1ui/core test:ci

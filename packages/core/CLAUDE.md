@@ -14,6 +14,8 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 - `pnpm fmt` / `pnpm fmt:check` — `oxfmt`
 - `pnpm test` — Vitest in watch mode; `pnpm test run` for one-shot
 - `pnpm test:coverage` — `vitest run --coverage` (`v8` provider, output at `./coverage`)
+- `pnpm test:vrt` — run visual regression baselines only (`--project vrt`); see "Visual regression testing" below
+- `pnpm test:vrt:update` — refresh VRT baselines (`--project vrt -u`); scoped to `vrt` because `-u` also rewrites inline/file snapshots
 - `pnpm storybook` — dev server on port 6006
 - `pnpm build-storybook` — static build → `storybook-static/`
 
@@ -21,10 +23,11 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 
 Tests run in real Chromium, Firefox, and WebKit via **Vitest Browser Mode** (`@vitest/browser-playwright` + `vitest-browser-react`) — see `vitest.config.ts`'s `browserInstances()`. If browsers are missing on a fresh clone: `pnpm exec playwright install`. `pnpm test:coverage` runs Chromium only — `@vitest/coverage-v8` errors outright with more than one browser instance (V8 coverage is a Chromium-only capability); since coverage measures JS execution paths, not rendering, this loses nothing, and `browserInstances()` picks Chromium-only automatically whenever `--coverage` is passed.
 
-Two Vitest projects (`vitest.config.ts`):
+Three Vitest projects (`vitest.config.ts`):
 
-- **`unit`** — `<Component>.test.tsx` files sitting next to each component
+- **`unit`** — `<Component>.test.tsx` files sitting next to each component. Excludes `**/*.vrt.test.tsx`.
 - **`storybook`** — every `.stories.tsx` becomes a test via `@storybook/addon-vitest`'s `storybookTest()` plugin. `@storybook/addon-a11y` runs axe on each story, and `parameters.a11y.test: "error"` in `preview.tsx` makes violations fail the test (not just warn).
+- **`vrt`** — `<Component>.vrt.test.tsx` files. Visual regression baselines via Vitest 4's built-in `toMatchScreenshot`. Kept as its own project so `-u` (baseline refresh) doesn't accidentally rewrite unit-test snapshots. See "Visual regression testing" below.
 
 Gotchas:
 
@@ -35,6 +38,21 @@ Gotchas:
 - Both `@storybook/addon-vitest` and `@storybook/addon-a11y` must be listed in `.storybook/main.ts`'s `addons` for a11y checks and interaction panels to wire in.
 - Some assertions are genuinely engine-specific (a vendor CSS property/value one engine doesn't parse, a real platform keyboard-navigation difference). Prefer feature detection (`CSS.supports(prop, value)`) over hardcoding a browser name — it fails loudly if a browser starts rejecting a value for real reasons, not just "this engine happens to be different." Only fall back to `import { server } from "vitest/browser"; server.browser === "firefox"` when the difference is a rendering/behavior quirk `CSS.supports` can't see (verify empirically before hardcoding — see `src/styles/reset.test.tsx`'s and `Button.contrast.test.tsx`'s comments for two verified examples, including one where `CSS.supports` returns a false positive).
 - **Known intermittent Firefox flake, no fix from our side**: tests that call `.focus()` then `await userEvent.keyboard(" ")` on a checkbox/button (Space-key activation) occasionally fail on the Playwright Firefox provider under concurrent 3-browser load (reproduced ~15-20% of full-suite runs, never in isolation) — Firefox's native Space-activation sequence for form controls genuinely differs from Chromium/WebKit (extra `DOMActivate` event, `keypress` reports `keyCode 0` instead of `32`), and the synthesized key occasionally doesn't complete it in time. `expect.poll()` doesn't help (the event already misfired, it won't retro-actively succeed) and neither did a render-settle tick (see `src/testing/settle.ts`) — this isn't the same render-timing gap that helper closes for `:focus-visible`. If a Space-key test fails, re-run before assuming a real regression; see `Checkbox.test.tsx`'s "Space toggles checked state when focused" for the fullest account, cross-referenced from `Button.test.tsx`.
+
+### Visual regression testing
+
+VRT runs in the `vrt` project via Vitest 4's `expect.element(...).toMatchScreenshot()` (docs: https://vitest.dev/guide/browser/visual-regression-testing). Comparator is `pixelmatch` with `threshold: 0.05` and `allowedMismatchedPixelRatio: 0.005` — tighter than the 0.1 default so token/color drifts aren't silently absorbed. Playwright's `animations: "disabled"` and `caret: "hide"` are the provider defaults, so no CSS freeze layer is needed.
+
+Files: `<Component>.vrt.test.tsx` next to the component. See `src/components/Button/Button.vrt.test.tsx` as the template. VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
+
+**Baseline layout & source of truth.** Baselines live at `src/components/<Name>/__screenshots__/<file>/<name>-<browser>-<platform>.png`. Only **`-linux.png`** baselines are committed (the CI runtime); `-darwin.png` and `-win32.png` are `.gitignore`d so per-developer / per-OS captures never enter git. This means:
+
+- Locally on macOS: first `pnpm test:vrt` after a fresh checkout auto-generates darwin baselines (Vitest's `updateSnapshot: "new"` behavior) and reports missing-reference errors for that run only. Re-run and it passes. Darwin baselines are untracked scratch — regenerate freely.
+- On CI Linux: `updateSnapshot: "none"`, so missing baselines fail hard instead of auto-generating. Refresh flow: run `pnpm test:vrt:update` in a Linux container (or on the CI runner) and commit the `-linux.png` diff.
+
+**`:focus-visible` on WebKit** is unreachable — macOS Safari's default "Full Keyboard Access" excludes `<button>`/`<a>` from Tab (same as `Button.contrast.test.tsx`); the Playwright WebKit build matches that default. Skip the combination with `ctx.skip(state === "focus-visible" && server.browser === "webkit", "…")` so the reporter labels it skipped instead of pass-with-no-assertions.
+
+**Failure-page snapshots.** Vitest's default `screenshotFailures` output is `<test-name>-<n>.png` under `__screenshots__/` — repo `.gitignore` catches `-[0-9].png` / `-[0-9][0-9].png` so those never leak to git even at N failures per test. VRT baselines and platform-suffixed captures (`-linux.png` / `-darwin.png` / `-win32.png`) don't match the digit pattern, so the two coexist safely in the same directory. `screenshotFailures: false` is set only on the `vrt` project — the per-VRT-failure `-actual` + `-diff` pair under `.vitest-attachments/` is a strictly better diagnostic than a plain page snapshot, and disabling the redundant path snapshot avoids `-1.png` files racing with a future baseline named after a numbered case.
 
 ### Test authoring conventions
 
@@ -84,10 +102,12 @@ Two dimensions — line and behavioral.
 
 ## Component authoring
 
-Each component lives in `src/components/<Name>/` with a four-file set:
+Each component lives in `src/components/<Name>/` with a four-file core set plus an optional VRT file:
 
 ```
 <Name>.tsx  <Name>.css  <Name>.test.tsx  <Name>.stories.tsx
+<Name>.vrt.test.tsx        # optional; add for components with a stable visible surface — see the Testing section
+<Name>.contrast.test.tsx   # optional; add when introducing a new (fg-token, bg-token) pair — see "Three layers of a11y coverage"
 ```
 
 Conventions:

@@ -65,9 +65,27 @@ const HANDLERS: Record<PseudoClass, StateHandler> = {
   // first (or only) tabbable element in the rendered tree; this is verified
   // (not assumed) below, so a violated assumption fails the test loudly
   // instead of silently asserting against the wrong — or no — element.
+  //
+  // We deliberately use `userEvent.keyboard("{Tab}")` — NOT `userEvent.tab()`.
+  // Both route to the Playwright provider, but `__vitest_tab` calls
+  // `page.keyboard.press("Tab")` against the TOP-LEVEL page without first
+  // establishing iframe focus ownership. Chromium walks focus into the child
+  // frame anyway on Tab, but Firefox does not, so the very first `tab()` in
+  // a fresh tester iframe (nothing yet focused inside it) never reaches any
+  // element — the activeElement check below then throws. `__vitest_keyboard`
+  // unconditionally runs a `focusIframe()` step first (calls `window.focus()`
+  // inside the iframe when nothing is focused there), which fixes Firefox
+  // without changing Chromium/WebKit behavior. See
+  // @vitest/browser-playwright@4.1.10 packages/browser-playwright/src/commands/{tab,keyboard}.ts.
+  //
+  // TODO(upstream): file an issue at https://github.com/vitest-dev/vitest to
+  // add the same `focusIframe()` bootstrap to `__vitest_tab`, then revert this
+  // to `userEvent.tab()` once a fixed release lands. When filing, replace this
+  // line with `TODO(upstream: vitest-dev/vitest#NNNN)` so the tracker stays
+  // pinned to the fix.
   "focus-visible": {
     apply: async (el, selector) => {
-      await userEvent.tab();
+      await userEvent.keyboard("{Tab}");
       if (document.activeElement !== el) {
         (document.activeElement as HTMLElement | null)?.blur();
         throw new Error(

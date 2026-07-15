@@ -35,16 +35,40 @@ function browserInstances() {
       ];
 }
 
+// Shared cross-project defaults for `test.browser`. Each project spreads this
+// then overlays project-specific fields (name, commands, screenshotFailures,
+// expect.toMatchScreenshot). Hoisting these here prevents silent drift when a
+// new browser-level setting (viewport, locale, isolate, etc.) is introduced —
+// there's exactly one place to add it. `instances` and `provider` are called
+// per project (not stored on this base) because both must return their own
+// per-project object references (see the `browserInstances()` comment above,
+// and `playwright()` similarly returns fresh state each call).
+function browserBase() {
+  return {
+    enabled: true as const,
+    provider: playwright(),
+    instances: browserInstances(),
+    headless: true,
+  };
+}
+
 export default defineConfig({
   plugins: [react()],
   test: {
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.stories.tsx", "src/**/*.test.tsx", "src/testing/**"],
-      // Aggregate is enforced across BOTH projects (unit + storybook); running with
-      // `--project unit` or `--project storybook` alone will drop below 100% and fail.
-      // Always run `pnpm test:coverage` (no --project filter) for gate checks.
+      exclude: [
+        "src/**/*.stories.tsx",
+        "src/**/*.test.tsx",
+        "src/**/*.vrt.test.tsx",
+        "src/testing/**",
+      ],
+      // Aggregate is enforced across the `unit` + `storybook` projects (the
+      // `vrt` project is coverage-excluded above via `*.vrt.test.tsx`). Running
+      // with `--project unit` or `--project storybook` alone will drop below
+      // 100% and fail. Always run `pnpm test:coverage` (no --project filter)
+      // for gate checks.
       thresholds: {
         perFile: true,
         statements: 100,
@@ -58,11 +82,13 @@ export default defineConfig({
         extends: true,
         test: {
           name: "unit",
+          // VRT files live alongside unit tests but are their own project so
+          // that `-u` (screenshot baseline update) is scoped to VRT — `-u`
+          // updates inline snapshots too, and we don't want a stray unit-test
+          // snapshot getting rewritten during a baseline refresh.
+          exclude: ["**/*.vrt.test.tsx"],
           browser: {
-            enabled: true,
-            provider: playwright(),
-            instances: browserInstances(),
-            headless: true,
+            ...browserBase(),
             commands: { pointerDown, releasePointer: pointerUp },
           },
         },
@@ -77,11 +103,40 @@ export default defineConfig({
         ],
         test: {
           name: "storybook",
+          browser: browserBase(),
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "vrt",
+          include: ["src/**/*.vrt.test.tsx"],
           browser: {
-            enabled: true,
-            provider: playwright(),
-            instances: browserInstances(),
-            headless: true,
+            ...browserBase(),
+            commands: { pointerDown, releasePointer: pointerUp },
+            // Vitest's default failure snapshot writes `<test-name>-N.png`
+            // under __screenshots__/ with no browser/platform suffix, which
+            // would collide with VRT's `<name>-<browser>-<platform>.png`
+            // baseline layout. `.gitignore` catches the `-N.png` pattern
+            // (belt-and-braces), and turning failure snapshots off here also
+            // removes the redundant page snapshot — a VRT failure already
+            // produces a `-actual` + `-diff` pair under .vitest-attachments/
+            // (kept untracked), which is a strictly better diagnostic.
+            screenshotFailures: false,
+            expect: {
+              // Playwright's screenshot defaults (animations: "disabled",
+              // caret: "hide") are auto-applied by @vitest/browser-playwright;
+              // no CSS override needed. pixelmatch threshold defaults to 0.1
+              // — tightened slightly here so genuine color drifts aren't
+              // silently absorbed.
+              toMatchScreenshot: {
+                comparatorName: "pixelmatch",
+                comparatorOptions: {
+                  threshold: 0.05,
+                  allowedMismatchedPixelRatio: 0.005,
+                },
+              },
+            },
           },
         },
       },

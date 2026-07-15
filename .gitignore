@@ -11,8 +11,17 @@ storybook-static/
 
 # vitest
 .vitest-attachments/
-__screenshots__/
 coverage/
+# ad-hoc page.screenshot() debug output from testing-helper tests
+packages/*/src/testing/__screenshots__/
+# Vitest browser-mode failure snapshots (`<test-name>-<n>.png`, n = 1..99);
+# platform-suffixed VRT baselines never match this pattern (last chars are
+# `-linux.png`/`-darwin.png`/`-win32.png`, not `-<digit>.png`).
+**/__screenshots__/**/*-[0-9].png
+**/__screenshots__/**/*-[0-9][0-9].png
+# VRT baselines: commit CI Linux only; local darwin/win32 generations stay untracked
+**/__screenshots__/**/*-darwin.png
+**/__screenshots__/**/*-win32.png
 
 # cork
 .cork
