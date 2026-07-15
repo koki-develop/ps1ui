@@ -105,12 +105,17 @@ describe("withPseudoState", () => {
           {`.pseudo-state-probe-focus-visible { color: rgb(0, 0, 0); transition: none; }
             .pseudo-state-probe-focus-visible:focus-visible { color: rgb(128, 0, 128); }`}
         </style>
-        <button
+        {/* An <input>, not a <button> — macOS Safari's default "Full Keyboard
+            Access" setting limits Tab to text boxes and lists, excluding
+            buttons/links (see Button.contrast.test.tsx's comment for the
+            same limitation, verified empirically to match this Playwright
+            WebKit build too). This sanity test only needs to prove the
+            Tab-navigation mechanism itself works, so a universally-tabbable
+            element keeps it meaningful on every engine. */}
+        <input
           className="pseudo-state-probe-focus-visible"
           data-testid="pseudo-state-probe-focus-visible"
-        >
-          probe
-        </button>
+        />
       </>,
     );
     const probe = screen.container.querySelector<HTMLElement>(

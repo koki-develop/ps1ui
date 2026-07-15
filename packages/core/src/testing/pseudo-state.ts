@@ -1,5 +1,6 @@
 import { commands, userEvent } from "vitest/browser";
 import type { PseudoStateCommands } from "../../vitest.browser-commands";
+import { nextFrame } from "./settle";
 
 declare module "vitest/browser" {
   interface BrowserCommands extends PseudoStateCommands {}
@@ -73,6 +74,10 @@ const HANDLERS: Record<PseudoClass, StateHandler> = {
           `:focus-visible target was not the first tabbable element: expected ${selector} to receive focus after Tab`,
         );
       }
+      // See src/testing/settle.ts — closes the gap between Tab landing focus
+      // and Firefox's style recalc for the new :focus-visible match actually
+      // being reflected in getComputedStyle.
+      await nextFrame();
     },
     release: async (el) => el.blur(),
   },

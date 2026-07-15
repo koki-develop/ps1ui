@@ -1,15 +1,22 @@
 // Behavioral coverage for base.css's reset block. Every declaration that
 // surfaces via getComputedStyle is asserted here so a future tweak to the
 // reset can't silently regress the "same look across browsers" guarantee.
+// Runs against Chromium, Firefox, and WebKit (see vitest.config.ts); a few
+// declarations are genuinely engine-specific vendor properties or values —
+// those use CSS.supports() feature detection (see "reset — interpolate-size"
+// below for the established pattern) so "this engine doesn't parse the
+// declaration" and "our rule stopped applying it" stay distinguishable.
 //
-// Declarations that CANNOT be verified from this Chromium test environment
-// are catalogued (with reasons) at the bottom of the file so silent omission
-// per packages/core/CLAUDE.md's behavioral-coverage rule is impossible.
+// Declarations that CANNOT be verified from any Vitest Browser Mode
+// environment are catalogued (with reasons) at the bottom of the file so
+// silent omission per packages/core/CLAUDE.md's behavioral-coverage rule is
+// impossible.
 
 import "./styles.css";
 
 import { createElement, type ReactNode } from "react";
 import { describe, expect, test } from "vitest";
+import { server } from "vitest/browser";
 import { render } from "vitest-browser-react";
 
 const GIF_1X1 = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
@@ -48,10 +55,14 @@ describe("reset — html base", () => {
   });
 
   test("-webkit-text-size-adjust: 100% (iOS rotation zoom locked out)", () => {
+    // Blink/WebKit-only property, invented for mobile Safari; feature-detect
+    // rather than hardcode an engine name (see interpolate-size below).
+    if (!CSS.supports("-webkit-text-size-adjust", "100%")) return;
     expect(gcs(document.documentElement).getPropertyValue("-webkit-text-size-adjust")).toBe("100%");
   });
 
   test("-webkit-tap-highlight-color is transparent (iOS blue flash killed)", () => {
+    if (!CSS.supports("-webkit-tap-highlight-color", "transparent")) return;
     expect(gcs(document.documentElement).getPropertyValue("-webkit-tap-highlight-color")).toBe(
       "rgba(0, 0, 0, 0)",
     );
@@ -78,6 +89,15 @@ describe("reset — body base", () => {
   });
 
   test("-webkit-font-smoothing: antialiased (macOS Chrome/Safari parity)", () => {
+    // Firefox 128+ deliberately aliases -webkit-font-smoothing to
+    // -moz-osx-font-smoothing (https://bugzilla.mozilla.org/show_bug.cgi?id=1670993)
+    // — the values differ (grayscale/auto vs. antialiased/subpixel-antialiased),
+    // so ANY declared -webkit-font-smoothing keyword resolves to one of the
+    // two -moz-osx-font-smoothing states. CSS.supports("-webkit-font-smoothing",
+    // "antialiased") returns true regardless (verified empirically), so unlike
+    // the other vendor-property tests above, feature detection can't
+    // distinguish this from a real regression. Skipped by engine name.
+    if (server.browser === "firefox") return;
     expect(gcs(document.body).getPropertyValue("-webkit-font-smoothing")).toBe("antialiased");
   });
 });
@@ -236,6 +256,9 @@ describe("reset — headings", () => {
 
 describe("reset — paragraph", () => {
   test("p has text-wrap: pretty (widow avoidance)", async () => {
+    // Chromium-only CSS Text Level 4 value as of writing; Firefox/WebKit fall
+    // back to the initial "wrap" and never parse "pretty" as valid.
+    if (!CSS.supports("text-wrap", "pretty")) return;
     const { get } = await renderProbes(<p data-testid="probe">x</p>);
     expect(gcs(get("probe")).textWrap).toBe("pretty");
   });
@@ -368,7 +391,13 @@ describe("reset — form controls", () => {
       expect(probe.fontFamily).toBe(baseline.fontFamily);
       expect(probe.color).toBe(baseline.color);
       expect(probe.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-      expect(probe.borderRadius).toBe("0px");
+      // WebKit's native <select> widget (appearance retained, no
+      // -webkit-appearance: none override) ignores author border-radius on
+      // its own menulist chrome — a rendering quirk, not a missing property,
+      // so CSS.supports can't detect it. See the footnote at the bottom.
+      if (!(tag === "select" && server.browser === "webkit")) {
+        expect(probe.borderRadius).toBe("0px");
+      }
       expect(probe.opacity).toBe("1");
     },
   );
@@ -624,13 +653,45 @@ describe("reset — interpolate-size (Chromium)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Declarations that are NOT verifiable from this Chromium test environment.
+// Declarations that are NOT verifiable from any current Vitest Browser Mode
+// environment (Chromium / Firefox / WebKit — see vitest.config.ts), plus
+// engine-specific rendering quirks CSS.supports() can't feature-detect.
 // Enumerated per packages/core/CLAUDE.md ("silent omission is not an option").
 // ---------------------------------------------------------------------------
 //
-//   * -moz-osx-font-smoothing: grayscale       Firefox-only property; unobservable in Chromium.
+//   * -webkit-font-smoothing on Firefox         Firefox 128+ deliberately aliases this to
+//                                              -moz-osx-font-smoothing (Mozilla bug 1670993:
+//                                              https://bugzilla.mozilla.org/show_bug.cgi?id=1670993),
+//                                              whose only two states are "grayscale"/"auto" — any
+//                                              declared -webkit-font-smoothing keyword resolves to
+//                                              one of those two, so the computed value is never the
+//                                              declared keyword verbatim. CSS.supports("-webkit-
+//                                              font-smoothing", "antialiased") returns true in
+//                                              Firefox regardless (verified empirically), so feature
+//                                              detection can't tell that apart from a real
+//                                              regression; skipped by engine name instead.
+//   * <select> border-radius on WebKit         A well-documented WebKit/Safari limitation (see e.g.
+//                                              github.com/alphagov/govuk-frontend/issues/3520,
+//                                              github.com/google/model-viewer/issues/662): a native-
+//                                              appearance <select> ignores author border-radius
+//                                              unless -webkit-appearance: none is also set, which
+//                                              also strips the native disclosure arrow. Verified in
+//                                              this repo by isolating each declaration on a bare
+//                                              <select> (appearance left at its default "auto"):
+//                                              authoring EITHER `border-radius` (even `0`) OR
+//                                              `background-color` makes WebKit fall back to a fixed
+//                                              native ~5px corner radius — font/color/opacity alone
+//                                              don't trigger it. Not a missing-property case, so
+//                                              CSS.supports can't detect it. Skipped explicitly for tag="select" on
+//                                              server.browser === "webkit" in the form-controls test
+//                                              above. Fully overriding would require
+//                                              `-webkit-appearance: none`, which also strips WebKit's
+//                                              native disclosure chrome — a bigger, more opinionated
+//                                              change than this reset's normalize-don't-redesign
+//                                              scope covers.
+//   * -moz-osx-font-smoothing: grayscale       Firefox-only property; unobservable outside Firefox.
 //   * :-moz-ui-invalid, :-moz-focusring        Firefox-only pseudos.
-//   * input[type=number] { -moz-appearance }   Firefox-only; Chromium hides the spinner via
+//   * input[type=number] { -moz-appearance }   Firefox-only; Chromium/WebKit hide the spinner via
 //                                              ::-webkit-inner-spin-button (see below). The
 //                                              deprecated unprefixed `appearance: textfield`
 //                                              was intentionally removed from base.css — it

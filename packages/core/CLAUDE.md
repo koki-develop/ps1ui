@@ -19,7 +19,7 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 
 ## Testing
 
-Tests run in real Chromium via **Vitest Browser Mode** (`@vitest/browser-playwright` + `vitest-browser-react`). If Chromium is missing on a fresh clone: `pnpm exec playwright install chromium`.
+Tests run in real Chromium, Firefox, and WebKit via **Vitest Browser Mode** (`@vitest/browser-playwright` + `vitest-browser-react`) — see `vitest.config.ts`'s `browserInstances()`. If browsers are missing on a fresh clone: `pnpm exec playwright install`. `pnpm test:coverage` runs Chromium only — `@vitest/coverage-v8` errors outright with more than one browser instance (V8 coverage is a Chromium-only capability); since coverage measures JS execution paths, not rendering, this loses nothing, and `browserInstances()` picks Chromium-only automatically whenever `--coverage` is passed.
 
 Two Vitest projects (`vitest.config.ts`):
 
@@ -33,6 +33,8 @@ Gotchas:
 - Browser Mode isolates state per **file**, not per test — don't rely on cross-test isolation of module-level side effects.
 - For the `storybook` project, do **not** add a manual `test.include` or a `setProjectAnnotations()` setup file — `storybookTest()` indexes stories from `.storybook/main.ts`'s `stories` glob and auto-applies preview annotations. Adding either breaks it.
 - Both `@storybook/addon-vitest` and `@storybook/addon-a11y` must be listed in `.storybook/main.ts`'s `addons` for a11y checks and interaction panels to wire in.
+- Some assertions are genuinely engine-specific (a vendor CSS property/value one engine doesn't parse, a real platform keyboard-navigation difference). Prefer feature detection (`CSS.supports(prop, value)`) over hardcoding a browser name — it fails loudly if a browser starts rejecting a value for real reasons, not just "this engine happens to be different." Only fall back to `import { server } from "vitest/browser"; server.browser === "firefox"` when the difference is a rendering/behavior quirk `CSS.supports` can't see (verify empirically before hardcoding — see `src/styles/reset.test.tsx`'s and `Button.contrast.test.tsx`'s comments for two verified examples, including one where `CSS.supports` returns a false positive).
+- **Known intermittent Firefox flake, no fix from our side**: tests that call `.focus()` then `await userEvent.keyboard(" ")` on a checkbox/button (Space-key activation) occasionally fail on the Playwright Firefox provider under concurrent 3-browser load (reproduced ~15-20% of full-suite runs, never in isolation) — Firefox's native Space-activation sequence for form controls genuinely differs from Chromium/WebKit (extra `DOMActivate` event, `keypress` reports `keyCode 0` instead of `32`), and the synthesized key occasionally doesn't complete it in time. `expect.poll()` doesn't help (the event already misfired, it won't retro-actively succeed) and neither did a render-settle tick (see `src/testing/settle.ts`) — this isn't the same render-timing gap that helper closes for `:focus-visible`. If a Space-key test fails, re-run before assuming a real regression; see `Checkbox.test.tsx`'s "Space toggles checked state when focused" for the fullest account, cross-referenced from `Button.test.tsx`.
 
 ### Test authoring conventions
 

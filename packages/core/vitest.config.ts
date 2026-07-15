@@ -9,6 +9,32 @@ import { pointerDown, pointerUp } from "./vitest.browser-commands";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// @vitest/coverage-v8 only instruments a single Chromium instance (it errors outright
+// otherwise — V8 coverage is a Chromium-engine-only capability, not something Firefox/
+// WebKit expose). Coverage measures JS statement/branch execution, which doesn't vary
+// by rendering engine, so restricting the coverage run to Chromium loses nothing;
+// cross-browser CSS/DOM correctness is verified by the coverage-free `pnpm test` run.
+// Each project needs its OWN array instance: Vitest's workspace plugin runs
+// `instance.name ??= ...` on each instance object per project (vitest source:
+// packages/vitest/src/node/plugins/workspace.ts), so a shared object reference
+// keeps the FIRST project's assigned name ("unit (chromium)") when the second
+// project's `resolveBrowserProjects` reads it, tripping its own duplicate-name
+// check ("Cannot define a nested project... was already defined").
+function browserInstances() {
+  // Match any `--coverage`-prefixed flag (`--coverage`, `--coverage=true`,
+  // `--coverage.enabled=true`, ...), not just the exact bare token — an exact
+  // match would silently miss those variants and let the coverage-v8 crash
+  // above resurface.
+  const coverageRequested = process.argv.some((arg) => arg.startsWith("--coverage"));
+  return coverageRequested
+    ? [{ browser: "chromium" as const }]
+    : [
+        { browser: "chromium" as const },
+        { browser: "firefox" as const },
+        { browser: "webkit" as const },
+      ];
+}
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -35,7 +61,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             provider: playwright(),
-            instances: [{ browser: "chromium" }],
+            instances: browserInstances(),
             headless: true,
             commands: { pointerDown, releasePointer: pointerUp },
           },
@@ -54,7 +80,7 @@ export default defineConfig({
           browser: {
             enabled: true,
             provider: playwright(),
-            instances: [{ browser: "chromium" }],
+            instances: browserInstances(),
             headless: true,
           },
         },

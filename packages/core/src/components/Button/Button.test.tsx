@@ -77,6 +77,10 @@ describe("Button", () => {
 
     test.for([
       { label: "Enter", key: "{Enter}" },
+      // "Space" is a known intermittent flake on the Playwright Firefox
+      // provider only — see Checkbox.test.tsx's "Space toggles checked
+      // state when focused" comment for the same, unfixed-from-our-side
+      // Firefox Space-activation event-sequence quirk.
       { label: "Space", key: " " },
     ])("fires onClick when $label is pressed on a focused button", async ({ key }) => {
       const onClick = vi.fn();
