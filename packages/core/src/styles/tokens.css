@@ -41,8 +41,20 @@
   --ps1ui-radius-md: 3px;
   --ps1ui-radius-lg: 4px;
 
-  --ps1ui-space-2: 8px;
-  --ps1ui-space-5: 24px;
+  --ps1ui-space-xs: 4px;
+  --ps1ui-space-sm: 8px;
+  --ps1ui-space-md: 12px;
+  --ps1ui-space-lg: 16px;
+  --ps1ui-space-xl: 24px;
+  --ps1ui-space-2xl: 32px;
+
+  /* Container max-widths. Doubles as the natural breakpoint scale if
+     future media-query / container-query tokens are introduced (they
+     should reference these instead of duplicating the pixel values). */
+  --ps1ui-container-sm: 640px;
+  --ps1ui-container-md: 768px;
+  --ps1ui-container-lg: 1024px;
+  --ps1ui-container-xl: 1280px;
 
   --ps1ui-font-size-xs: 11px;
   --ps1ui-font-size-sm: 13px;

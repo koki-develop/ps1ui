@@ -2,7 +2,7 @@
   background: var(--ps1ui-color-surface);
   border: 1px solid var(--ps1ui-color-border);
   border-radius: var(--ps1ui-radius-lg);
-  padding: var(--ps1ui-space-5);
+  padding: var(--ps1ui-space-xl);
   color: var(--ps1ui-color-fg);
   font-family: var(--ps1ui-font-mono);
   font-size: var(--ps1ui-font-size-sm);

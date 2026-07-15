@@ -1,0 +1,26 @@
+.ps1ui-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--ps1ui-grid-columns), minmax(0, 1fr));
+}
+
+.ps1ui-grid--gap-none {
+  gap: 0;
+}
+.ps1ui-grid--gap-xs {
+  gap: var(--ps1ui-space-xs);
+}
+.ps1ui-grid--gap-sm {
+  gap: var(--ps1ui-space-sm);
+}
+.ps1ui-grid--gap-md {
+  gap: var(--ps1ui-space-md);
+}
+.ps1ui-grid--gap-lg {
+  gap: var(--ps1ui-space-lg);
+}
+.ps1ui-grid--gap-xl {
+  gap: var(--ps1ui-space-xl);
+}
+.ps1ui-grid--gap-2xl {
+  gap: var(--ps1ui-space-2xl);
+}

@@ -16,6 +16,23 @@ export type { LabelProps } from "./components/Label/Label";
 export { Card } from "./components/Card/Card";
 export type { CardProps } from "./components/Card/Card";
 
+export type { SpaceScale } from "./utils/spacing";
+
+export { Container } from "./components/Container/Container";
+export type { ContainerProps, ContainerSize } from "./components/Container/Container";
+
+export { Grid } from "./components/Grid/Grid";
+export type { GridGap, GridProps } from "./components/Grid/Grid";
+
+export { Stack } from "./components/Stack/Stack";
+export type {
+  StackAlign,
+  StackDirection,
+  StackGap,
+  StackJustify,
+  StackProps,
+} from "./components/Stack/Stack";
+
 export { CodeBlock } from "./components/CodeBlock/CodeBlock";
 export type { CodeBlockLanguage, CodeBlockProps } from "./components/CodeBlock/CodeBlock";
 

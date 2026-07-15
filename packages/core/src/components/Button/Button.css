@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ps1ui-space-2);
+  gap: var(--ps1ui-space-sm);
   font-family: var(--ps1ui-font-mono);
   font-size: var(--ps1ui-font-size-sm);
   font-weight: 500;

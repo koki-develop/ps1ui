@@ -1,0 +1,97 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { Card } from "../Card/Card";
+import { Text } from "../Text/Text";
+import { Container } from "./Container";
+
+const meta = {
+  title: "Components/Container",
+  component: Container,
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["sm", "md", "lg", "xl", "full"],
+    },
+    px: {
+      control: { type: "select" },
+      options: ["none", "xs", "sm", "md", "lg", "xl", "2xl"],
+    },
+  },
+} satisfies Meta<typeof Container>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+// Container is structural (max-width + centering + horizontal padding),
+// so it has no ink of its own. A dashed outline via inline style makes
+// the outer bounds visible in Storybook without wrapping in another
+// element — a fixed-width wrapper would overflow the canvas at narrower
+// viewports and force horizontal scroll (the very bug that produced this
+// story pattern).
+const outlineStyle = {
+  outline: "1px dashed var(--ps1ui-color-border-strong)",
+} as const;
+
+// Compact Card padding so the demo doesn't dwarf the container's own
+// padding gutter; Card's default --ps1ui-space-xl (24px) is too heavy
+// against the container's default --ps1ui-space-lg (16px) inline padding.
+const markerPadding = { padding: 12 } as const;
+
+export const Default: Story = {
+  render: (args) => (
+    <Container {...args} style={{ ...args.style, ...outlineStyle }}>
+      <Card style={markerPadding}>
+        <Text>
+          Playground Container. Tweak `size` and `px` in the Controls panel to see the max-width
+          capping and horizontal padding respond.
+        </Text>
+      </Card>
+    </Container>
+  ),
+};
+
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {(["sm", "md", "lg", "xl", "full"] as const).map((size) => (
+        <Container key={size} size={size} style={outlineStyle}>
+          <Card style={markerPadding}>
+            <Text>size=&quot;{size}&quot;</Text>
+          </Card>
+        </Container>
+      ))}
+    </div>
+  ),
+};
+
+export const HorizontalPadding: Story = {
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {(["none", "xs", "sm", "md", "lg", "xl", "2xl"] as const).map((px) => (
+        <Container key={px} px={px} style={outlineStyle}>
+          <Card style={markerPadding}>
+            <Text>px=&quot;{px}&quot;</Text>
+          </Card>
+        </Container>
+      ))}
+    </div>
+  ),
+};
+
+export const AsMainLandmark: Story = {
+  render: () => (
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-landmark pattern; Container is intentionally a bare <div>.
+    <Container role="main" aria-labelledby="page-title" style={outlineStyle}>
+      <Card style={markerPadding}>
+        <Text as="div" id="page-title" weight="semibold" style={{ marginBottom: 6 }}>
+          page heading
+        </Text>
+        <Text as="p" variant="muted">
+          Container can be given `role=&quot;main&quot;` plus an aria-labelledby target to become a
+          labelled main landmark.
+        </Text>
+      </Card>
+    </Container>
+  ),
+};
