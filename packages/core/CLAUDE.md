@@ -41,7 +41,7 @@ Gotchas:
 
 ### Visual regression testing
 
-VRT runs in the `vrt` project via Vitest 4's `expect.element(...).toMatchScreenshot()` (docs: https://vitest.dev/guide/browser/visual-regression-testing). Comparator is `pixelmatch` with `threshold: 0.05` and `allowedMismatchedPixelRatio: 0.005` — tighter than the 0.1 default so token/color drifts aren't silently absorbed. Playwright's `animations: "disabled"` and `caret: "hide"` are the provider defaults, so no CSS freeze layer is needed.
+VRT runs in the `vrt` project via Vitest 4's `expect.element(...).toMatchScreenshot()` (docs: https://vitest.dev/guide/browser/visual-regression-testing). Comparator is `pixelmatch` with `threshold: 0.1` (pixelmatch's default — a stricter 0.05 rejected consecutive WebKit/Firefox frames on text-only fixtures) and `allowedMismatchedPixelRatio: 0.01`, kept tight enough that a real token/color drift still trips the diff. Playwright's `animations: "disabled"` and `caret: "hide"` are the provider defaults, so no CSS freeze layer is needed.
 
 Files: `<Component>.vrt.test.tsx` next to the component (every component ships one). VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
 
