@@ -1,0 +1,63 @@
+name: VRT
+
+# Visual regression gating check. Kept separate from ci.yml because a "vrt is
+# red" signal is intentionally noisy (see packages/core/CLAUDE.md § "Refresh
+# flow"): every PR that adds a new component or intentionally changes a
+# visible surface lands red here, then vrt-update.yml auto-heals main on
+# merge. Bundling that expected-red pattern into the general CI lane would
+# muddy the "did lint/build/unit pass?" signal that ci.yml is for.
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/core/**"
+      - ".github/workflows/vrt.yml"
+      - ".github/actions/setup/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "mise.toml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - ".github/workflows/vrt.yml"
+      - ".github/actions/setup/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "mise.toml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vrt:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @ps1ui/core exec playwright install --with-deps
+      - run: pnpm --filter @ps1ui/core test:vrt
+      # On failure (mismatch OR missing reference), upload the -actual /
+      # -diff PNG pair Vitest wrote to .vitest-attachments/ so a reviewer
+      # can see what changed. Retention capped so old artifacts don't
+      # accumulate against the repo storage quota.
+      - name: Upload VRT diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vrt-diff-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/core/.vitest-attachments/
+          retention-days: 14
+          if-no-files-found: warn
