@@ -153,3 +153,24 @@ export async function withPseudoState(
     );
   }
 }
+
+/**
+ * State-name-driven wrapper around `withPseudoState` for VRT tests that iterate
+ * a mixed matrix of "static" states (e.g. "default", "disabled" — just render
+ * variants) and pseudo-class states ("hover", "focus-visible", "active"). Pass
+ * the arbitrary state string and the whitelist of names that should be applied
+ * as pseudo-classes; anything not in the whitelist runs `fn` with no state
+ * applied. Centralizes the "empty pseudo array is a no-op" contract that VRT
+ * callers otherwise re-derive per file.
+ */
+export async function withPseudoStateFor(
+  selector: string,
+  state: string,
+  pseudoStates: readonly PseudoClass[],
+  fn: () => Promise<void>,
+): Promise<void> {
+  const applied: readonly PseudoClass[] = pseudoStates.includes(state as PseudoClass)
+    ? [state as PseudoClass]
+    : [];
+  await withPseudoState(selector, applied, fn);
+}

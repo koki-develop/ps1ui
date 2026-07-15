@@ -132,9 +132,24 @@ export default defineConfig({
               toMatchScreenshot: {
                 comparatorName: "pixelmatch",
                 comparatorOptions: {
-                  threshold: 0.05,
-                  allowedMismatchedPixelRatio: 0.005,
+                  // `threshold` at the pixelmatch default (0.1) — a
+                  // stricter 0.05 rejected consecutive WebKit/Firefox
+                  // frames on text-only fixtures (Anchor subtle,
+                  // Button secondary) where the browser rasterises
+                  // glyph edges slightly differently per capture,
+                  // starving Stable Screenshot Detection. Sub-pixel
+                  // text noise is exactly what this tolerance is for.
+                  threshold: 0.1,
+                  // Ratio kept tight (1%) so a real colour/token drift
+                  // of even a small region still trips the diff — a
+                  // 20×20 accent swap on a 320×80 capture is ~1.5%,
+                  // well over threshold.
+                  allowedMismatchedPixelRatio: 0.01,
                 },
+                // Bumped from the 5s default so Stable Screenshot
+                // Detection gets extra retries on text-heavy fixtures
+                // that converge slowly on Firefox/WebKit.
+                timeout: 15000,
               },
             },
           },

@@ -43,12 +43,45 @@ Gotchas:
 
 VRT runs in the `vrt` project via Vitest 4's `expect.element(...).toMatchScreenshot()` (docs: https://vitest.dev/guide/browser/visual-regression-testing). Comparator is `pixelmatch` with `threshold: 0.05` and `allowedMismatchedPixelRatio: 0.005` — tighter than the 0.1 default so token/color drifts aren't silently absorbed. Playwright's `animations: "disabled"` and `caret: "hide"` are the provider defaults, so no CSS freeze layer is needed.
 
-Files: `<Component>.vrt.test.tsx` next to the component. See `src/components/Button/Button.vrt.test.tsx` as the template. VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
+Files: `<Component>.vrt.test.tsx` next to the component (every component ships one). VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
+
+**`VrtFrame` (`src/testing/vrt.tsx`)** is the shared capture wrapper — dark-canvas background + 20 px padding + `display: inline-block`. Every VRT file uses it so screenshots share the same canvas context (deterministic for `background: transparent` variants), the frame stays tight to the component (no bloated PNGs), and `:focus-visible` shadows/outlines don't clip. Frame carries `data-testid="vrt-frame"` (screenshot target); the component-under-test carries `data-testid="vrt-target"` (pseudo-state selector hook). Interactive template:
+
+```tsx
+import { VrtFrame } from "../../testing/vrt";
+import { withPseudoState, type PseudoClass } from "../../testing/pseudo-state";
+
+const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
+
+test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ctx) => {
+  ctx.skip(state === "focus-visible" && server.browser === "webkit", "…");
+  const screen = await render(
+    <VrtFrame>
+      <Component variant={variant} data-testid="vrt-target">…</Component>
+    </VrtFrame>,
+  );
+  const pseudo: readonly PseudoClass[] =
+    state === "default" || state === "disabled" ? [] : [state];
+  await withPseudoState('[data-testid="vrt-target"]', pseudo, async () => {
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${variant}-${state}`);
+  });
+});
+```
+
+**Axis strategy for typography-only components** (Text, Heading, Label): don't cartesian-product the axes — 5×5×4 = 100 near-duplicate baselines. Cover each axis independently with the other axes at defaults. Level cases in Heading double as `LEVEL_DEFAULTS`-mapping regression coverage.
+
+**Native controls Safari excludes from Tab.** macOS Safari's default "Full Keyboard Access" excludes non-text form controls and links: `<button>`, `<a href>`, `<input type=checkbox>`, and any `<div|pre> tabindex=0` (CodeBlock's scrollable pattern). All of these need the WebKit `ctx.skip` for `focus-visible`. Text inputs are Tab-reachable everywhere, so no skip for `Input` `:focus`.
+
+**`ctx.skip(...)` — not early `return`.** Skipping via `ctx.skip(condition, reason)` is deliberate: the reporter labels those cases as *skipped* and the reason surfaces in the log. An early `if (cond) return;` compiles + passes locally (the test just exits, no assertions) but shows up as *pass* in CI reporter output, silently green-checking whatever regression the skip was hiding.
+
+**Known VRT flakes (skipped, not fixable from our side).** Two combos on Firefox rasterise inconsistently across successive captures: `Button variant=secondary + state=focus-visible` and `Anchor variant=subtle + state=focus-visible`. Both share the pattern *transparent background + focus-ring box-shadow alpha blend + text* — Firefox's compositor re-samples the alpha layer per frame, producing 4-6% pixel drift between consecutive captures that no realistic tolerance can absorb without defeating VRT's regression-catching purpose. Stable Screenshot Detection times out ~100% of the time on these. Skipped with `ctx.skip(variant === ... && state === "focus-visible" && server.browser === "firefox", ...)`. Coverage loss is bounded: Chromium and WebKit still capture these combos (WebKit's focus-visible skip is a separate FKA concern), and the non-focus states on all browsers still capture the transparent variant.
 
 **Baseline layout & source of truth.** Baselines live at `src/components/<Name>/__screenshots__/<file>/<name>-<browser>-<platform>.png`. Only **`-linux.png`** baselines are committed (the CI runtime); `-darwin.png` and `-win32.png` are `.gitignore`d so per-developer / per-OS captures never enter git. This means:
 
 - Locally on macOS: first `pnpm test:vrt` after a fresh checkout auto-generates darwin baselines (Vitest's `updateSnapshot: "new"` behavior) and reports missing-reference errors for that run only. Re-run and it passes. Darwin baselines are untracked scratch — regenerate freely.
 - On CI Linux: `updateSnapshot: "none"`, so missing baselines fail hard instead of auto-generating.
+
+**VrtFrame edits invalidate every committed baseline.** Because `VrtFrame` is the outer capture wrapper for every VRT test, any change to its padding, background, or DOM structure shifts every screenshot in `packages/core/src/components/**/__screenshots__/**/*-linux.png` by construction. Land those edits in a dedicated commit with manual baseline regen (`pnpm test:vrt:update` in the mcr.microsoft.com/playwright Linux container) + representative-sample diff inspection — do NOT rely on the auto-heal path, which would silently commit ~200 new baselines without a reviewer looking at them.
 
 **CI baselines.** Gated by the `vrt` job in `.github/workflows/ci.yml` (uploads `-actual`/`-diff` PNGs from `.vitest-attachments/` as a `vrt-diff-<runId>-<attempt>` artifact on failure). Auto-healed on `main` by `.github/workflows/vrt-update.yml` — see that file's header comment for the full flow. To green a PR's VRT check *before* merging (e.g. for branch protection), regenerate `-linux.png` baselines in a Linux container and push the diff: `docker run --rm -v $PWD:/w -w /w mcr.microsoft.com/playwright:v1.61.1-noble pnpm --filter @ps1ui/core test:vrt:update`.
 
@@ -104,13 +137,14 @@ Two dimensions — line and behavioral.
 
 ## Component authoring
 
-Each component lives in `src/components/<Name>/` with a four-file core set plus an optional VRT file:
+Each component lives in `src/components/<Name>/` with:
 
 ```
-<Name>.tsx  <Name>.css  <Name>.test.tsx  <Name>.stories.tsx
-<Name>.vrt.test.tsx        # optional; add for components with a stable visible surface — see the Testing section
+<Name>.tsx  <Name>.css  <Name>.test.tsx  <Name>.stories.tsx  <Name>.vrt.test.tsx
 <Name>.contrast.test.tsx   # optional; add when introducing a new (fg-token, bg-token) pair — see "Three layers of a11y coverage"
 ```
+
+VRT files are mandatory for any component that renders visible DOM — a stable pixel surface without a baseline leaves a token/CSS regression net unclaimed. Headless helpers (Provider, Portal, hook-only shims) don't need one — they have no pixel surface to regress against. See the "Visual regression testing" section above for the `VrtFrame` template and axis strategy.
 
 Conventions:
 
