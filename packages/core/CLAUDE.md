@@ -48,7 +48,9 @@ Files: `<Component>.vrt.test.tsx` next to the component. See `src/components/But
 **Baseline layout & source of truth.** Baselines live at `src/components/<Name>/__screenshots__/<file>/<name>-<browser>-<platform>.png`. Only **`-linux.png`** baselines are committed (the CI runtime); `-darwin.png` and `-win32.png` are `.gitignore`d so per-developer / per-OS captures never enter git. This means:
 
 - Locally on macOS: first `pnpm test:vrt` after a fresh checkout auto-generates darwin baselines (Vitest's `updateSnapshot: "new"` behavior) and reports missing-reference errors for that run only. Re-run and it passes. Darwin baselines are untracked scratch — regenerate freely.
-- On CI Linux: `updateSnapshot: "none"`, so missing baselines fail hard instead of auto-generating. Refresh flow: run `pnpm test:vrt:update` in a Linux container (or on the CI runner) and commit the `-linux.png` diff.
+- On CI Linux: `updateSnapshot: "none"`, so missing baselines fail hard instead of auto-generating.
+
+**CI baselines.** Gated by the `vrt` job in `.github/workflows/ci.yml` (uploads `-actual`/`-diff` PNGs from `.vitest-attachments/` as a `vrt-diff-<runId>-<attempt>` artifact on failure). Auto-healed on `main` by `.github/workflows/vrt-update.yml` — see that file's header comment for the full flow. To green a PR's VRT check *before* merging (e.g. for branch protection), regenerate `-linux.png` baselines in a Linux container and push the diff: `docker run --rm -v $PWD:/w -w /w mcr.microsoft.com/playwright:v1.61.1-noble pnpm --filter @ps1ui/core test:vrt:update`.
 
 **`:focus-visible` on WebKit** is unreachable — macOS Safari's default "Full Keyboard Access" excludes `<button>`/`<a>` from Tab (same as `Button.contrast.test.tsx`); the Playwright WebKit build matches that default. Skip the combination with `ctx.skip(state === "focus-visible" && server.browser === "webkit", "…")` so the reporter labels it skipped instead of pass-with-no-assertions.
 

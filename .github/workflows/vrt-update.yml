@@ -1,0 +1,136 @@
+name: VRT Update
+
+# Auto-heals Linux VRT baselines on main after a PR with intentional visual
+# changes lands: runs `pnpm test:vrt:update`, then — if baselines actually
+# changed — pushes a Verified `chore: Update VRT baselines` commit signed by
+# `github-actions[bot]` via the GitHub Git Data API. That commit itself
+# doesn't re-trigger CI (GITHUB_TOKEN pushes don't cascade), so the merge
+# commit that introduced the visual change keeps its red vrt check as a
+# historical marker; anyone wanting a fresh check on the baseline update
+# commit can re-run CI manually from the Actions tab.
+#
+# Bootstrapping is automatic: this workflow's own file is under the paths
+# filter, so the very first push landing vrt-update.yml on main triggers a
+# run that seeds the initial baselines.
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/core/**"
+      - ".github/workflows/vrt-update.yml"
+      - ".github/actions/setup/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "mise.toml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed for github.rest.git.updateRef via GITHUB_TOKEN.
+      contents: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - run: pnpm --filter @ps1ui/core exec playwright install --with-deps
+
+      # `-u` sets updateSnapshot=all and the script scopes to --project vrt,
+      # so inline snapshots in unit/storybook tests won't be rewritten.
+      # Vitest exits 0 in this mode even when baselines are missing (they get
+      # generated), so any non-zero here is a real failure worth surfacing.
+      - run: pnpm --filter @ps1ui/core test:vrt:update
+
+      - name: Commit baselines via Git Data API (Verified signed by github-actions[bot])
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          # Direct `git push` from Actions produces UNVERIFIED commits.
+          # Constructing the commit via the Git Data API (createBlob →
+          # createTree → createCommit → updateRef) with GITHUB_TOKEN yields
+          # a `github-actions[bot]`-authored Verified commit, matching the
+          # signing hygiene of human commits in this repo.
+          script: |
+            const fs = require('node:fs').promises;
+            const { execFileSync } = require('node:child_process');
+
+            // Enumerate baseline PNGs that changed (new or modified),
+            // respecting .gitignore — so only Linux baselines
+            // (`-linux.png`) end up in the list, never darwin/win32/
+            // failure-snapshot files that .gitignore filters out.
+            const raw = execFileSync(
+              'git',
+              [
+                'ls-files',
+                '--modified', '--others', '--exclude-standard', '-z',
+                'packages/*/src/**/__screenshots__/**/*.png',
+              ],
+              { encoding: 'utf8' },
+            );
+            const files = raw.split('\0').filter(Boolean);
+
+            if (files.length === 0) {
+              core.info('No baseline changes to commit.');
+              return;
+            }
+            core.info(`${files.length} baseline file(s) changed.`);
+
+            const { data: refData } = await github.rest.git.getRef({
+              ...context.repo,
+              ref: `heads/main`,
+            });
+            const parentSha = refData.object.sha;
+            const { data: parentCommit } = await github.rest.git.getCommit({
+              ...context.repo,
+              commit_sha: parentSha,
+            });
+
+            const treeEntries = await Promise.all(
+              files.map(async (path) => {
+                const content = await fs.readFile(path);
+                const { data: blob } = await github.rest.git.createBlob({
+                  ...context.repo,
+                  content: content.toString('base64'),
+                  encoding: 'base64',
+                });
+                return { path, mode: '100644', type: 'blob', sha: blob.sha };
+              }),
+            );
+
+            const { data: tree } = await github.rest.git.createTree({
+              ...context.repo,
+              base_tree: parentCommit.tree.sha,
+              tree: treeEntries,
+            });
+
+            const { data: commit } = await github.rest.git.createCommit({
+              ...context.repo,
+              message: 'chore: Update VRT baselines',
+              tree: tree.sha,
+              parents: [parentSha],
+            });
+
+            // Fast-forward main to the new commit. Fails loudly if the
+            // ref moved under us mid-run (concurrency group makes that
+            // unlikely, but a hand-push at the same time would trigger it).
+            await github.rest.git.updateRef({
+              ...context.repo,
+              ref: 'heads/main',
+              sha: commit.sha,
+            });
+
+            core.notice(`Committed ${commit.sha} to main (Verified).`);
