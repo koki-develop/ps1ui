@@ -57,11 +57,12 @@ test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ct
   ctx.skip(state === "focus-visible" && server.browser === "webkit", "…");
   const screen = await render(
     <VrtFrame>
-      <Component variant={variant} data-testid="vrt-target">…</Component>
+      <Component variant={variant} data-testid="vrt-target">
+        …
+      </Component>
     </VrtFrame>,
   );
-  const pseudo: readonly PseudoClass[] =
-    state === "default" || state === "disabled" ? [] : [state];
+  const pseudo: readonly PseudoClass[] = state === "default" || state === "disabled" ? [] : [state];
   await withPseudoState('[data-testid="vrt-target"]', pseudo, async () => {
     await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${variant}-${state}`);
   });
@@ -72,9 +73,9 @@ test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ct
 
 **Native controls Safari excludes from Tab.** macOS Safari's default "Full Keyboard Access" excludes non-text form controls and links: `<button>`, `<a href>`, `<input type=checkbox>`, and any `<div|pre> tabindex=0` (CodeBlock's scrollable pattern). All of these need the WebKit `ctx.skip` for `focus-visible`. Text inputs are Tab-reachable everywhere, so no skip for `Input` `:focus`.
 
-**`ctx.skip(...)` — not early `return`.** Skipping via `ctx.skip(condition, reason)` is deliberate: the reporter labels those cases as *skipped* and the reason surfaces in the log. An early `if (cond) return;` compiles + passes locally (the test just exits, no assertions) but shows up as *pass* in CI reporter output, silently green-checking whatever regression the skip was hiding.
+**`ctx.skip(...)` — not early `return`.** Skipping via `ctx.skip(condition, reason)` is deliberate: the reporter labels those cases as _skipped_ and the reason surfaces in the log. An early `if (cond) return;` compiles + passes locally (the test just exits, no assertions) but shows up as _pass_ in CI reporter output, silently green-checking whatever regression the skip was hiding.
 
-**Known VRT flakes (skipped, not fixable from our side).** Two combos on Firefox rasterise inconsistently across successive captures: `Button variant=secondary + state=focus-visible` and `Anchor variant=subtle + state=focus-visible`. Both share the pattern *transparent background + focus-ring box-shadow alpha blend + text* — Firefox's compositor re-samples the alpha layer per frame, producing 4-6% pixel drift between consecutive captures that no realistic tolerance can absorb without defeating VRT's regression-catching purpose. Stable Screenshot Detection times out ~100% of the time on these. Skipped with `ctx.skip(variant === ... && state === "focus-visible" && server.browser === "firefox", ...)`. Coverage loss is bounded: Chromium and WebKit still capture these combos (WebKit's focus-visible skip is a separate FKA concern), and the non-focus states on all browsers still capture the transparent variant.
+**Known VRT flakes (skipped, not fixable from our side).** Two combos on Firefox rasterise inconsistently across successive captures: `Button variant=secondary + state=focus-visible` and `Anchor variant=subtle + state=focus-visible`. Both share the pattern _transparent background + focus-ring box-shadow alpha blend + text_ — Firefox's compositor re-samples the alpha layer per frame, producing 4-6% pixel drift between consecutive captures that no realistic tolerance can absorb without defeating VRT's regression-catching purpose. Stable Screenshot Detection times out ~100% of the time on these. Skipped with `ctx.skip(variant === ... && state === "focus-visible" && server.browser === "firefox", ...)`. Coverage loss is bounded: Chromium and WebKit still capture these combos (WebKit's focus-visible skip is a separate FKA concern), and the non-focus states on all browsers still capture the transparent variant.
 
 **Baseline layout & source of truth.** Baselines live at `src/components/<Name>/__screenshots__/<file>/<name>-<browser>-<platform>.png`. Only **`-linux.png`** baselines are committed (the CI runtime); `-darwin.png` and `-win32.png` are `.gitignore`d so per-developer / per-OS captures never enter git. This means:
 
@@ -83,7 +84,7 @@ test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ct
 
 **VrtFrame edits invalidate every committed baseline.** Because `VrtFrame` is the outer capture wrapper for every VRT test, any change to its padding, background, or DOM structure shifts every screenshot in `packages/core/src/components/**/__screenshots__/**/*-linux.png` by construction. Land those edits in a dedicated commit with manual baseline regen (`pnpm test:vrt:update` in the mcr.microsoft.com/playwright Linux container) + representative-sample diff inspection — do NOT rely on the auto-heal path, which would silently commit ~200 new baselines without a reviewer looking at them.
 
-**CI baselines.** Gated by `.github/workflows/vrt.yml` (uploads `-actual`/`-diff` PNGs from `.vitest-attachments/` as a `vrt-diff-<runId>-<attempt>` artifact on failure). Kept as a separate workflow from `ci.yml` because "vrt is red" is an intentionally noisy signal — every PR that adds a new component or intentionally changes a visible surface lands red until main auto-heals — and bundling it into the general CI lane would muddy the "did lint/build/unit pass?" semantics. Auto-healed on `main` by `.github/workflows/vrt-update.yml` — see that file's header comment for the full flow. To green a PR's VRT check *before* merging (e.g. for branch protection), regenerate `-linux.png` baselines in a Linux container and push the diff: `docker run --rm -v $PWD:/w -w /w mcr.microsoft.com/playwright:v1.61.1-noble pnpm --filter @ps1ui/core test:vrt:update`.
+**CI baselines.** Gated by `.github/workflows/vrt.yml` (uploads `-actual`/`-diff` PNGs from `.vitest-attachments/` as a `vrt-diff-<runId>-<attempt>` artifact on failure). Kept as a separate workflow from `ci.yml` because "vrt is red" is an intentionally noisy signal — every PR that adds a new component or intentionally changes a visible surface lands red until main auto-heals — and bundling it into the general CI lane would muddy the "did lint/build/unit pass?" semantics. Auto-healed on `main` by `.github/workflows/vrt-update.yml` — see that file's header comment for the full flow. To green a PR's VRT check _before_ merging (e.g. for branch protection), regenerate `-linux.png` baselines in a Linux container and push the diff: `docker run --rm -v $PWD:/w -w /w mcr.microsoft.com/playwright:v1.61.1-noble pnpm --filter @ps1ui/core test:vrt:update`.
 
 **`:focus-visible` on WebKit** is unreachable — macOS Safari's default "Full Keyboard Access" excludes `<button>`/`<a>` from Tab (same as `Button.contrast.test.tsx`); the Playwright WebKit build matches that default. Skip the combination with `ctx.skip(state === "focus-visible" && server.browser === "webkit", "…")` so the reporter labels it skipped instead of pass-with-no-assertions.
 
