@@ -5,6 +5,7 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { pointerDown, pointerUp } from "./vitest.browser-commands";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +37,7 @@ export default defineConfig({
             provider: playwright(),
             instances: [{ browser: "chromium" }],
             headless: true,
+            commands: { pointerDown, releasePointer: pointerUp },
           },
         },
       },

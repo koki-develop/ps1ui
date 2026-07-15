@@ -1,39 +1,136 @@
-// Sanity net for withForcedPseudoState — proves that CDP `CSS.forcePseudoState`
-// actually shifts computed styles in the Vitest tester iframe, AND that the
-// finally-block release cleans up afterwards. Uses inline CSS so the check
-// stays component-agnostic; every *.contrast.test.tsx relies on this working,
-// so it's centralized here rather than duplicated per file.
+// Sanity net for withPseudoState — proves that each mechanism (real hover via
+// userEvent, a held mouse button via the pointerDown/releasePointer browser
+// commands, real DOM focus/blur, real Tab navigation) actually shifts computed
+// styles, AND that release restores the base state afterwards. Uses inline CSS
+// so the check stays component-agnostic; every *.contrast.test.tsx relies on
+// this working, so it's centralized here rather than duplicated per file.
 //
-// If Blink, Playwright, or the tester-iframe wiring regresses, this fails
-// loudly BEFORE the component contrast matrices silently pass with no state
-// ever forced.
+// If the userEvent wiring, the pointerDown/releasePointer commands, or the
+// tester-iframe setup regresses, this fails loudly BEFORE the component
+// contrast matrices silently pass with no state ever actually applied.
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
-import { withForcedPseudoState } from "./pseudo-state";
+import { withPseudoState } from "./pseudo-state";
 
-describe("withForcedPseudoState", () => {
-  test("forces :hover and releases it after the callback", async () => {
+describe("withPseudoState", () => {
+  test("applies :hover and releases it after the callback", async () => {
     const screen = await render(
       <>
         <style>
-          {`.pseudo-state-probe { color: rgb(0, 0, 0); transition: none; }
-            .pseudo-state-probe:hover { color: rgb(255, 0, 0); }`}
+          {`.pseudo-state-probe-hover { color: rgb(0, 0, 0); transition: none; }
+            .pseudo-state-probe-hover:hover { color: rgb(255, 0, 0); }`}
         </style>
-        <span className="pseudo-state-probe" data-testid="pseudo-state-probe">
+        <span className="pseudo-state-probe-hover" data-testid="pseudo-state-probe-hover">
           probe
         </span>
       </>,
     );
-    const probe = screen.container.querySelector<HTMLElement>('[data-testid="pseudo-state-probe"]');
+    const probe = screen.container.querySelector<HTMLElement>(
+      '[data-testid="pseudo-state-probe-hover"]',
+    );
     if (!probe) throw new Error("probe not found");
 
     const baseColor = getComputedStyle(probe).color;
     expect(baseColor).toBe("rgb(0, 0, 0)");
 
-    await withForcedPseudoState('[data-testid="pseudo-state-probe"]', ["hover"], async () => {
+    await withPseudoState('[data-testid="pseudo-state-probe-hover"]', ["hover"], async () => {
       expect(getComputedStyle(probe).color).toBe("rgb(255, 0, 0)");
     });
+
+    // finally-block release restores the base color.
+    expect(getComputedStyle(probe).color).toBe(baseColor);
+  });
+
+  test("applies :active via a held mouse button and releases it after the callback", async () => {
+    const screen = await render(
+      <>
+        <style>
+          {`.pseudo-state-probe-active { color: rgb(0, 0, 0); transition: none; }
+            .pseudo-state-probe-active:active { color: rgb(0, 0, 255); }`}
+        </style>
+        <button className="pseudo-state-probe-active" data-testid="pseudo-state-probe-active">
+          probe
+        </button>
+      </>,
+    );
+    const probe = screen.container.querySelector<HTMLElement>(
+      '[data-testid="pseudo-state-probe-active"]',
+    );
+    if (!probe) throw new Error("probe not found");
+
+    const baseColor = getComputedStyle(probe).color;
+    expect(baseColor).toBe("rgb(0, 0, 0)");
+
+    await withPseudoState('[data-testid="pseudo-state-probe-active"]', ["active"], async () => {
+      expect(getComputedStyle(probe).color).toBe("rgb(0, 0, 255)");
+    });
+
+    // finally-block release (releasePointer) restores the base color.
+    expect(getComputedStyle(probe).color).toBe(baseColor);
+  });
+
+  test("applies :focus and releases it after the callback", async () => {
+    const screen = await render(
+      <>
+        <style>
+          {`.pseudo-state-probe-focus { color: rgb(0, 0, 0); transition: none; }
+            .pseudo-state-probe-focus:focus { color: rgb(0, 128, 0); }`}
+        </style>
+        <button className="pseudo-state-probe-focus" data-testid="pseudo-state-probe-focus">
+          probe
+        </button>
+      </>,
+    );
+    const probe = screen.container.querySelector<HTMLElement>(
+      '[data-testid="pseudo-state-probe-focus"]',
+    );
+    if (!probe) throw new Error("probe not found");
+
+    const baseColor = getComputedStyle(probe).color;
+    expect(baseColor).toBe("rgb(0, 0, 0)");
+
+    await withPseudoState('[data-testid="pseudo-state-probe-focus"]', ["focus"], async () => {
+      expect(getComputedStyle(probe).color).toBe("rgb(0, 128, 0)");
+    });
+
+    // finally-block release restores the base color.
+    expect(getComputedStyle(probe).color).toBe(baseColor);
+  });
+
+  test("applies :focus-visible via real Tab navigation and releases it after the callback", async () => {
+    const screen = await render(
+      <>
+        <style>
+          {`.pseudo-state-probe-focus-visible { color: rgb(0, 0, 0); transition: none; }
+            .pseudo-state-probe-focus-visible:focus-visible { color: rgb(128, 0, 128); }`}
+        </style>
+        <button
+          className="pseudo-state-probe-focus-visible"
+          data-testid="pseudo-state-probe-focus-visible"
+        >
+          probe
+        </button>
+      </>,
+    );
+    const probe = screen.container.querySelector<HTMLElement>(
+      '[data-testid="pseudo-state-probe-focus-visible"]',
+    );
+    if (!probe) throw new Error("probe not found");
+
+    const baseColor = getComputedStyle(probe).color;
+    expect(baseColor).toBe("rgb(0, 0, 0)");
+
+    await withPseudoState(
+      '[data-testid="pseudo-state-probe-focus-visible"]',
+      ["focus-visible"],
+      async () => {
+        // Proves the activeElement check inside the "focus-visible" handler
+        // actually landed on the target, not just that some element got focus.
+        expect(document.activeElement).toBe(probe);
+        expect(getComputedStyle(probe).color).toBe("rgb(128, 0, 128)");
+      },
+    );
 
     // finally-block release restores the base color.
     expect(getComputedStyle(probe).color).toBe(baseColor);

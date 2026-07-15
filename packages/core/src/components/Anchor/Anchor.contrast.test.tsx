@@ -1,13 +1,14 @@
 // Contrast regression net for Anchor's interactive states. Loads the real CSS
-// and uses CDP `CSS.forcePseudoState` to put the link into :hover / :active so
-// axe's color-contrast rule sees the resolved colors. Text.contrast.test.tsx
-// already covers the default primary color on bg / surface via the shared
-// Text primary variant; hover / active tokens are unique to interactive
-// components and are what this file locks in.
+// and puts the link into :hover / :active via real userEvent hover / a held
+// mouse button (see src/testing/pseudo-state.ts) so axe's color-contrast rule
+// sees the resolved colors. Text.contrast.test.tsx already covers the default
+// primary color on bg / surface via the shared Text primary variant; hover /
+// active tokens are unique to interactive components and are what this file
+// locks in.
 //
 // :focus-visible is intentionally NOT in the state list — the Anchor CSS only
 // touches outline in that state, so color-contrast is byte-identical to default.
-// The sanity check that forcePseudoState actually shifts styles lives once in
+// The sanity check that withPseudoState actually shifts styles lives once in
 // src/testing/pseudo-state.test.tsx (shared with Button.contrast).
 
 import "../../styles/styles.css";
@@ -15,7 +16,7 @@ import "../../styles/styles.css";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
-import { withForcedPseudoState } from "../../testing/pseudo-state";
+import { withPseudoState } from "../../testing/pseudo-state";
 import { Card } from "../Card/Card";
 import { Anchor, type AnchorVariant } from "./Anchor";
 
@@ -51,7 +52,7 @@ describe("Anchor contrast", () => {
           await expectNoAxeViolations(screen.container);
           return;
         }
-        await withForcedPseudoState('[data-testid="ctr-anchor"]', [state], async () => {
+        await withPseudoState('[data-testid="ctr-anchor"]', [state], async () => {
           await expectNoAxeViolations(screen.container);
         });
       },
@@ -105,7 +106,7 @@ describe("Anchor contrast", () => {
         expect(getComputedStyle(link).textDecorationColor).toBe(baseColor);
         expect(expectedColor).not.toBe(baseColor);
 
-        await withForcedPseudoState('[data-testid="dec-anchor"]', [state], async () => {
+        await withPseudoState('[data-testid="dec-anchor"]', [state], async () => {
           expect(getComputedStyle(link).textDecorationColor).toBe(expectedColor);
         });
       },
@@ -134,7 +135,7 @@ describe("Anchor contrast", () => {
           await expectNoAxeViolations(screen.container);
           return;
         }
-        await withForcedPseudoState('[data-testid="ctr-anchor"]', [state], async () => {
+        await withPseudoState('[data-testid="ctr-anchor"]', [state], async () => {
           await expectNoAxeViolations(screen.container);
         });
       },
