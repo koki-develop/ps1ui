@@ -34,7 +34,7 @@ jobs:
       - run: pnpm --filter @ps1ui/core build
       - run: pnpm --filter @ps1ui/site build
 
-      - run: pnpm --filter @ps1ui/core exec playwright install
+      - run: pnpm --filter @ps1ui/core exec playwright install --with-deps
       # Scoped to `unit` + `storybook` — VRT lives in its own workflow
       # (.github/workflows/vrt.yml) so its expected-red-on-new-baseline
       # signal doesn't muddy this workflow's "did lint/build/unit pass?"
