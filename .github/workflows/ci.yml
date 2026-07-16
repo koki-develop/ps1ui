@@ -31,9 +31,8 @@ jobs:
           - run: pnpm --filter @ps1ui/core lint
           - run: pnpm --filter @ps1ui/core fmt:check
           - run: pnpm --filter @ps1ui/site typecheck
-      - parallel:
-          - run: pnpm --filter @ps1ui/core build
-          - run: pnpm --filter @ps1ui/site build
+      - run: pnpm --filter @ps1ui/core build
+      - run: pnpm --filter @ps1ui/site build
 
       - run: pnpm --filter @ps1ui/core exec playwright install
       # Scoped to `unit` + `storybook` — VRT lives in its own workflow
