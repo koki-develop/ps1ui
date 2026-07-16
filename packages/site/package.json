@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pnpm build:storybook",
+    "build:storybook": "STORYBOOK_BASE_PATH=/ps1ui/storybook/ pnpm --filter @ps1ui/core exec storybook build -o ../site/dist/storybook",
     "preview": "astro preview",
     "typecheck": "tsc --noEmit",
     "check": "pnpm typecheck"

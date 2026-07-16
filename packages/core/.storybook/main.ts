@@ -16,6 +16,15 @@ const config: StorybookConfig = {
   typescript: {
     reactDocgen: "react-docgen",
   },
+  // Subpath deploys (e.g. @ps1ui/site bundling us at /ps1ui/storybook/) set
+  // STORYBOOK_BASE_PATH so Vite emits correctly-prefixed asset URLs. Unset in
+  // dev / `pnpm build-storybook` so the default (`/`) is preserved.
+  async viteFinal(config) {
+    const base = process.env.STORYBOOK_BASE_PATH;
+    if (!base) return config;
+    const { mergeConfig } = await import("vite");
+    return mergeConfig(config, { base });
+  },
 };
 
 export default config;

@@ -5,9 +5,10 @@ https://koki-develop.github.io/ps1ui/ via `.github/workflows/pages.yml`.
 
 ## Commands
 
-- `pnpm dev` — Astro dev server (http://localhost:4321/ps1ui/)
-- `pnpm build` — static build → `dist/` (requires `@ps1ui/core` `dist/` present)
-- `pnpm preview` — serve the built `dist/` locally
+- `pnpm dev` — Astro dev server (http://localhost:4321/ps1ui/). Does **not** serve `/storybook` — for Storybook dev use `pnpm --filter @ps1ui/core storybook` (port 6006).
+- `pnpm build` — `astro build` + `build:storybook`, both writing into `dist/`. Requires `@ps1ui/core` `dist/` present for Astro's imports (the Storybook step reads core's source, not its dist).
+- `pnpm build:storybook` — builds `@ps1ui/core`'s Storybook into `dist/storybook/` with base `/ps1ui/storybook/`. Sets `STORYBOOK_BASE_PATH` and dispatches via `pnpm --filter @ps1ui/core exec storybook build` so no Storybook dependency is added to this package. Unix-only (env-var-prefix syntax); the repo has no Windows workflow.
+- `pnpm preview` — serve the built `dist/` locally (both `/ps1ui/` and `/ps1ui/storybook/` are served from the same origin, matching the GitHub Pages topology).
 - `pnpm typecheck` — `tsc --noEmit` (see note below on `astro check`)
 - `pnpm check` — alias of `typecheck`
 
@@ -20,7 +21,13 @@ https://koki-develop.github.io/ps1ui/ via `.github/workflows/pages.yml`.
 - **No `client:*` unless proven needed**: every `@ps1ui/core` public component renders statically. `CodeBlock` uses hooks internally but its SSR output is complete syntax-highlighted HTML — hydration only re-measures overflow on window resize, which we skip. Adding `client:load` ships React runtime (~40KB); don't.
 - **Reset-aware markup**: `@ps1ui/core/base.css` resets bare `<a>` / `<h*>` / `<button>` / `<ul>` / `<img>` etc. to un-styled state. Always route through `<Anchor>` / `<Heading>` / `<Button>` / `<CodeBlock>`.
 - **No lint/fmt in hooks**: `lefthook.yml` oxlint/oxfmt is scoped to `packages/core/`. Astro `.astro` files aren't oxlint-supported yet, so this package is currently unlinted.
-- **PR gating vs deploy**: `ci.yml` runs `pnpm --filter @ps1ui/site typecheck` + `build` on every PR (after `@ps1ui/core build`) — that's the site's PR ゲート. `.github/workflows/pages.yml` only fires on `push: main` / `workflow_dispatch` and does the actual deploy.
+- **PR gating vs deploy**: `ci.yml` runs `pnpm --filter @ps1ui/site typecheck` + `build` on every PR (after `@ps1ui/core build`) — that's the site's PR ゲート. Because `build` now chains Storybook, PR CI catches Storybook build regressions too. `.github/workflows/pages.yml` only fires on `push: main` / `workflow_dispatch` and does the actual deploy — no yml changes were needed for the `/storybook` addition since site's `pnpm build` produces the full artifact tree.
+
+## Storybook at `/storybook`
+
+- The deployed Pages artifact serves Storybook at `https://koki-develop.github.io/ps1ui/storybook/`. It's a plain static build of `@ps1ui/core`'s Storybook written into `dist/storybook/` by `pnpm build:storybook`.
+- Base path is injected via the `STORYBOOK_BASE_PATH` env var, which `@ps1ui/core/.storybook/main.ts`'s `viteFinal` merges into `config.base`. Unset → Vite uses `/` (dev / standalone `pnpm build-storybook`); set to `/ps1ui/storybook/` here so Vite prefixes every emitted asset URL.
+- Dev has no unified `/storybook` — run `pnpm --filter @ps1ui/core storybook` (port 6006) alongside `pnpm dev` when iterating. Only `pnpm build` + `pnpm preview` produces the merged surface.
 
 ## Initial GitHub Pages setup (one-time manual)
 

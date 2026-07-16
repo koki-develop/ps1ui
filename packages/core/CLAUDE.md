@@ -17,7 +17,7 @@ React UI component library for a Terminal / Mono design system (dark canvas, Jet
 - `pnpm test:vrt` — run visual regression baselines only (`--project vrt`); see "Visual regression testing" below
 - `pnpm test:vrt:update` — refresh VRT baselines (`--project vrt -u`); scoped to `vrt` because `-u` also rewrites inline/file snapshots
 - `pnpm storybook` — dev server on port 6006
-- `pnpm build-storybook` — static build → `storybook-static/`
+- `pnpm build-storybook` — static build → `storybook-static/`. Base path defaults to `/`; set `STORYBOOK_BASE_PATH=/some/subpath/` to deploy under a subpath — `.storybook/main.ts`'s `viteFinal` merges it into Vite's `config.base` so every emitted asset URL is prefixed. `@ps1ui/site`'s `build:storybook` uses this to bundle Storybook into `packages/site/dist/storybook/` at `/ps1ui/storybook/`. Also: `.storybook/manager-head.html` uses **relative** font paths (`./fonts/...`) so the same head HTML resolves correctly under any base.
 
 ## Testing
 

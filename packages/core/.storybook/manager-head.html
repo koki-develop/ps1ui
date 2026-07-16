@@ -1,8 +1,14 @@
+<!--
+  Relative paths (not `/fonts/…`) so they resolve correctly under any Vite base
+  — dev serves the manager at `/` (→ `/fonts/…`), and subpath deploys serve it
+  at e.g. `/ps1ui/storybook/` (→ `/ps1ui/storybook/fonts/…`), both matching
+  Vite's base-prefixed staticDirs.
+-->
 <link
   rel="preload"
-  href="/fonts/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2"
+  href="./fonts/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2"
   as="font"
   type="font/woff2"
   crossorigin
 />
-<link rel="stylesheet" href="/fonts/jetbrains-mono/index.css" />
+<link rel="stylesheet" href="./fonts/jetbrains-mono/index.css" />
