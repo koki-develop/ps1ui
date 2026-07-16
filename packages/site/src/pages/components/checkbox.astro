@@ -1,0 +1,33 @@
+---
+import { Checkbox, Label, Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const states = `<Checkbox aria-label="Unchecked" />
+<Checkbox aria-label="Checked" defaultChecked />
+<Checkbox aria-label="Disabled" disabled />
+<Checkbox aria-label="Disabled checked" disabled defaultChecked />`;
+
+const withLabel = `<Stack direction="row" gap="sm" align="center">
+  <Checkbox id="agree" />
+  <Label htmlFor="agree">I agree to the terms</Label>
+</Stack>`;
+---
+
+<ComponentPage slug="checkbox">
+  <Demo title="States" code={states}>
+    <Stack direction="row" gap="md" align="center" wrap>
+      <Checkbox aria-label="Unchecked" />
+      <Checkbox aria-label="Checked" defaultChecked />
+      <Checkbox aria-label="Disabled" disabled />
+      <Checkbox aria-label="Disabled checked" disabled defaultChecked />
+    </Stack>
+  </Demo>
+
+  <Demo title="With a label" code={withLabel}>
+    <Stack direction="row" gap="sm" align="center">
+      <Checkbox id="agree" />
+      <Label htmlFor="agree">I agree to the terms</Label>
+    </Stack>
+  </Demo>
+</ComponentPage>

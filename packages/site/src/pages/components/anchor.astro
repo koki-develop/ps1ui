@@ -1,0 +1,37 @@
+---
+import { Anchor, Stack, Text } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const variants = `<Anchor href="https://github.com/koki-develop/ps1ui">
+  primary — the default
+</Anchor>
+<Anchor href="https://github.com/koki-develop/ps1ui" variant="subtle">
+  subtle — for secondary navigation
+</Anchor>`;
+
+const inText = `<Text>
+  Anchors sit inline within running text, like this link to the{" "}
+  <Anchor href="https://github.com/koki-develop/ps1ui">repository</Anchor>.
+</Text>`;
+---
+
+<ComponentPage slug="anchor">
+  <Demo title="Variants" code={variants}>
+    <Stack direction="column" gap="sm" align="start">
+      <Anchor href="https://github.com/koki-develop/ps1ui">
+        primary — the default
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" variant="subtle">
+        subtle — for secondary navigation
+      </Anchor>
+    </Stack>
+  </Demo>
+
+  <Demo title="In running text" code={inText}>
+    <Text>
+      Anchors sit inline within running text, like this link to the <Anchor
+        href="https://github.com/koki-develop/ps1ui">repository</Anchor>.
+    </Text>
+  </Demo>
+</ComponentPage>

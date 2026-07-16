@@ -14,10 +14,17 @@ https://koki-develop.github.io/ps1ui/ via `.github/workflows/pages.yml`.
 
 `astro check` is intentionally omitted from `typecheck` until `@astrojs/language-server` supports TypeScript 7.0 — the current release (2.16.11 as of 2026-07-16) crashes on `getTsconfig` with "Cannot read properties of undefined (reading 'fileExists')". `tsc --noEmit` still catches type errors in `.tsx` files and in the frontmatter of `.astro` files that `.astro`'s TS module maps to. Re-enable once compatibility lands.
 
+## Page structure
+
+- `/` — landing (hero + install + CTAs), `src/pages/index.astro`
+- `/getting-started/` — setup guide, `src/pages/getting-started.astro`
+- `/components/` + `/components/<slug>/` — component index and one page per `@ps1ui/core` component. Each page is a hand-written `src/pages/components/<slug>.astro` using the `ComponentPage` layout (header + import line from the registry) and `Demo` blocks (live static render + code string). **Adding a component to core means adding its entry to `src/lib/components.ts` (registry: sidebar, index, page headers) AND a matching page file.** Live previews render statically — avoid demos that need client JS to look right (e.g. Checkbox `indeterminate` is a DOM property set in an effect, so it won't show without hydration).
+- `/storybook/` — static Storybook build (see below); linked only from the footer.
+
 ## Conventions
 
 - **Depend on built `@ps1ui/core`**: `workspace:*` resolves via symlink but Astro imports its `dist/` exports (`@ps1ui/core`, `@ps1ui/core/styles.css`). Always run `pnpm --filter @ps1ui/core build` before `pnpm --filter @ps1ui/site dev|build`.
-- **Base path**: `astro.config.mjs` sets `base: "/ps1ui"`. Static asset URLs referenced from `.astro` templates (image `src`, `<link href>`) are auto-prefixed by Astro. Internal `<a href>` attributes are NOT auto-prefixed — when adding a link to another page in this site, prefix the path with `import.meta.env.BASE_URL` yourself (see the Storybook link in `Hero.astro`). No helper is warranted while internal linking stays this sparse; add one if it grows.
+- **Base path**: `astro.config.mjs` sets `base: "/ps1ui"`. Static asset URLs referenced from `.astro` templates (image `src`, `<link href>`) are auto-prefixed by Astro. Internal `<a href>` attributes are NOT auto-prefixed — route every internal link through the `href()` helper in `src/lib/url.ts` (`href("components/button/")`; base-relative, no leading slash, trailing slash required because `trailingSlash: "always"`).
 - **No `client:*` unless proven needed**: every `@ps1ui/core` public component renders statically. `CodeBlock` uses hooks internally but its SSR output is complete syntax-highlighted HTML — hydration only re-measures overflow on window resize, which we skip. Adding `client:load` ships React runtime (~40KB); don't.
 - **Reset-aware markup**: `@ps1ui/core/base.css` resets bare `<a>` / `<h*>` / `<button>` / `<ul>` / `<img>` etc. to un-styled state. Always route through `<Anchor>` / `<Heading>` / `<Button>` / `<CodeBlock>`.
 - **No lint/fmt in hooks**: `lefthook.yml` oxlint/oxfmt is scoped to `packages/core/`. Astro `.astro` files aren't oxlint-supported yet, so this package is currently unlinted.

@@ -1,0 +1,50 @@
+---
+import { Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+import DemoBox from "../../components/DemoBox.astro";
+
+const row = `<Stack direction="row" gap="md">
+  <div>01</div>
+  <div>02</div>
+  <div>03</div>
+</Stack>`;
+
+const column = `<Stack direction="column" gap="sm">
+  <div>01</div>
+  <div>02</div>
+  <div>03</div>
+</Stack>`;
+
+const responsive = `<Stack direction={{ base: "column", md: "row" }} gap="md">
+  <div>01</div>
+  <div>02</div>
+  <div>03</div>
+</Stack>`;
+---
+
+<ComponentPage slug="stack">
+  <Demo title="Row" code={row}>
+    <Stack direction="row" gap="md">
+      <DemoBox>01</DemoBox>
+      <DemoBox>02</DemoBox>
+      <DemoBox>03</DemoBox>
+    </Stack>
+  </Demo>
+
+  <Demo title="Column" code={column}>
+    <Stack direction="column" gap="sm">
+      <DemoBox>01</DemoBox>
+      <DemoBox>02</DemoBox>
+      <DemoBox>03</DemoBox>
+    </Stack>
+  </Demo>
+
+  <Demo title="Responsive direction" code={responsive}>
+    <Stack direction={{ base: "column", md: "row" }} gap="md">
+      <DemoBox>01</DemoBox>
+      <DemoBox>02</DemoBox>
+      <DemoBox>03</DemoBox>
+    </Stack>
+  </Demo>
+</ComponentPage>

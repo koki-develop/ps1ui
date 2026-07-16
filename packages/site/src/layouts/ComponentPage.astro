@@ -1,0 +1,26 @@
+---
+import { CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
+import DocsLayout from "./DocsLayout.astro";
+import { componentBySlug } from "../lib/components";
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const meta = componentBySlug(slug);
+const importCode = `import { ${meta.name} } from "@ps1ui/core";`;
+---
+
+<DocsLayout title={meta.name} description={meta.description} current={slug}>
+  <Stack direction="column" gap="2xl">
+    <Stack direction="column" gap="md">
+      <Stack direction="column" gap="sm">
+        <Heading level={1} size="2xl">{meta.name}</Heading>
+        <Text>{meta.description}</Text>
+      </Stack>
+      <CodeBlock language="tsx" code={importCode} />
+    </Stack>
+    <slot />
+  </Stack>
+</DocsLayout>

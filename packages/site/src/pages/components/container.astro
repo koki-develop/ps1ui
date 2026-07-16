@@ -1,0 +1,38 @@
+---
+import { Container, Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+import DemoBox from "../../components/DemoBox.astro";
+
+const sizes = `<Container size="sm">max-width 40rem</Container>
+<Container size="md">max-width 48rem</Container>
+<Container size="full">unbounded</Container>`;
+
+const px = `<Container size="sm" px={{ base: "md", md: "2xl" }}>
+  Horizontal padding scales with the container width.
+</Container>`;
+---
+
+<ComponentPage slug="container">
+  <Demo title="Sizes" code={sizes}>
+    <Stack direction="column" gap="sm">
+      <Container size="sm">
+        <DemoBox>size="sm" — max-width 40rem</DemoBox>
+      </Container>
+      <Container size="md">
+        <DemoBox>size="md" — max-width 48rem</DemoBox>
+      </Container>
+      <Container size="full">
+        <DemoBox>size="full" — unbounded</DemoBox>
+      </Container>
+    </Stack>
+  </Demo>
+
+  <Demo title="Responsive padding" code={px}>
+    <Container size="sm" px={{ base: "md", md: "2xl" }}>
+      <DemoBox>
+        px switches from md to 2xl at the md container breakpoint.
+      </DemoBox>
+    </Container>
+  </Demo>
+</ComponentPage>

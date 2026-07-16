@@ -1,0 +1,67 @@
+---
+import { Anchor, CodeBlock, Container, Heading, Stack, Text } from "@ps1ui/core";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { CONTAINER_PX, INSTALL_COMMAND } from "../lib/site";
+import { href } from "../lib/url";
+
+const styles = `import "@ps1ui/core/styles.css";`;
+
+const usage = `import "@ps1ui/core/styles.css";
+import { PS1Root, Button, Heading } from "@ps1ui/core";
+
+export function App() {
+  return (
+    <PS1Root>
+      <Heading level={1}>Hello, PS1 UI</Heading>
+      <Button variant="primary">Click me</Button>
+    </PS1Root>
+  );
+}`;
+---
+
+<BaseLayout
+  title="Getting Started"
+  description="Install @ps1ui/core and render your first components."
+>
+  <Container size="md" px={CONTAINER_PX}>
+    <Stack direction="column" gap="2xl">
+      <Heading level={1} size="2xl">Getting Started</Heading>
+
+      <Stack direction="column" gap="md">
+        <Heading level={2} size="lg">Install</Heading>
+        <Text>
+          React 19 is a peer dependency — install it alongside the package.
+        </Text>
+        <CodeBlock language="bash" code={INSTALL_COMMAND} />
+      </Stack>
+
+      <Stack direction="column" gap="md">
+        <Heading level={2} size="lg">Import the stylesheet</Heading>
+        <Text>
+          The JS entry ships no styles. Import the CSS once at your app's entry
+          point — it brings the design tokens, the dark canvas, and every
+          component's styles.
+        </Text>
+        <CodeBlock language="tsx" code={styles} />
+      </Stack>
+
+      <Stack direction="column" gap="md">
+        <Heading level={2} size="lg">Wrap your app in PS1Root</Heading>
+        <Text>
+          PS1Root establishes the container-query context that responsive props
+          resolve against. Without it, responsive props silently fall back to
+          their base values. Wrap once, at the top of your tree.
+        </Text>
+        <CodeBlock language="tsx" code={usage} />
+      </Stack>
+
+      <Stack direction="column" gap="md">
+        <Heading level={2} size="lg">Next</Heading>
+        <Text>
+          Browse the <Anchor href={href("components/")}>components</Anchor> to
+          see everything in the box.
+        </Text>
+      </Stack>
+    </Stack>
+  </Container>
+</BaseLayout>

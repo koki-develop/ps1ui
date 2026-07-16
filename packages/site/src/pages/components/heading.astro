@@ -1,0 +1,47 @@
+---
+import { Heading, Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+// The code string shows the plain consumer form, but the live render demotes
+// level 1 to an h2 tag via `as` — the page title must stay this document's
+// only h1. Visuals are identical (level drives size/weight, `as` only swaps
+// the tag), so this is the one intentional live/code divergence on the site.
+const levels = `<Heading level={1}>Heading 1</Heading>
+<Heading level={2}>Heading 2</Heading>
+<Heading level={3}>Heading 3</Heading>
+<Heading level={4}>Heading 4</Heading>
+<Heading level={5}>Heading 5</Heading>
+<Heading level={6}>Heading 6</Heading>`;
+
+const sizeOverride = `<Heading level={2} size="3xl">
+  Looks like an h1, stays an h2
+</Heading>`;
+
+const responsive = `<Heading level={2} size={{ base: "xl", md: "3xl" }}>
+  Scales up at the md breakpoint
+</Heading>`;
+---
+
+<ComponentPage slug="heading">
+  <Demo title="Levels" code={levels}>
+    <Stack direction="column" gap="md">
+      <Heading level={1} as="h2">Heading 1</Heading>
+      <Heading level={2}>Heading 2</Heading>
+      <Heading level={3}>Heading 3</Heading>
+      <Heading level={4}>Heading 4</Heading>
+      <Heading level={5}>Heading 5</Heading>
+      <Heading level={6}>Heading 6</Heading>
+    </Stack>
+  </Demo>
+
+  <Demo title="Size override" code={sizeOverride}>
+    <Heading level={2} size="3xl">Looks like an h1, stays an h2</Heading>
+  </Demo>
+
+  <Demo title="Responsive size" code={responsive}>
+    <Heading level={2} size={{ base: "xl", md: "3xl" }}>
+      Scales up at the md breakpoint
+    </Heading>
+  </Demo>
+</ComponentPage>

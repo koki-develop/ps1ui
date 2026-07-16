@@ -1,0 +1,49 @@
+---
+import { Anchor, Container, Stack, Text } from "@ps1ui/core";
+import { CONTAINER_PX } from "../lib/site";
+import { href } from "../lib/url";
+---
+
+<footer>
+  <Container size="xl" px={CONTAINER_PX}>
+    <Stack direction="row" align="center" justify="between" gap="lg">
+      <Text as="span" size="sm" variant="subtle">MIT License</Text>
+      <ul>
+        <li>
+          <Anchor
+            href="https://github.com/koki-develop/ps1ui"
+            variant="subtle"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </Anchor>
+        </li>
+        <li>
+          <Anchor
+            href={href("storybook/")}
+            variant="subtle"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Storybook
+          </Anchor>
+        </li>
+      </ul>
+    </Stack>
+  </Container>
+</footer>
+
+<style>
+  footer {
+    border-top: 1px solid var(--ps1ui-color-border);
+    padding-block: var(--ps1ui-space-xl);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ps1ui-space-sm) var(--ps1ui-space-lg);
+    font-size: var(--ps1ui-font-size-sm);
+  }
+</style>

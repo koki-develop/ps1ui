@@ -1,0 +1,53 @@
+---
+import { Anchor, Container, Stack } from "@ps1ui/core";
+import { CONTAINER_PX } from "../lib/site";
+import { href } from "../lib/url";
+---
+
+<header>
+  <Container size="xl" px={CONTAINER_PX}>
+    <Stack direction="row" align="center" justify="between" gap="lg">
+      <span class="brand">
+        <Anchor href={href()} variant="subtle">PS1 UI</Anchor>
+      </span>
+      <nav aria-label="Site">
+        <ul>
+          <li>
+            <Anchor href={href("getting-started/")} variant="subtle">Getting Started</Anchor>
+          </li>
+          <li>
+            <Anchor href={href("components/")} variant="subtle">Components</Anchor>
+          </li>
+          <li>
+            <Anchor
+              href="https://github.com/koki-develop/ps1ui"
+              variant="subtle"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </Anchor>
+          </li>
+        </ul>
+      </nav>
+    </Stack>
+  </Container>
+</header>
+
+<style>
+  header {
+    border-bottom: 1px solid var(--ps1ui-color-border);
+    padding-block: var(--ps1ui-space-lg);
+  }
+
+  .brand {
+    font-weight: 600;
+  }
+
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ps1ui-space-sm) var(--ps1ui-space-lg);
+    font-size: var(--ps1ui-font-size-sm);
+  }
+</style>

@@ -1,16 +1,20 @@
 ---
 import "@ps1ui/core/styles.css";
 import { PS1Root } from "@ps1ui/core";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 
 interface Props {
   title?: string;
   description?: string;
 }
 
-const {
-  title = "PS1 UI",
-  description = "For engineers who never left the terminal.",
-} = Astro.props;
+const { title, description = "For engineers who never left the terminal." } =
+  Astro.props;
+
+// Pages pass a short title ("Button", "Getting Started"); the site suffix is
+// composed here once so no call site carries " — PS1 UI" itself.
+const fullTitle = title ? `${title} — PS1 UI` : "PS1 UI";
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 ---
@@ -25,21 +29,39 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
     <link rel="canonical" href={canonical} />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
 
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content={title} />
+    <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
 
-    <title>{title}</title>
+    <title>{fullTitle}</title>
   </head>
   <body>
-    <PS1Root>
-      <div style="padding-block: clamp(2rem, 6vw, 4rem)">
+    <PS1Root className="site-root">
+      <SiteHeader />
+      <main>
         <slot />
-      </div>
+      </main>
+      <SiteFooter />
     </PS1Root>
   </body>
 </html>
+
+<style>
+  /* PS1Root is a React component, so Astro's scoped attribute never lands on
+     it — target its className globally. Flex column + min-height pins the
+     footer to the bottom on short pages. */
+  :global(.site-root) {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  main {
+    flex: 1;
+    padding-block: clamp(2rem, 6vw, 4rem);
+  }
+</style>

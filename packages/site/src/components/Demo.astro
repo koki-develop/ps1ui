@@ -1,0 +1,26 @@
+---
+import { CodeBlock, Heading, Stack } from "@ps1ui/core";
+
+interface Props {
+  title: string;
+  code: string;
+}
+
+const { title, code } = Astro.props;
+---
+
+<Stack direction="column" gap="md">
+  <Heading level={2} size="lg">{title}</Heading>
+  <div class="preview">
+    <slot />
+  </div>
+  <CodeBlock language="tsx" code={code} />
+</Stack>
+
+<style>
+  .preview {
+    padding: var(--ps1ui-space-xl);
+    border: 1px solid var(--ps1ui-color-border);
+    border-radius: var(--ps1ui-radius-lg);
+  }
+</style>

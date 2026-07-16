@@ -1,0 +1,48 @@
+---
+import { Grid } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+import DemoBox from "../../components/DemoBox.astro";
+
+const columns = `<Grid columns={3} gap="md">
+  <div>01</div>
+  <div>02</div>
+  <div>03</div>
+  <div>04</div>
+  <div>05</div>
+  <div>06</div>
+</Grid>`;
+
+const responsive = `<Grid columns={{ base: 1, sm: 2, md: 3 }} gap="md">
+  <div>01</div>
+  <div>02</div>
+  <div>03</div>
+  <div>04</div>
+  <div>05</div>
+  <div>06</div>
+</Grid>`;
+---
+
+<ComponentPage slug="grid">
+  <Demo title="Columns" code={columns}>
+    <Grid columns={3} gap="md">
+      <DemoBox>01</DemoBox>
+      <DemoBox>02</DemoBox>
+      <DemoBox>03</DemoBox>
+      <DemoBox>04</DemoBox>
+      <DemoBox>05</DemoBox>
+      <DemoBox>06</DemoBox>
+    </Grid>
+  </Demo>
+
+  <Demo title="Responsive columns" code={responsive}>
+    <Grid columns={{ base: 1, sm: 2, md: 3 }} gap="md">
+      <DemoBox>01</DemoBox>
+      <DemoBox>02</DemoBox>
+      <DemoBox>03</DemoBox>
+      <DemoBox>04</DemoBox>
+      <DemoBox>05</DemoBox>
+      <DemoBox>06</DemoBox>
+    </Grid>
+  </Demo>
+</ComponentPage>

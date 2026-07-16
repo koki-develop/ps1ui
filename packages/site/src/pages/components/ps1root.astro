@@ -1,0 +1,39 @@
+---
+import { CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+
+const usage = `import { PS1Root } from "@ps1ui/core";
+
+export function App() {
+  return (
+    <PS1Root>
+      {/* your app */}
+    </PS1Root>
+  );
+}`;
+---
+
+<ComponentPage slug="ps1root">
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Usage</Heading>
+    <Text>
+      PS1Root renders a single div with container-type: inline-size. Responsive
+      props on descendant components resolve against this containment context —
+      without an ancestor PS1Root (or another containment ancestor like
+      Container, Grid, or Stack), responsive props silently fall back to their
+      base values. Wrap your app once, at the top of the tree.
+    </Text>
+    <CodeBlock language="tsx" code={usage} />
+  </Stack>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Containment side effects</Heading>
+    <Text>
+      container-type: inline-size implies layout containment, so PS1Root
+      becomes the containing block for position: fixed descendants — a raw
+      fixed element inside it scrolls with the page instead of pinning to the
+      viewport. Render viewport-anchored overlays (modals, tooltips, popovers)
+      through a React Portal to document.body so they escape the containment.
+    </Text>
+  </Stack>
+</ComponentPage>

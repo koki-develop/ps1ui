@@ -1,0 +1,20 @@
+---
+// Demo-only placeholder box for visualizing layout primitives (Stack, Grid,
+// Container). Not part of @ps1ui/core — just visible chrome for previews.
+---
+
+<div class="demo-box">
+  <slot />
+</div>
+
+<style>
+  .demo-box {
+    min-width: 0;
+    padding: var(--ps1ui-space-sm) var(--ps1ui-space-md);
+    border: 1px dashed var(--ps1ui-color-border-strong);
+    border-radius: var(--ps1ui-radius-md);
+    color: var(--ps1ui-color-fg-muted);
+    font-size: var(--ps1ui-font-size-sm);
+    text-align: center;
+  }
+</style>

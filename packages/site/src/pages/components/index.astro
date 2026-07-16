@@ -1,0 +1,46 @@
+---
+import { Anchor, Container, Heading, Stack, Text } from "@ps1ui/core";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { COMPONENT_GROUPS } from "../../lib/components";
+import { CONTAINER_PX } from "../../lib/site";
+import { href } from "../../lib/url";
+---
+
+<BaseLayout title="Components" description="Every component @ps1ui/core ships.">
+  <Container size="md" px={CONTAINER_PX}>
+    <Stack direction="column" gap="2xl">
+      <Stack direction="column" gap="sm">
+        <Heading level={1} size="2xl">Components</Heading>
+        <Text>Every component @ps1ui/core ships today.</Text>
+      </Stack>
+      {
+        COMPONENT_GROUPS.map((group) => (
+          <Stack direction="column" gap="md">
+            <Heading level={2} size="lg">
+              {group.title}
+            </Heading>
+            <ul class="list">
+              {group.items.map((c) => (
+                <li>
+                  <Anchor href={href(`components/${c.slug}/`)}>{c.name}</Anchor>
+                  <Text as="span" size="sm">
+                    {" — "}
+                    {c.description}
+                  </Text>
+                </li>
+              ))}
+            </ul>
+          </Stack>
+        ))
+      }
+    </Stack>
+  </Container>
+</BaseLayout>
+
+<style>
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ps1ui-space-sm);
+  }
+</style>
