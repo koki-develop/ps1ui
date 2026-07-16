@@ -15,6 +15,18 @@ type ButtonOwnProps<E extends ElementType> = {
 // (`as="a"`) and React component types (`as={NextLink}`) so consumers can render a link that
 // looks like a button; a loose ref type would silently accept mismatched refs, so dropping ref
 // from the prop type is safer than a misleading loose type.
+/**
+ * Props for {@link Button}. Derived from the props of the rendered element `E`,
+ * so what's accepted follows the `as` target.
+ *
+ * `disabled` and polymorphism: `disabled` only exists on form elements, so
+ * `<Button as="a" href="…" disabled>` is a type error (`ComponentPropsWithoutRef<"a">`
+ * has no `disabled` — locked in by `Button.test-d.tsx`). This is intentional and
+ * matches the ARIA Authoring Practices: links are not disabled. When the action is
+ * unavailable, render a native `<Button disabled>` (or no link at all) instead of a
+ * link. Untyped JS callers and `as={Component}` escapes that pass `disabled` anyway
+ * get a leaked no-op attribute — no visual or behavioral disabling happens.
+ */
 export type ButtonProps<E extends ElementType = "button"> = ButtonOwnProps<E> &
   Omit<ComponentPropsWithoutRef<E>, keyof ButtonOwnProps<E>>;
 

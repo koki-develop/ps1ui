@@ -9,7 +9,7 @@
   background: var(--ps1ui-color-bg);
   border: 1px solid var(--ps1ui-color-border-strong);
   border-radius: var(--ps1ui-radius-md);
-  padding: 7px 12px;
+  padding: var(--ps1ui-control-padding-y) var(--ps1ui-space-md);
   transition:
     border-color var(--ps1ui-transition-fast),
     box-shadow var(--ps1ui-transition-fast);

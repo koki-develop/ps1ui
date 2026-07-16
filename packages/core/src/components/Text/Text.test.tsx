@@ -43,13 +43,14 @@ const BREAKPOINTS_NON_BASE = ["sm", "md", "lg", "xl"] as const satisfies readonl
   "base"
 >[];
 
-// Expected computed font-size per token, mirroring --ps1ui-font-size-* in
-// tokens.css. Kept as a table so any font-size token drift trips these
+// Expected computed font-size per token: the rem values of
+// --ps1ui-font-size-* in tokens.css resolved at the test browser's default
+// 16px root. Kept as a table so any font-size token drift trips these
 // tests, not just a class rename.
 const FONT_SIZE_PX = {
-  xs: "11px",
-  sm: "13px",
-  md: "15px",
+  xs: "12px",
+  sm: "14px",
+  md: "16px",
   lg: "18px",
   xl: "22px",
 } as const satisfies Record<TextSize, string>;
@@ -326,10 +327,27 @@ describe("Text", () => {
       },
     );
 
-    test("no size prop → CSS default font-size sm (13px)", async () => {
+    test("no size prop → CSS default font-size sm (14px)", async () => {
       const screen = await render(<Text data-testid="t">x</Text>);
       const el = screen.getByTestId("t").element() as HTMLElement;
       expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX.sm);
+    });
+
+    test("font-size tokens are rem-based: text scales with the root font-size (user preference)", async () => {
+      // The px assertions above hold at the default 16px root whether the
+      // tokens are rem or hardcoded px — this pins the actual point of the
+      // rem scale: tracking the user's browser font-size setting.
+      const screen = await render(<Text data-testid="t">x</Text>);
+      const el = screen.getByTestId("t").element() as HTMLElement;
+      document.documentElement.style.fontSize = "20px";
+      try {
+        // 0.875rem (sm) × 20px root
+        expect(getComputedStyle(el).fontSize).toBe("17.5px");
+      } finally {
+        // Root font-size is page-global and Browser Mode shares the page per
+        // file — always restore.
+        document.documentElement.style.fontSize = "";
+      }
     });
 
     test("no weight prop → font-weight resolves to normal (400) via CSS `initial` fallback", async () => {

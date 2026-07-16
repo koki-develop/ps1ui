@@ -48,6 +48,11 @@
   --ps1ui-space-xl: 24px;
   --ps1ui-space-2xl: 32px;
 
+  /* Vertical padding for 1px-bordered controls (Button, Input): border +
+     padding = --ps1ui-space-sm (8px), so this is a derived value, not a new
+     spacing step. */
+  --ps1ui-control-padding-y: 7px;
+
   /* Container max-widths, in rem so they scale with the user's browser
      font-size preference (WCAG-friendly). Numeric equivalents at the
      browser-default 16px root: 40 = 640, 48 = 768, 64 = 1024, 80 = 1280.
@@ -68,13 +73,17 @@
   --ps1ui-breakpoint-lg: 64rem;
   --ps1ui-breakpoint-xl: 80rem;
 
-  --ps1ui-font-size-xs: 11px;
-  --ps1ui-font-size-sm: 13px;
-  --ps1ui-font-size-md: 15px;
-  --ps1ui-font-size-lg: 18px;
-  --ps1ui-font-size-xl: 22px;
-  --ps1ui-font-size-2xl: 26px;
-  --ps1ui-font-size-3xl: 32px;
+  /* Type scale, in rem so text tracks the user's browser font-size preference
+     (same rationale as the container/breakpoint tokens above). All values sit
+     on the 0.125rem (2px) grid; px equivalents at the default 16px root:
+     12 / 14 / 16 / 18 / 22 / 26 / 32. */
+  --ps1ui-font-size-xs: 0.75rem;
+  --ps1ui-font-size-sm: 0.875rem;
+  --ps1ui-font-size-md: 1rem;
+  --ps1ui-font-size-lg: 1.125rem;
+  --ps1ui-font-size-xl: 1.375rem;
+  --ps1ui-font-size-2xl: 1.625rem;
+  --ps1ui-font-size-3xl: 2rem;
 
   --ps1ui-transition-fast: 120ms ease;
 }

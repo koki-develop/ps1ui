@@ -60,8 +60,8 @@ export function Heading<E extends HeadingElement = HeadingElement>({
   const sizeVars = resolveResponsive(size, "--_heading-size", fontSizeToVar);
   const weightVars = resolveResponsive(weight, "--_heading-weight", weightToValue);
 
-  // React 18's CSSProperties does not permit `--*` keys; stamp them via a
-  // cast — same pattern as the layout primitives.
+  // Caller style first, internal `--_*` vars win — see Text.tsx. Cast because
+  // csstype has no index signature for `--*` keys (React 19 included).
   const mergedStyle: CSSProperties = {
     ...style,
     ...sizeVars,

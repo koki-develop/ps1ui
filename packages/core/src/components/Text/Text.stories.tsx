@@ -50,9 +50,9 @@ export const Variants: Story = {
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <Text size="xs">xs — 11px</Text>
-      <Text size="sm">sm — 13px</Text>
-      <Text size="md">md — 15px</Text>
+      <Text size="xs">xs — 12px</Text>
+      <Text size="sm">sm — 14px</Text>
+      <Text size="md">md — 16px</Text>
       <Text size="lg">lg — 18px</Text>
       <Text size="xl">xl — 22px</Text>
     </div>

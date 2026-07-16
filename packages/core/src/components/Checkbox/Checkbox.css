@@ -58,7 +58,7 @@
    Depends on the pseudo's initial `box-sizing: content-box` so the 2px borders
    sit OUTSIDE the 4×8 content — base.css's reset intentionally excludes pseudo
    elements from its `box-sizing: border-box` block for exactly this pattern.
-   Rendered geometry locked in by Checkbox.contrast.test.tsx. */
+   Rendered geometry locked in by Checkbox.checkmark-geometry.test.tsx. */
 .ps1ui-checkbox:checked:not(:indeterminate)::after {
   content: "";
   position: absolute;
@@ -81,6 +81,21 @@
   height: 2px;
   background: currentColor;
   border-radius: 1px;
+}
+
+/* forced-colors force-replaces author backgrounds, so the background-drawn
+   indeterminate bar would vanish — redraw it as a border, which survives as
+   system ink (same 6–8px band; the checked ✓ is already border-drawn and
+   needs nothing). The focus-outline counterpart lives in the grouped
+   forced-colors rule in styles/components.css. Tested in
+   src/styles/forced-colors.test.tsx. */
+@media (forced-colors: active) {
+  .ps1ui-checkbox:indeterminate::after {
+    background: none;
+    height: 0;
+    border-top: 2px solid currentColor;
+    border-radius: 0;
+  }
 }
 
 .ps1ui-checkbox:disabled {

@@ -28,6 +28,15 @@ export const pointerUp: BrowserCommand<[]> = async (context) => {
   await context.page.mouse.up();
 };
 
+// forced-colors can't be entered from inside the page — only Playwright's
+// `page.emulateMedia` flips it. `null` (not `"none"`) on release restores the
+// real environment default. Engine support varies; callers feature-detect via
+// matchMedia after enabling (see src/testing/forced-colors.ts).
+export const emulateForcedColors: BrowserCommand<[active: boolean]> = async (context, active) => {
+  assertPlaywrightProvider(context, "emulateForcedColors");
+  await context.page.emulateMedia({ forcedColors: active ? "active" : null });
+};
+
 // `commands.pointerDown(selector)` on the client calls this WITHOUT the leading
 // `context` argument (Vitest's RPC layer injects that server-side) — strip it here so
 // the derived client type matches what's actually callable.
@@ -44,4 +53,10 @@ type ClientCommand<T> = T extends (context: never, ...payload: infer P) => infer
 export type PseudoStateCommands = {
   pointerDown: ClientCommand<typeof pointerDown>;
   releasePointer: ClientCommand<typeof pointerUp>;
+};
+
+// Same derivation pattern as PseudoStateCommands, consumed by
+// src/testing/forced-colors.ts's `declare module "vitest/browser"`.
+export type ForcedColorsCommands = {
+  emulateForcedColors: ClientCommand<typeof emulateForcedColors>;
 };

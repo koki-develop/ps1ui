@@ -139,7 +139,7 @@ export const WithBodyText: Story = {
       <Heading level={3} style={{ marginTop: 12 }}>
         Requirements
       </Heading>
-      <Text>React 18 or 19. Tokens rely on CSS variables and JetBrains Mono Variable.</Text>
+      <Text>React 19+. Tokens rely on CSS variables and JetBrains Mono Variable.</Text>
     </article>
   ),
 };

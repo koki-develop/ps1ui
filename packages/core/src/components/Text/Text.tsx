@@ -64,8 +64,9 @@ export function Text<E extends TextElement = "p">({
     className,
   );
 
-  // React 18's CSSProperties does not permit `--*` keys; stamp them via a
-  // cast — same pattern as the layout primitives.
+  // Caller style first, resolved vars last: `--_*` is the reserved internal
+  // prefix and wins on purpose — responsive values are prop-controlled. Cast
+  // because csstype has no index signature for `--*` keys (React 19 included).
   const mergedStyle: CSSProperties = {
     ...style,
     ...sizeVars,

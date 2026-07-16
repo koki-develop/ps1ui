@@ -7,7 +7,8 @@
   font-size: var(--ps1ui-font-size-sm);
   font-weight: 500;
   line-height: 1;
-  padding: 7px 14px;
+  /* 14px: 2× the 7px vertical rhythm; deliberately off the space scale. */
+  padding: var(--ps1ui-control-padding-y) 14px;
   border-radius: var(--ps1ui-radius-md);
   border: 1px solid transparent;
   cursor: pointer;

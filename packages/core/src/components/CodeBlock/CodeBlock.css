@@ -1,6 +1,6 @@
 .ps1ui-codeblock {
   margin: 0;
-  padding: 12px 16px;
+  padding: var(--ps1ui-space-md) var(--ps1ui-space-lg);
   background: var(--ps1ui-color-surface);
   border: 1px solid var(--ps1ui-color-border);
   border-radius: var(--ps1ui-radius-lg);

@@ -23,7 +23,7 @@ const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, st
 describe("Button contrast", () => {
   test.for(CASES)(
     "variant=$variant / state=$state passes WCAG contrast",
-    async ({ variant, state }) => {
+    async ({ variant, state }, ctx) => {
       // macOS Safari's default "Full Keyboard Access" setting limits Tab to
       // text boxes and lists — <button> (and <a>) are excluded from the Tab
       // sequence unless the user opts in via System Settings or Safari's own
@@ -33,7 +33,10 @@ describe("Button contrast", () => {
       // :focus-visible can't be authentically reached here — a real user
       // tabbing through a default-configured Safari hits the same
       // limitation, so this isn't something our CSS/component can fix.
-      if (state === "focus-visible" && server.browser === "webkit") return;
+      ctx.skip(
+        state === "focus-visible" && server.browser === "webkit",
+        "WebKit's Full-Keyboard-Access default excludes <button> from Tab; :focus-visible unreachable",
+      );
 
       const screen = await render(
         <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>

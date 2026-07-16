@@ -57,10 +57,11 @@ const WEIGHT_VALUE = {
   bold: "700",
 } as const satisfies Record<HeadingWeight, string>;
 
-// Expected computed font-size in px, mirroring --ps1ui-font-size-* tokens.
+// Expected computed font-size: the rem values of --ps1ui-font-size-* tokens
+// resolved at the test browser's default 16px root.
 const FONT_SIZE_PX = {
-  sm: "13px",
-  md: "15px",
+  sm: "14px",
+  md: "16px",
   lg: "18px",
   xl: "22px",
   "2xl": "26px",

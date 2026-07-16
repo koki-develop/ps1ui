@@ -74,8 +74,8 @@ export function Stack({
   const justifyVars = resolveResponsive(justify, "--_stack-justify", justifyToValue);
   const wrapVars = resolveResponsive(wrap, "--_stack-wrap", wrapToValue);
 
-  // React 18's CSSProperties does not permit `--*` custom-property keys;
-  // stamp them via a cast — same pattern as Container.tsx and Grid.tsx.
+  // Caller style first, internal `--_*` vars win — see Text.tsx. Cast because
+  // csstype has no index signature for `--*` keys (React 19 included).
   const mergedStyle: CSSProperties = {
     ...style,
     ...directionVars,

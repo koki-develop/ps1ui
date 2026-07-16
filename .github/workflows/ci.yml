@@ -40,3 +40,6 @@ jobs:
       # signal doesn't muddy this workflow's "did lint/build/unit pass?"
       # semantics.
       - run: pnpm --filter @ps1ui/core test:ci
+      # 100% per-file coverage gate (vitest.config.ts thresholds); runs
+      # Chromium-only, so it's cheap next to the 3-browser run above.
+      - run: pnpm --filter @ps1ui/core test:coverage

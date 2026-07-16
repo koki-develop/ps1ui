@@ -8,8 +8,7 @@
   "type": "module",
   "sideEffects": [
     "**/*.css",
-    "**/CodeBlock/refractor.ts",
-    "dist/index.mjs"
+    "**/CodeBlock/refractor.*"
   ],
   "exports": {
     ".": {
@@ -39,7 +38,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ci": "vitest run --project unit --project storybook",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --project unit --project storybook",
     "test:vrt": "vitest run --project vrt",
     "test:vrt:update": "vitest run --project vrt -u",
     "storybook": "storybook dev -p 6006",
@@ -79,7 +78,7 @@
     "vitest-browser-react": "2.2.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

@@ -5,7 +5,7 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
-import { pointerDown, pointerUp } from "./vitest.browser-commands";
+import { emulateForcedColors, pointerDown, pointerUp } from "./vitest.browser-commands";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,19 +36,24 @@ function browserInstances() {
 }
 
 // Shared cross-project defaults for `test.browser`. Each project spreads this
-// then overlays project-specific fields (name, commands, screenshotFailures,
+// then overlays project-specific fields (name, screenshotFailures,
 // expect.toMatchScreenshot). Hoisting these here prevents silent drift when a
 // new browser-level setting (viewport, locale, isolate, etc.) is introduced —
-// there's exactly one place to add it. `instances` and `provider` are called
-// per project (not stored on this base) because both must return their own
-// per-project object references (see the `browserInstances()` comment above,
-// and `playwright()` similarly returns fresh state each call).
+// there's exactly one place to add it. Custom commands live here too: the
+// client-side `declare module "vitest/browser"` augmentations in src/testing
+// are project-agnostic, so registering a command in only some projects would
+// leave the others typechecking against commands that fail at runtime.
+// `instances` and `provider` are called per project (not stored on this base)
+// because both must return their own per-project object references (see the
+// `browserInstances()` comment above, and `playwright()` similarly returns
+// fresh state each call).
 function browserBase() {
   return {
     enabled: true as const,
     provider: playwright(),
     instances: browserInstances(),
     headless: true,
+    commands: { pointerDown, releasePointer: pointerUp, emulateForcedColors },
   };
 }
 
@@ -61,14 +66,17 @@ export default defineConfig({
       exclude: [
         "src/**/*.stories.tsx",
         "src/**/*.test.tsx",
+        // Type-level tests: tsc-only, never executed, would sit at 0% forever.
+        "src/**/*.test-d.tsx",
         "src/**/*.vrt.test.tsx",
         "src/testing/**",
       ],
-      // Aggregate is enforced across the `unit` + `storybook` projects (the
-      // `vrt` project is coverage-excluded above via `*.vrt.test.tsx`). Running
-      // with `--project unit` or `--project storybook` alone will drop below
-      // 100% and fail. Always run `pnpm test:coverage` (no --project filter)
-      // for gate checks.
+      // Aggregate is enforced across the `unit` + `storybook` projects — the
+      // pair `pnpm test:coverage` runs. Running either project alone drops
+      // below 100% and fails. The `vrt` project is deliberately left out of
+      // the script: its files are coverage-excluded above, so running it adds
+      // zero coverage while re-executing every screenshot compare — and would
+      // turn intentional visual changes into coverage-gate failures in CI.
       thresholds: {
         perFile: true,
         statements: 100,
@@ -87,10 +95,7 @@ export default defineConfig({
           // updates inline snapshots too, and we don't want a stray unit-test
           // snapshot getting rewritten during a baseline refresh.
           exclude: ["**/*.vrt.test.tsx"],
-          browser: {
-            ...browserBase(),
-            commands: { pointerDown, releasePointer: pointerUp },
-          },
+          browser: browserBase(),
         },
       },
       {
@@ -111,9 +116,11 @@ export default defineConfig({
         test: {
           name: "vrt",
           include: ["src/**/*.vrt.test.tsx"],
+          // Waits for JetBrains Mono to be resident before every capture —
+          // see src/testing/vrt-setup.ts for the font-load race this closes.
+          setupFiles: ["./src/testing/vrt-setup.ts"],
           browser: {
             ...browserBase(),
-            commands: { pointerDown, releasePointer: pointerUp },
             // Vitest's default failure snapshot writes `<test-name>-N.png`
             // under __screenshots__/ with no browser/platform suffix, which
             // would collide with VRT's `<name>-<browser>-<platform>.png`

@@ -172,9 +172,13 @@ textarea {
   resize: vertical;
 }
 
+/* `in srgb` for consistency with the library's other color-mix calls. The
+   space is irrelevant when mixing with `transparent` (premultiplied-alpha
+   interpolation, CSS Color 4), so diverging from Tailwind Preflight's oklab
+   here is visually a no-op. */
 ::placeholder {
   opacity: 1;
-  color: color-mix(in oklab, currentcolor 55%, transparent);
+  color: color-mix(in srgb, currentcolor 55%, transparent);
 }
 
 ::-webkit-date-and-time-value {

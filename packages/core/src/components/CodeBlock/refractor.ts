@@ -1,8 +1,10 @@
 // Shared Refractor singleton. `refractor` (as opposed to `refractor/core`) ships with
 // ~36 "checked" languages pre-registered — see refractor/lib/common.js. We layer a
 // curated set of additional languages on top so common ecosystem grammars work out of
-// the box. Everything is a static import, so each language contributes to the
-// consumer's initial bundle; keep this list intentional.
+// the box. Static imports on purpose: only CodeBlock consumers pay for them (this
+// module is its own side-effectful dist chunk — see package.json `sideEffects`),
+// and lazy `import()` registration would make highlighting async (unhighlighted
+// first paint, no SSR story) for a few KB per grammar. Keep this list intentional.
 import { refractor } from "refractor";
 
 import dart from "refractor/dart";

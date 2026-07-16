@@ -1,3 +1,25 @@
+/* ==========================================================================
+ * Cascade & overrides — why this file does NOT use @layer
+ * --------------------------------------------------------------------------
+ * Wrapping these styles in `@layer ps1ui { … }` was considered and rejected:
+ * unlayered styles beat layered ones regardless of specificity, and host
+ * design systems (this entry's target audience) invariably ship unlayered
+ * element-level rules (`button { … }`, `input { … }`, `a { … }`). Layering
+ * ps1ui would let every such host rule silently override component classes,
+ * breaking components by default exactly where this entry is meant to be
+ * embedded. So component rules stay unlayered, and selectors like
+ * `.ps1ui-checkbox:checked:hover:not(:disabled)` keep real specificity.
+ *
+ * Overriding ps1ui styles, in preference order:
+ *   1. Redefine `--ps1ui-*` design tokens (the supported theming surface) —
+ *      colors, spacing, radii, fonts all flow from tokens.css.
+ *   2. Match or exceed the component selector's specificity, e.g.
+ *      `.my-app .ps1ui-button { … }`.
+ *   3. If YOUR system is fully layered, import this entry into a low layer
+ *      yourself — `@import "@ps1ui/core/components.css" layer(vendor);` —
+ *      and your layered rules above it win without extra specificity.
+ * ========================================================================== */
+
 @import "./tokens.css";
 @import "../components/PS1Root/PS1Root.css";
 @import "../components/Anchor/Anchor.css";
@@ -41,4 +63,20 @@
   align-self: stretch;
   justify-self: stretch;
   min-width: 0;
+}
+
+/* forced-colors (Windows High Contrast) strips box-shadow, so every component
+   whose focus ring is box-shadow-based needs a real outline there — one rule,
+   one owner, same precedent as the containment grouped selector above. Add new
+   box-shadow-focus components to this list. Component-specific forced-colors
+   adjustments (e.g. Checkbox's indeterminate bar) stay in their own CSS.
+   Tested in src/styles/forced-colors.test.tsx. */
+@media (forced-colors: active) {
+  .ps1ui-button:focus-visible,
+  .ps1ui-checkbox:focus-visible,
+  .ps1ui-codeblock:focus-visible,
+  .ps1ui-input:focus {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }

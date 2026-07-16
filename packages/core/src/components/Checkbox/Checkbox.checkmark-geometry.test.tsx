@@ -3,6 +3,13 @@
 // Checkbox.css edit, or upstream browser default that would visually break
 // the tick fails a specific assertion.
 //
+// Deliberately NOT a `*.contrast.test.tsx` (it used to be misnamed as one):
+// axe's color-contrast rule only evaluates TEXT nodes, and a checkbox renders
+// no text — an axe-based contrast test here would assert nothing. The checked
+// state's fg/bg pair (--ps1ui-color-primary-fg on --ps1ui-color-primary) is
+// the same pair Button's primary variant uses, already verified with real
+// text by Button.contrast.test.tsx.
+//
 // Concrete anti-scenarios this test catches:
 //   * base.css puts pseudo elements back into `box-sizing: border-box` →
 //     the 2px right/bottom borders get swallowed into the 4×8 content and

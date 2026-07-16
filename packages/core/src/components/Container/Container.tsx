@@ -18,9 +18,8 @@ const sizeToVar = (v: ContainerSize): string =>
 export function Container({ size, px, className, style, ...rest }: ContainerProps) {
   const sizeVars = resolveResponsive(size, "--_container-size", sizeToVar);
   const pxVars = resolveResponsive(px, "--_container-px", spaceToVar);
-  // React 18's CSSProperties does not permit `--*` custom-property keys;
-  // stamp them via a cast — same pattern used in Grid.tsx. React 19 permits
-  // them directly, but the peer-dep range still spans React 18.
+  // Caller style first, internal `--_*` vars win — see Text.tsx. Cast because
+  // csstype has no index signature for `--*` keys (React 19 included).
   const mergedStyle: CSSProperties = {
     ...style,
     ...sizeVars,

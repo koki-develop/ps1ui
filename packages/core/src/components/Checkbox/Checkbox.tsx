@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useLayoutEffect, useRef, type ComponentProps } from "react";
 import { cx } from "../../utils/cx";
 
