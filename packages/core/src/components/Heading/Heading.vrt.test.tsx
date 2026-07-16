@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { VrtFrame } from "../../testing/vrt";
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Heading, type HeadingLevel, type HeadingSize, type HeadingWeight } from "./Heading";
 
 const LEVELS = [1, 2, 3, 4, 5, 6] as const satisfies readonly HeadingLevel[];
@@ -31,19 +32,32 @@ const FRAME_WIDTH = 480;
 
 const LABEL = "the quick brown fox";
 
-type Case = { name: string; node: () => ReactNode };
+type Case = { name: string; stageWidth: number; node: () => ReactNode };
+
+// Responsive size cascade — one baseline per breakpoint band. Level 1
+// bakes in as the base default via withResponsiveBase, so the base case
+// captures level 1's 3xl and each wider band picks up the object's entry.
+const RESPONSIVE_SIZE = {
+  base: "sm",
+  sm: "md",
+  md: "lg",
+  lg: "2xl",
+  xl: "3xl",
+} as const satisfies Record<"base" | "sm" | "md" | "lg" | "xl", HeadingSize>;
 
 const CASES: readonly Case[] = [
   // Level cases test both the h1..h6 tag choice AND the LEVEL_DEFAULTS
   // size/weight mapping in one shot — a drift in either surfaces here.
   ...LEVELS.map((level) => ({
     name: `level-${level}`,
+    stageWidth: FRAME_WIDTH,
     node: () => <Heading level={level}>{LABEL}</Heading>,
   })),
   // Size / weight cases pin level=1 (default 3xl bold) and override one
   // axis, so a size or weight class regression isolates cleanly.
   ...SIZES.map((size) => ({
     name: `size-${size}`,
+    stageWidth: FRAME_WIDTH,
     node: () => (
       <Heading level={1} size={size}>
         {LABEL}
@@ -52,17 +66,79 @@ const CASES: readonly Case[] = [
   })),
   ...WEIGHTS.map((weight) => ({
     name: `weight-${weight}`,
+    stageWidth: FRAME_WIDTH,
     node: () => (
       <Heading level={1} weight={weight}>
         {LABEL}
       </Heading>
     ),
   })),
+  // Responsive size cascade — PS1Root supplies the containment ancestor
+  // for the @container queries in Heading.css.
+  // 320 CSS px width doubles as the WCAG 2.2 SC 1.4.10 (Reflow) baseline —
+  // proves level 1's default (3xl via withResponsiveBase) heading text
+  // wraps within the narrowest supported viewport without horizontal
+  // overflow.
+  {
+    name: "responsive-size-below-sm-wcag-320",
+    stageWidth: 320,
+    node: () => (
+      <PS1Root>
+        <Heading level={1} size={RESPONSIVE_SIZE}>
+          {LABEL}
+        </Heading>
+      </PS1Root>
+    ),
+  },
+  {
+    name: "responsive-size-sm-band",
+    stageWidth: 700,
+    node: () => (
+      <PS1Root>
+        <Heading level={1} size={RESPONSIVE_SIZE}>
+          {LABEL}
+        </Heading>
+      </PS1Root>
+    ),
+  },
+  {
+    name: "responsive-size-md-band",
+    stageWidth: 900,
+    node: () => (
+      <PS1Root>
+        <Heading level={1} size={RESPONSIVE_SIZE}>
+          {LABEL}
+        </Heading>
+      </PS1Root>
+    ),
+  },
+  {
+    name: "responsive-size-lg-band",
+    stageWidth: 1200,
+    node: () => (
+      <PS1Root>
+        <Heading level={1} size={RESPONSIVE_SIZE}>
+          {LABEL}
+        </Heading>
+      </PS1Root>
+    ),
+  },
+  {
+    name: "responsive-size-xl-band",
+    stageWidth: 1400,
+    node: () => (
+      <PS1Root>
+        <Heading level={1} size={RESPONSIVE_SIZE}>
+          {LABEL}
+        </Heading>
+      </PS1Root>
+    ),
+  },
 ];
 
 describe("Heading VRT", () => {
-  test.for(CASES)("$name", async ({ name, node }) => {
-    const screen = await render(<VrtFrame width={FRAME_WIDTH}>{node()}</VrtFrame>);
+  test.for(CASES)("$name", async ({ name, stageWidth, node }) => {
+    const screen = await render(<VrtFrame width={stageWidth}>{node()}</VrtFrame>);
     await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
   });
 });

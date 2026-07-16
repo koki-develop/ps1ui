@@ -1,4 +1,5 @@
 @import "./tokens.css";
+@import "../components/PS1Root/PS1Root.css";
 @import "../components/Anchor/Anchor.css";
 @import "../components/Button/Button.css";
 @import "../components/Checkbox/Checkbox.css";

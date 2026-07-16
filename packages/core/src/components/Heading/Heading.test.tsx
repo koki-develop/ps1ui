@@ -1,7 +1,10 @@
-import type { ReactElement } from "react";
+import "../../styles/styles.css";
+
+import type { CSSProperties, ReactElement } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import type { Breakpoint } from "../../utils/responsive";
 import {
   Heading,
   type HeadingElement,
@@ -20,6 +23,11 @@ const WEIGHTS = [
   "bold",
 ] as const satisfies readonly HeadingWeight[];
 
+const BREAKPOINTS_NON_BASE = ["sm", "md", "lg", "xl"] as const satisfies readonly Exclude<
+  Breakpoint,
+  "base"
+>[];
+
 // Mirror of LEVEL_DEFAULTS in Heading.tsx — kept in the test as a snapshot so a defaults
 // change in the component fails a test rather than silently shifting typography.
 const EXPECTED_DEFAULTS: Record<HeadingLevel, { size: HeadingSize; weight: HeadingWeight }> = {
@@ -30,6 +38,53 @@ const EXPECTED_DEFAULTS: Record<HeadingLevel, { size: HeadingSize; weight: Headi
   5: { size: "md", weight: "medium" },
   6: { size: "sm", weight: "medium" },
 };
+
+// Mirrors sizeToVar in Heading.tsx.
+const SIZE_VAR = {
+  sm: "var(--ps1ui-font-size-sm)",
+  md: "var(--ps1ui-font-size-md)",
+  lg: "var(--ps1ui-font-size-lg)",
+  xl: "var(--ps1ui-font-size-xl)",
+  "2xl": "var(--ps1ui-font-size-2xl)",
+  "3xl": "var(--ps1ui-font-size-3xl)",
+} as const satisfies Record<HeadingSize, string>;
+
+// Mirrors weightToValue in Heading.tsx.
+const WEIGHT_VALUE = {
+  regular: "400",
+  medium: "500",
+  semibold: "600",
+  bold: "700",
+} as const satisfies Record<HeadingWeight, string>;
+
+// Expected computed font-size in px, mirroring --ps1ui-font-size-* tokens.
+const FONT_SIZE_PX = {
+  sm: "13px",
+  md: "15px",
+  lg: "18px",
+  xl: "22px",
+  "2xl": "26px",
+  "3xl": "32px",
+} as const satisfies Record<HeadingSize, string>;
+
+// Renders a UI tree inside a fixed-width `container-type: inline-size` wrapper
+// so Heading's `@container` queries match against the wrapper.
+function renderInContainerAtWidth(width: number, ui: ReactElement) {
+  return render(
+    <div
+      data-testid="query-context"
+      style={
+        {
+          containerType: "inline-size",
+          width,
+          background: "transparent",
+        } as CSSProperties
+      }
+    >
+      {ui}
+    </div>,
+  );
+}
 
 describe("Heading", () => {
   describe("rendering", () => {
@@ -75,79 +130,269 @@ describe("Heading", () => {
       await expect.element(screen.getByTestId("h")).toHaveClass("ps1ui-heading");
     });
 
-    test.for(LEVELS.map((level) => ({ level })))(
-      "level=$level applies its default size and weight classes",
-      async ({ level }) => {
-        const screen = await render(
-          <Heading level={level} data-testid="h">
-            {`level-${level}`}
-          </Heading>,
-        );
-        const el = screen.getByTestId("h");
-        const { size, weight } = EXPECTED_DEFAULTS[level];
-        await expect.element(el).toHaveClass(`ps1ui-heading--size-${size}`);
-        await expect.element(el).toHaveClass(`ps1ui-heading--weight-${weight}`);
-      },
-    );
-
-    test.for(SIZES.map((size) => ({ size })))(
-      "size=$size overrides the level default",
-      async ({ size }) => {
-        const screen = await render(
-          <Heading level={1} size={size} data-testid="h">
-            {`size-${size}`}
-          </Heading>,
-        );
-        const el = screen.getByTestId("h").element();
-        const sizeClasses = Array.from(el.classList).filter((c) =>
-          c.startsWith("ps1ui-heading--size-"),
-        );
-        expect(sizeClasses).toEqual([`ps1ui-heading--size-${size}`]);
-      },
-    );
-
-    test.for(WEIGHTS.map((weight) => ({ weight })))(
-      "weight=$weight overrides the level default",
-      async ({ weight }) => {
-        const screen = await render(
-          <Heading level={1} weight={weight} data-testid="h">
-            {`weight-${weight}`}
-          </Heading>,
-        );
-        const el = screen.getByTestId("h").element();
-        const weightClasses = Array.from(el.classList).filter((c) =>
-          c.startsWith("ps1ui-heading--weight-"),
-        );
-        expect(weightClasses).toEqual([`ps1ui-heading--weight-${weight}`]);
-      },
-    );
-
-    test("size / weight overrides keep only the caller-provided classes (no default leaks)", async () => {
+    test("does not emit legacy size/weight BEM classes (handled via CSS variables now)", async () => {
+      // The old `ps1ui-heading--size-*` / `ps1ui-heading--weight-*` modifier
+      // classes were replaced by inline CSS variables. Locking in that BEM
+      // classes are gone — catches an accidental partial revert.
       const screen = await render(
-        <Heading level={1} size="sm" weight="regular" data-testid="h">
-          overridden
+        <Heading level={1} size="lg" weight="regular" data-testid="h">
+          x
         </Heading>,
       );
       const el = screen.getByTestId("h").element();
-      const sizeClasses = Array.from(el.classList).filter((c) =>
-        c.startsWith("ps1ui-heading--size-"),
-      );
-      const weightClasses = Array.from(el.classList).filter((c) =>
-        c.startsWith("ps1ui-heading--weight-"),
-      );
-      expect(sizeClasses).toEqual(["ps1ui-heading--size-sm"]);
-      expect(weightClasses).toEqual(["ps1ui-heading--weight-regular"]);
+      for (const cls of Array.from(el.classList)) {
+        expect(cls).not.toMatch(/^ps1ui-heading--(size|weight)-/);
+      }
     });
 
     test("merges caller-supplied className without dropping the base class", async () => {
       const screen = await render(
-        <Heading level={1} className="extra" data-testid="h">
+        <Heading level={1} className="extra other" data-testid="h">
           x
         </Heading>,
       );
       const el = screen.getByTestId("h");
       await expect.element(el).toHaveClass("ps1ui-heading");
       await expect.element(el).toHaveClass("extra");
+      await expect.element(el).toHaveClass("other");
+    });
+  });
+
+  describe("inline style CSS variables", () => {
+    test.for(LEVELS.map((level) => ({ level })))(
+      "level=$level with no size/weight overrides → emits level's default at --_heading-{size,weight}-base",
+      async ({ level }) => {
+        const screen = await render(
+          <Heading level={level} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        const { size, weight } = EXPECTED_DEFAULTS[level];
+        expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR[size]);
+        expect(el.style.getPropertyValue("--_heading-weight-base")).toBe(WEIGHT_VALUE[weight]);
+        // Only -base emitted for the scalar-default path.
+        for (const bp of BREAKPOINTS_NON_BASE) {
+          expect(el.style.getPropertyValue(`--_heading-size-${bp}`)).toBe("");
+          expect(el.style.getPropertyValue(`--_heading-weight-${bp}`)).toBe("");
+        }
+      },
+    );
+
+    test.for(SIZES.map((size) => ({ size })))(
+      "explicit scalar size=$size overrides the level default at --_heading-size-base",
+      async ({ size }) => {
+        const screen = await render(
+          <Heading level={1} size={size} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR[size]);
+      },
+    );
+
+    test.for(WEIGHTS.map((weight) => ({ weight })))(
+      "explicit scalar weight=$weight overrides the level default at --_heading-weight-base",
+      async ({ weight }) => {
+        const screen = await render(
+          <Heading level={1} weight={weight} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(el.style.getPropertyValue("--_heading-weight-base")).toBe(WEIGHT_VALUE[weight]);
+      },
+    );
+
+    test("responsive size WITHOUT base falls back to the level default at base", async () => {
+      // The withResponsiveBase pipeline: level 1's default size is `3xl`; a
+      // caller who wrote `size={{ md: "xl" }}` gets `{ base: "3xl", md: "xl" }`
+      // stamped as inline CSS variables.
+      const screen = await render(
+        <Heading level={1} size={{ md: "xl" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR["3xl"]);
+      expect(el.style.getPropertyValue("--_heading-size-md")).toBe(SIZE_VAR.xl);
+    });
+
+    test("responsive weight WITHOUT base falls back to the level default at base", async () => {
+      const screen = await render(
+        <Heading level={2} weight={{ md: "regular" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      // level 2 default weight = semibold (600)
+      expect(el.style.getPropertyValue("--_heading-weight-base")).toBe(WEIGHT_VALUE.semibold);
+      expect(el.style.getPropertyValue("--_heading-weight-md")).toBe(WEIGHT_VALUE.regular);
+    });
+
+    test("responsive size WITH explicit base uses the caller's base and per-breakpoint entries", async () => {
+      const screen = await render(
+        <Heading level={1} size={{ base: "sm", md: "xl", xl: "3xl" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      // Level 1's default (3xl) is discarded because the caller supplied
+      // an explicit base — user intent wins.
+      expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR.sm);
+      expect(el.style.getPropertyValue("--_heading-size-md")).toBe(SIZE_VAR.xl);
+      expect(el.style.getPropertyValue("--_heading-size-xl")).toBe(SIZE_VAR["3xl"]);
+      expect(el.style.getPropertyValue("--_heading-size-sm")).toBe("");
+      expect(el.style.getPropertyValue("--_heading-size-lg")).toBe("");
+    });
+
+    test("caller-supplied style is preserved alongside responsive vars", async () => {
+      const screen = await render(
+        <Heading level={1} size="xl" style={{ letterSpacing: "0.1em" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(el.style.letterSpacing).toBe("0.1em");
+      expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR.xl);
+    });
+  });
+
+  describe("computed styles: scalar (no responsive)", () => {
+    test.for(LEVELS.map((level) => ({ level })))(
+      "level=$level with no overrides → level default resolves to expected font-size and font-weight",
+      async ({ level }) => {
+        const screen = await render(
+          <Heading level={level} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        const { size, weight } = EXPECTED_DEFAULTS[level];
+        expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX[size]);
+        expect(getComputedStyle(el).fontWeight).toBe(WEIGHT_VALUE[weight]);
+      },
+    );
+
+    test.for(SIZES.map((size) => ({ size, expected: FONT_SIZE_PX[size] })))(
+      "explicit size=$size scalar → font-size resolves to $expected",
+      async ({ size, expected }) => {
+        const screen = await render(
+          <Heading level={1} size={size} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(getComputedStyle(el).fontSize).toBe(expected);
+      },
+    );
+
+    test.for(WEIGHTS.map((weight) => ({ weight, expected: WEIGHT_VALUE[weight] })))(
+      "explicit weight=$weight scalar → font-weight resolves to $expected",
+      async ({ weight, expected }) => {
+        const screen = await render(
+          <Heading level={1} weight={weight} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(getComputedStyle(el).fontWeight).toBe(expected);
+      },
+    );
+  });
+
+  describe("computed styles: responsive (via @container queries)", () => {
+    type Band = { name: string; width: number; effectiveBreakpoint: Breakpoint };
+    const BANDS: readonly Band[] = [
+      { name: "below sm (base only)", width: 400, effectiveBreakpoint: "base" },
+      { name: "sm band", width: 700, effectiveBreakpoint: "sm" },
+      { name: "md band", width: 900, effectiveBreakpoint: "md" },
+      { name: "lg band", width: 1200, effectiveBreakpoint: "lg" },
+      { name: "xl band", width: 1400, effectiveBreakpoint: "xl" },
+    ];
+
+    const FULL_SIZE = {
+      base: "sm",
+      sm: "md",
+      md: "lg",
+      lg: "2xl",
+      xl: "3xl",
+    } as const satisfies Record<Breakpoint, HeadingSize>;
+
+    test.for(BANDS)(
+      "size={full object} in $name ($width px) → font-size resolves to $effectiveBreakpoint's px",
+      async ({ width, effectiveBreakpoint }) => {
+        const screen = await renderInContainerAtWidth(
+          width,
+          <Heading level={1} size={FULL_SIZE} data-testid="h">
+            x
+          </Heading>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX[FULL_SIZE[effectiveBreakpoint]]);
+      },
+    );
+
+    test("responsive object WITHOUT base → level default applies at base breakpoint", async () => {
+      // withResponsiveBase should inject level 1's default (3xl) as base so
+      // at narrow contexts we still see level 1 typography.
+      const screen = await renderInContainerAtWidth(
+        400,
+        <Heading level={1} size={{ md: "sm" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX["3xl"]);
+    });
+
+    test("responsive object WITHOUT base → md override kicks in at md band", async () => {
+      const screen = await renderInContainerAtWidth(
+        900,
+        <Heading level={1} size={{ md: "sm" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX.sm);
+    });
+
+    test("cascade fallback: size={base:'sm', md:'xl'} above md → md (xl) wins for all wider breakpoints", async () => {
+      const screen = await renderInContainerAtWidth(
+        1400,
+        <Heading level={1} size={{ base: "sm", md: "xl" }} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX.xl);
+    });
+
+    test("no explicit responsive props inside a wide container → level default still applies (no accidental cascade)", async () => {
+      const screen = await renderInContainerAtWidth(
+        1400,
+        <Heading level={3} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      // Level 3 default = xl. Even at xl breakpoint (>= 80rem), the
+      // level default is baked into `-base` only, so the cascade
+      // reduces to that value at every breakpoint.
+      expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX.xl);
+    });
+  });
+
+  describe("Heading does NOT establish its own containment context (leaf component)", () => {
+    test("container-type is not `inline-size`", async () => {
+      const screen = await render(
+        <Heading level={1} data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).containerType).not.toBe("inline-size");
     });
   });
 
@@ -161,16 +406,6 @@ describe("Heading", () => {
       const el = screen.getByTestId("h");
       await expect.element(el).toHaveAttribute("id", "section-1");
       await expect.element(el).toHaveAttribute("aria-describedby", "hint");
-    });
-
-    test("forwards inline style", async () => {
-      const screen = await render(
-        <Heading level={1} style={{ letterSpacing: "0.1em" }} data-testid="h">
-          x
-        </Heading>,
-      );
-      const el = screen.getByTestId("h").element() as HTMLElement;
-      expect(el.style.letterSpacing).toBe("0.1em");
     });
   });
 
@@ -194,7 +429,6 @@ describe("Heading", () => {
 
     const structuralCases: A11yCase[] = [
       {
-        // heading-order guard — h1 down to h6 in strict order must not violate the rule.
         name: "heading-order: h1 → h6 in sequence passes axe",
         node: () => (
           <article>
@@ -208,10 +442,6 @@ describe("Heading", () => {
         ),
       },
       {
-        // Semantic vs visual split — level stays semantically valid while as tweaks the rendered
-        // tag. Using level to preserve h1→h2→h3 order regardless of as would defeat the point,
-        // so this case demonstrates the correct pattern: as follows the semantic hierarchy while
-        // the visual size defaults to what the level implies.
         name: "as override preserves semantic order (h1, h2, h3)",
         node: () => (
           <article>
@@ -232,6 +462,22 @@ describe("Heading", () => {
         node: () => (
           <Heading level={1} size="sm" weight="regular">
             reduced heading
+          </Heading>
+        ),
+      },
+      {
+        name: "responsive size on level 1",
+        node: () => (
+          <Heading level={1} size={{ base: "xl", md: "3xl" }}>
+            responsive heading
+          </Heading>
+        ),
+      },
+      {
+        name: "responsive weight on level 2",
+        node: () => (
+          <Heading level={2} weight={{ base: "regular", md: "bold" }}>
+            responsive weight heading
           </Heading>
         ),
       },

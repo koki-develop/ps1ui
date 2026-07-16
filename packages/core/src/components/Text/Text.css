@@ -1,7 +1,71 @@
+/* Text — typography primitive.
+   Text is a leaf component: it queries an ancestor containment context (a
+   PS1Root / Container / Grid / Stack), but does NOT establish one itself.
+   Establishing containment on every Text would fragment the query surface
+   for descendants and impose a `contain: layout` side effect on every
+   paragraph — needless overhead for a component that carries no children
+   worth measuring.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_text-size-{bp}` / `--_text-weight-{bp}` via inline
+   style. Each `@container (min-width: X)` block below overrides `--_size`
+   / `--_weight` with the value for the matching breakpoint; the fallback
+   chain in `--_size-{bp}` inherits the previous breakpoint's effective
+   value so a partial responsive object cascades naturally.
+
+   `weight` fallback is `initial` (= normal / 400). Consumers who want bold
+   text pass `weight="bold"` explicitly; a bare `<Text as="strong">` renders
+   as normal weight (Text is the source of truth for its own typography,
+   NOT the UA `<strong>` style). Users who need the UA-strong appearance
+   should pair `as="strong"` with `weight="bold"` for consistency across
+   engines. */
 .ps1ui-text {
   margin: 0;
   font-family: var(--ps1ui-font-mono);
   line-height: 1.6;
+
+  --_size-base: var(--_text-size-base, var(--ps1ui-font-size-sm));
+  --_size-sm: var(--_text-size-sm, var(--_size-base));
+  --_size-md: var(--_text-size-md, var(--_size-sm));
+  --_size-lg: var(--_text-size-lg, var(--_size-md));
+  --_size-xl: var(--_text-size-xl, var(--_size-lg));
+
+  --_weight-base: var(--_text-weight-base, initial);
+  --_weight-sm: var(--_text-weight-sm, var(--_weight-base));
+  --_weight-md: var(--_text-weight-md, var(--_weight-sm));
+  --_weight-lg: var(--_text-weight-lg, var(--_weight-md));
+  --_weight-xl: var(--_text-weight-xl, var(--_weight-lg));
+
+  --_size: var(--_size-base);
+  --_weight: var(--_weight-base);
+
+  font-size: var(--_size);
+  font-weight: var(--_weight);
+}
+
+@container (min-width: 40rem) {
+  .ps1ui-text {
+    --_size: var(--_size-sm);
+    --_weight: var(--_weight-sm);
+  }
+}
+@container (min-width: 48rem) {
+  .ps1ui-text {
+    --_size: var(--_size-md);
+    --_weight: var(--_weight-md);
+  }
+}
+@container (min-width: 64rem) {
+  .ps1ui-text {
+    --_size: var(--_size-lg);
+    --_weight: var(--_weight-lg);
+  }
+}
+@container (min-width: 80rem) {
+  .ps1ui-text {
+    --_size: var(--_size-xl);
+    --_weight: var(--_weight-xl);
+  }
 }
 
 .ps1ui-text--truncate {
@@ -29,33 +93,4 @@
 }
 .ps1ui-text--accent {
   color: var(--ps1ui-color-accent);
-}
-
-.ps1ui-text--size-xs {
-  font-size: var(--ps1ui-font-size-xs);
-}
-.ps1ui-text--size-sm {
-  font-size: var(--ps1ui-font-size-sm);
-}
-.ps1ui-text--size-md {
-  font-size: var(--ps1ui-font-size-md);
-}
-.ps1ui-text--size-lg {
-  font-size: var(--ps1ui-font-size-lg);
-}
-.ps1ui-text--size-xl {
-  font-size: var(--ps1ui-font-size-xl);
-}
-
-.ps1ui-text--weight-regular {
-  font-weight: 400;
-}
-.ps1ui-text--weight-medium {
-  font-weight: 500;
-}
-.ps1ui-text--weight-semibold {
-  font-weight: 600;
-}
-.ps1ui-text--weight-bold {
-  font-weight: 700;
 }

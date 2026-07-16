@@ -48,13 +48,25 @@
   --ps1ui-space-xl: 24px;
   --ps1ui-space-2xl: 32px;
 
-  /* Container max-widths. Doubles as the natural breakpoint scale if
-     future media-query / container-query tokens are introduced (they
-     should reference these instead of duplicating the pixel values). */
-  --ps1ui-container-sm: 640px;
-  --ps1ui-container-md: 768px;
-  --ps1ui-container-lg: 1024px;
-  --ps1ui-container-xl: 1280px;
+  /* Container max-widths, in rem so they scale with the user's browser
+     font-size preference (WCAG-friendly). Numeric equivalents at the
+     browser-default 16px root: 40 = 640, 48 = 768, 64 = 1024, 80 = 1280.
+     Doubles as the breakpoint scale — see --ps1ui-breakpoint-* below. */
+  --ps1ui-container-sm: 40rem;
+  --ps1ui-container-md: 48rem;
+  --ps1ui-container-lg: 64rem;
+  --ps1ui-container-xl: 80rem;
+
+  /* Responsive breakpoints, in rem for the same accessibility reason.
+     Values are identical to --ps1ui-container-* by design: a Container
+     of size=lg (64rem) fills at exactly the `lg` breakpoint. These are
+     documentation tokens — @container / @media conditions cannot use
+     `var()` per the CSS spec, so the same numeric values are also
+     hardcoded in each component's CSS. Keep in sync. */
+  --ps1ui-breakpoint-sm: 40rem;
+  --ps1ui-breakpoint-md: 48rem;
+  --ps1ui-breakpoint-lg: 64rem;
+  --ps1ui-breakpoint-xl: 80rem;
 
   --ps1ui-font-size-xs: 11px;
   --ps1ui-font-size-sm: 13px;

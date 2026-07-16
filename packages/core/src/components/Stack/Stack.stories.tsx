@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Button } from "../Button/Button";
 import { Card } from "../Card/Card";
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "../Text/Text";
 import { Stack } from "./Stack";
 
@@ -145,6 +146,37 @@ export const Wrap: Story = {
     >
       {Array.from({ length: 8 }, (_, i) => cell(String(i + 1)))}
     </Stack>
+  ),
+};
+
+// Responsive direction — mobile-first column layout that flips to row on
+// wider contexts. Wrapped in PS1Root so @container queries in Stack.css
+// have a containment ancestor. Resize the preview panel to see the flip.
+export const ResponsiveDirection: Story = {
+  render: () => (
+    <PS1Root>
+      <Stack direction={{ base: "column", md: "row" }} gap={{ base: "sm", md: "lg" }}>
+        {["one", "two", "three"].map((l) => cell(l))}
+      </Stack>
+    </PS1Root>
+  ),
+};
+
+// Responsive alignment — cross-axis alignment adapts to context width.
+export const ResponsiveAlign: Story = {
+  render: () => (
+    <PS1Root>
+      <Stack
+        direction="row"
+        gap="md"
+        align={{ base: "start", md: "center", xl: "end" }}
+        style={{ minHeight: 100 }}
+      >
+        {cell("a", { height: 48 })}
+        {cell("b", { height: 96 })}
+        {cell("c", { height: 72 })}
+      </Stack>
+    </PS1Root>
   ),
 };
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
 import { Input } from "../Input/Input";
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "./Text";
 
 const meta = {
@@ -89,6 +90,19 @@ export const Truncate: Story = {
     style: { maxWidth: 200 },
     children: "this is a long line of text that will be truncated with an ellipsis",
   },
+};
+
+// Responsive size — Text sizing adapts to the ancestor containment
+// context's width. Resize the preview panel to see the size step through
+// the breakpoint scale.
+export const ResponsiveSize: Story = {
+  render: () => (
+    <PS1Root>
+      <Text size={{ base: "xs", sm: "sm", md: "md", lg: "lg", xl: "xl" }}>
+        Responsive text — size scales with the ancestor container width.
+      </Text>
+    </PS1Root>
+  ),
 };
 
 export const OnSurface: Story = {

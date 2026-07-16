@@ -1,18 +1,23 @@
 import { createElement } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import { cx } from "../../utils/cx";
+import { resolveResponsive, type Responsive } from "../../utils/responsive";
+import { fontSizeToVar, weightToValue, type FontWeight } from "../../utils/typography";
 
 export type TextElement = "p" | "span" | "div" | "label" | "strong" | "em" | "small";
 
 export type TextVariant = "body" | "muted" | "subtle" | "primary" | "accent";
 export type TextSize = "xs" | "sm" | "md" | "lg" | "xl";
-export type TextWeight = "regular" | "medium" | "semibold" | "bold";
+// TextWeight is a re-export of the shared FontWeight scale. Keeping a
+// component-local alias preserves the public type name (backwards compat)
+// while the underlying scale stays single-sourced in utils/typography.ts.
+export type TextWeight = FontWeight;
 
 type TextOwnProps<E extends TextElement> = {
   as?: E;
   variant?: TextVariant;
-  size?: TextSize;
-  weight?: TextWeight;
+  size?: Responsive<TextSize>;
+  weight?: Responsive<TextWeight>;
   truncate?: boolean;
 };
 
@@ -40,22 +45,32 @@ const INLINE_TEXT_ELEMENTS: Record<TextElement, boolean> = {
 export function Text<E extends TextElement = "p">({
   as,
   variant = "body",
-  size = "sm",
+  size,
   weight,
   truncate = false,
   className,
+  style,
   ...rest
 }: TextProps<E>) {
   const tag = as ?? "p";
+  const sizeVars = resolveResponsive(size, "--_text-size", fontSizeToVar);
+  const weightVars = resolveResponsive(weight, "--_text-weight", weightToValue);
+
   const classes = cx(
     "ps1ui-text",
     `ps1ui-text--${variant}`,
-    `ps1ui-text--size-${size}`,
-    weight && `ps1ui-text--weight-${weight}`,
     truncate && "ps1ui-text--truncate",
     truncate && INLINE_TEXT_ELEMENTS[tag] && "ps1ui-text--truncate-inline",
     className,
   );
 
-  return createElement(tag, { ...rest, className: classes });
+  // React 18's CSSProperties does not permit `--*` keys; stamp them via a
+  // cast — same pattern as the layout primitives.
+  const mergedStyle: CSSProperties = {
+    ...style,
+    ...sizeVars,
+    ...weightVars,
+  } as CSSProperties;
+
+  return createElement(tag, { ...rest, className: classes, style: mergedStyle });
 }

@@ -1,18 +1,23 @@
 import { createElement } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import { cx } from "../../utils/cx";
+import { resolveResponsive, withResponsiveBase, type Responsive } from "../../utils/responsive";
+import { fontSizeToVar, weightToValue, type FontWeight } from "../../utils/typography";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 export type HeadingElement = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
 export type HeadingSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
-export type HeadingWeight = "regular" | "medium" | "semibold" | "bold";
+// HeadingWeight is a re-export of the shared FontWeight scale. Keeping a
+// component-local alias preserves the public type name (backwards compat)
+// while the underlying scale stays single-sourced in utils/typography.ts.
+export type HeadingWeight = FontWeight;
 
 type HeadingOwnProps<E extends HeadingElement> = {
   level: HeadingLevel;
   as?: E;
-  size?: HeadingSize;
-  weight?: HeadingWeight;
+  size?: Responsive<HeadingSize>;
+  weight?: Responsive<HeadingWeight>;
 };
 
 // Deliberate exception to the general "use ComponentProps<'tag'>" rule other components follow —
@@ -35,20 +40,37 @@ const LEVEL_DEFAULTS: Record<HeadingLevel, { size: HeadingSize; weight: HeadingW
 export function Heading<E extends HeadingElement = HeadingElement>({
   level,
   as,
-  size,
-  weight,
+  size: sizeProp,
+  weight: weightProp,
   className,
+  style,
   ...rest
 }: HeadingProps<E>) {
   const tag = as ?? (`h${level}` as HeadingElement);
   const defaults = LEVEL_DEFAULTS[level];
-  const finalSize = size ?? defaults.size;
-  const finalWeight = weight ?? defaults.weight;
-  const classes = cx(
-    "ps1ui-heading",
-    `ps1ui-heading--size-${finalSize}`,
-    `ps1ui-heading--weight-${finalWeight}`,
-    className,
-  );
-  return createElement(tag, { ...rest, className: classes });
+  // `withResponsiveBase` bakes the level's default in at the `base`
+  // breakpoint when the caller either omits the prop entirely or passes a
+  // responsive object with no `base` entry. Concretely, `<Heading level={1}
+  // size={{ md: "2xl" }}>` renders as level 1's default `3xl` at base, then
+  // `2xl` at the md breakpoint — matching the intuition "level sets the
+  // default; the object overrides at specific widths".
+  const size = withResponsiveBase(sizeProp, defaults.size);
+  const weight = withResponsiveBase(weightProp, defaults.weight);
+
+  const sizeVars = resolveResponsive(size, "--_heading-size", fontSizeToVar);
+  const weightVars = resolveResponsive(weight, "--_heading-weight", weightToValue);
+
+  // React 18's CSSProperties does not permit `--*` keys; stamp them via a
+  // cast — same pattern as the layout primitives.
+  const mergedStyle: CSSProperties = {
+    ...style,
+    ...sizeVars,
+    ...weightVars,
+  } as CSSProperties;
+
+  return createElement(tag, {
+    ...rest,
+    className: cx("ps1ui-heading", className),
+    style: mergedStyle,
+  });
 }

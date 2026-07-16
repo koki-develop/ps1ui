@@ -136,6 +136,35 @@ Two dimensions — line and behavioral.
 
 **Behavioral:** 100% lines is not behavior coverage — a `:hover` rule executed by an a11y visual test can pass without asserting that the color actually shifted. **YOU MUST add a direct assertion for every observable behavior a change introduces or alters** — CSS state transitions, computed styles, classes, DOM attributes, event handlers. Use `getComputedStyle` behind `withPseudoState` (`src/testing/pseudo-state.ts`) for CSS-state assertions; derive expected colors from CSS vars via probe elements rather than hardcoding hex. If a behavior is genuinely untestable, note the reason in a comment before shipping — silent omission is not an option.
 
+## Responsive props (container-query based)
+
+**Model.** ps1ui components accept `Responsive<T>` values for size/spacing/layout props. `Responsive<T>` is `T | Partial<Record<Breakpoint, T>>` where `Breakpoint = "base" | "sm" | "md" | "lg" | "xl"`. Scalars are equivalent to `{ base: T }`; object values override at container-query breakpoints (`sm` = 40rem / `md` = 48rem / `lg` = 64rem / `xl` = 80rem, mirroring `--ps1ui-breakpoint-*` in tokens.css).
+
+**Mechanism.** Component TS calls `resolveResponsive(value, "--_<comp>-<axis>", transform)` (from `src/utils/responsive.ts`) which returns a record of CSS custom properties to spread into inline `style`. Component CSS declares an intermediate cascade (`--_size-base: var(--_<comp>-size-base, <default>); --_size-sm: var(--_<comp>-size-sm, var(--_size-base));` etc.) and each `@container (min-width: X)` block reassigns `--_size` to the matched breakpoint's intermediate var. The fallback chain means a partial responsive object cascades naturally — a missing breakpoint inherits the previous one's effective value.
+
+**Where responsive is offered:** Container (`size`, `px`), Grid (`columns`, `gap`), Stack (`direction`, `gap`, `align`, `justify`, `wrap`), Heading (`size`, `weight`), Text (`size`, `weight`). Container / Grid / Stack additionally establish a named containment context (`container-name: ps1ui-container` / `ps1ui-grid` / `ps1ui-stack`) via `container-type: inline-size`.
+
+**Containment ancestor.** Every responsive component needs a `container-type: inline-size` ancestor for its `@container` queries to fire. Consumers wrap their app tree in `<PS1Root>` once at the top level. PS1Root establishes `container-name: ps1ui-root / inline-size` on a single `<div>` and does nothing else; it's the responsive contract's ONLY required scaffold. Without a containment ancestor, responsive props silently fall back to their `base` value — documented behaviour, not a bug.
+
+**Level-driven defaults + Responsive objects.** Heading has `LEVEL_DEFAULTS` mapping `level → default (size, weight)`. When a caller passes a responsive object without `base`, `withResponsiveBase(value, defaults[level].size)` injects the level default at base so `<Heading level={1} size={{ md: "2xl" }}>` still renders `3xl` at narrow contexts and `2xl` at md+. Use this helper when a component's base default depends on another prop.
+
+**Containment side effects.** `container-type: inline-size` implies `contain: layout style`, which has three shipped consequences (MDN "Using CSS containment"):
+
+1. **`position: fixed` re-parents.** Raw `position: fixed` inside PS1Root / Container / Grid / Stack scrolls with the page instead of pinning to the viewport. Modal / Tooltip / Popover render via React Portal to `document.body` to escape.
+2. **`position: absolute` re-parents.** An absolutely-positioned descendant that expected to anchor to an outer `position: relative` ancestor now anchors to the nearest primitive instead. Consumers who wrap `<div style="position: relative">` around a section and rely on abs-positioned children (badges, decorative overlays) inside a nested Container should keep the containing block explicit — either put the relative wrapper _inside_ the Container, or use Portal.
+3. **New stacking context.** Each primitive becomes an isolated stacking context: a descendant with `z-index: 9999` no longer paints over external siblings — it's clipped to the primitive's z-index range. Overlays that must escape (dropdowns rendered inline, sticky headers overlapping the next section) need Portal, or the primitive needs an appropriate `z-index` of its own to lift the whole subtree.
+
+Same three consequences also apply to `position: sticky` descendants (sticky element's containing block becomes the nearest primitive, so it scrolls out with the primitive rather than the viewport). Document these in per-component notes when introducing an overlay primitive.
+
+**Test conventions for responsive components.** In addition to the standard 5-axis structure below, add:
+
+- **`containment context`** — assert `getComputedStyle(el).containerType === "inline-size"` and `containerName === "ps1ui-<comp>"` (leaf components like Text/Heading assert `containerType !== "inline-size"` — they consume container queries but do not establish them).
+- **`inline style CSS variables`** — enumerate every scalar value, verify only `--_<comp>-<axis>-base` is emitted; then verify responsive objects emit one entry per specified breakpoint. Regex the style attribute for the negative case: `expect(styleAttr).not.toMatch(/--_<comp>-<axis>-/)` when no prop is passed.
+- **`computed styles: responsive (via @container queries)`** — render inside a `container-type: inline-size` wrapper at 5 fixed widths (400 / 700 / 900 / 1200 / 1400) that land one per breakpoint band (base / sm / md / lg / xl). A `renderInContainerAtWidth(width, ui)` helper in each test file centralizes the wrapper markup. Verify `getComputedStyle` resolves each band's value. Also test the cascade fallback (partial responsive object without base → CSS default; explicit gap in the object → later breakpoint inherits earlier's effective value).
+- **VRT baselines** — one capture per breakpoint band (below-sm / sm-band / md-band / lg-band / xl-band). The `below-sm` capture uses `stageWidth: 320` deliberately to double as the WCAG 2.2 SC 1.4.10 (Reflow) baseline — proves the primitive fits at the narrowest supported viewport without horizontal overflow.
+
+**Gotcha: same-test double `render()` in vitest-browser-react.** Both calls' elements coexist on the shared page and Playwright's strict-mode locator trips on duplicate `data-testid`. Split into two tests instead. Reference: Stack.test.tsx's split-out `cascade fallback: object without base → CSS default at base breakpoint` / `... → md override kicks in at md band` pair.
+
 ## Component authoring
 
 Each component lives in `src/components/<Name>/` with:

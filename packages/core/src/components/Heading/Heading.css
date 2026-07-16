@@ -1,38 +1,75 @@
+/* Heading — semantic heading primitive with level-driven typography.
+   Like Text, Heading is a leaf: it queries an ancestor containment context
+   but does not establish one itself. See Text.css for the rationale.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_heading-size-{bp}` / `--_heading-weight-{bp}` via
+   inline style, always at least at `-base` (Heading.tsx normalizes the
+   level's default into the base breakpoint if the caller didn't supply
+   one). Each `@container (min-width: X)` block below overrides `--_size`
+   / `--_weight` for the matching breakpoint; the fallback chain inherits
+   the previous breakpoint's effective value so a partial responsive object
+   cascades naturally.
+
+   Heading.tsx contract: `--_heading-size-base` and `--_heading-weight-base`
+   are ALWAYS emitted via inline style (see Heading.tsx — `size` and
+   `weight` both pass through `withResponsiveBase(..., LEVEL_DEFAULTS[level].
+   size|weight)`, which guarantees the `base` breakpoint is populated for
+   every render). The `--_size-base` / `--_weight-base` fallback branches
+   below are therefore defensive floors only — they should never be reached
+   in normal rendering. If Heading.tsx ever changes to NOT normalize the
+   base breakpoint, these floors keep the component in a legible default
+   (font-size sm, font-weight normal). Text.css uses a live fallback path
+   because Text.tsx does not normalize its size/weight props. */
 .ps1ui-heading {
   margin: 0;
   font-family: var(--ps1ui-font-mono);
   color: var(--ps1ui-color-fg);
   line-height: 1.3;
+
+  /* Defensive-floor fallbacks. Never reached under normal render — see
+     the comment above. Kept as font-size sm / weight normal so a
+     bypassed Heading.tsx contract still yields legible output. */
+  --_size-base: var(--_heading-size-base, var(--ps1ui-font-size-sm));
+  --_size-sm: var(--_heading-size-sm, var(--_size-base));
+  --_size-md: var(--_heading-size-md, var(--_size-sm));
+  --_size-lg: var(--_heading-size-lg, var(--_size-md));
+  --_size-xl: var(--_heading-size-xl, var(--_size-lg));
+
+  --_weight-base: var(--_heading-weight-base, normal);
+  --_weight-sm: var(--_heading-weight-sm, var(--_weight-base));
+  --_weight-md: var(--_heading-weight-md, var(--_weight-sm));
+  --_weight-lg: var(--_heading-weight-lg, var(--_weight-md));
+  --_weight-xl: var(--_heading-weight-xl, var(--_weight-lg));
+
+  --_size: var(--_size-base);
+  --_weight: var(--_weight-base);
+
+  font-size: var(--_size);
+  font-weight: var(--_weight);
 }
 
-.ps1ui-heading--size-sm {
-  font-size: var(--ps1ui-font-size-sm);
+@container (min-width: 40rem) {
+  .ps1ui-heading {
+    --_size: var(--_size-sm);
+    --_weight: var(--_weight-sm);
+  }
 }
-.ps1ui-heading--size-md {
-  font-size: var(--ps1ui-font-size-md);
+@container (min-width: 48rem) {
+  .ps1ui-heading {
+    --_size: var(--_size-md);
+    --_weight: var(--_weight-md);
+  }
 }
-.ps1ui-heading--size-lg {
-  font-size: var(--ps1ui-font-size-lg);
+@container (min-width: 64rem) {
+  .ps1ui-heading {
+    --_size: var(--_size-lg);
+    --_weight: var(--_weight-lg);
+  }
 }
-.ps1ui-heading--size-xl {
-  font-size: var(--ps1ui-font-size-xl);
-}
-.ps1ui-heading--size-2xl {
-  font-size: var(--ps1ui-font-size-2xl);
-}
-.ps1ui-heading--size-3xl {
-  font-size: var(--ps1ui-font-size-3xl);
-}
-
-.ps1ui-heading--weight-regular {
-  font-weight: 400;
-}
-.ps1ui-heading--weight-medium {
-  font-weight: 500;
-}
-.ps1ui-heading--weight-semibold {
-  font-weight: 600;
-}
-.ps1ui-heading--weight-bold {
-  font-weight: 700;
+@container (min-width: 80rem) {
+  .ps1ui-heading {
+    --_size: var(--_size-xl);
+    --_weight: var(--_weight-xl);
+  }
 }

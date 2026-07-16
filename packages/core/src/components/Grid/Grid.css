@@ -1,26 +1,63 @@
+/* Grid — display:grid + N-column tracks + gap.
+   Establishes an inline-size containment context so descendants respond to
+   Grid's width via `@container` queries. Named `ps1ui-grid` for future
+   targeted queries.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_grid-columns-{bp}` / `--_grid-gap-{bp}` via inline
+   style (see Grid.tsx). Each `@container (min-width: X)` block below
+   overrides `--_columns` / `--_gap` with the value for the matching
+   breakpoint; the fallback chain in `--_columns-{bp}` inherits the
+   previous breakpoint's effective value so a partial responsive object
+   cascades naturally.
+
+   Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
+   inline as literal values because `@container` conditions cannot resolve
+   `var()`. Keep them in sync. */
 .ps1ui-grid {
+  container: ps1ui-grid / inline-size;
   display: grid;
-  grid-template-columns: repeat(var(--ps1ui-grid-columns), minmax(0, 1fr));
+
+  --_columns-base: var(--_grid-columns-base, 1);
+  --_columns-sm: var(--_grid-columns-sm, var(--_columns-base));
+  --_columns-md: var(--_grid-columns-md, var(--_columns-sm));
+  --_columns-lg: var(--_grid-columns-lg, var(--_columns-md));
+  --_columns-xl: var(--_grid-columns-xl, var(--_columns-lg));
+
+  --_gap-base: var(--_grid-gap-base, var(--ps1ui-space-md));
+  --_gap-sm: var(--_grid-gap-sm, var(--_gap-base));
+  --_gap-md: var(--_grid-gap-md, var(--_gap-sm));
+  --_gap-lg: var(--_grid-gap-lg, var(--_gap-md));
+  --_gap-xl: var(--_grid-gap-xl, var(--_gap-lg));
+
+  --_columns: var(--_columns-base);
+  --_gap: var(--_gap-base);
+
+  grid-template-columns: repeat(var(--_columns), minmax(0, 1fr));
+  gap: var(--_gap);
 }
 
-.ps1ui-grid--gap-none {
-  gap: 0;
+@container (min-width: 40rem) {
+  .ps1ui-grid {
+    --_columns: var(--_columns-sm);
+    --_gap: var(--_gap-sm);
+  }
 }
-.ps1ui-grid--gap-xs {
-  gap: var(--ps1ui-space-xs);
+@container (min-width: 48rem) {
+  .ps1ui-grid {
+    --_columns: var(--_columns-md);
+    --_gap: var(--_gap-md);
+  }
 }
-.ps1ui-grid--gap-sm {
-  gap: var(--ps1ui-space-sm);
+@container (min-width: 64rem) {
+  .ps1ui-grid {
+    --_columns: var(--_columns-lg);
+    --_gap: var(--_gap-lg);
+  }
 }
-.ps1ui-grid--gap-md {
-  gap: var(--ps1ui-space-md);
-}
-.ps1ui-grid--gap-lg {
-  gap: var(--ps1ui-space-lg);
-}
-.ps1ui-grid--gap-xl {
-  gap: var(--ps1ui-space-xl);
-}
-.ps1ui-grid--gap-2xl {
-  gap: var(--ps1ui-space-2xl);
+@container (min-width: 80rem) {
+  .ps1ui-grid {
+    --_columns: var(--_columns-xl);
+    --_gap: var(--_gap-xl);
+  }
 }

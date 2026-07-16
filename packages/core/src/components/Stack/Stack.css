@@ -1,71 +1,110 @@
+/* Stack — flexbox composition of children along one axis.
+   Establishes an inline-size containment context so descendants respond to
+   Stack's width via `@container` queries. Named `ps1ui-stack` for future
+   targeted queries.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_stack-{axis}-{bp}` via inline style (see Stack.tsx).
+   Each `@container (min-width: X)` block below overrides `--_{axis}` with
+   the value for the matching breakpoint; the fallback chain in
+   `--_{axis}-{bp}` inherits the previous breakpoint's effective value so a
+   partial responsive object cascades naturally.
+
+   Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
+   inline as literal values because `@container` conditions cannot resolve
+   `var()`. Keep them in sync.
+
+   Fallback defaults:
+   - direction: `column` — vertical stacks are the mobile-first default
+     for a column-major layout primitive
+   - gap: `--ps1ui-space-md` — matches Container's default padding scale
+   - align: `normal` — the CSS box-alignment initial value; in a flex
+     context, `normal` behaves as `stretch`, matching Flexbox's default
+   - justify: `normal` — behaves as `flex-start` in a flex context
+   - wrap: `nowrap` — the flex-wrap CSS initial value
+   Each default matches the property's own initial-value behaviour so
+   omitting the corresponding prop is equivalent to not writing the
+   declaration at all. */
 .ps1ui-stack {
+  container: ps1ui-stack / inline-size;
   display: flex;
+
+  --_direction-base: var(--_stack-direction-base, column);
+  --_direction-sm: var(--_stack-direction-sm, var(--_direction-base));
+  --_direction-md: var(--_stack-direction-md, var(--_direction-sm));
+  --_direction-lg: var(--_stack-direction-lg, var(--_direction-md));
+  --_direction-xl: var(--_stack-direction-xl, var(--_direction-lg));
+
+  --_gap-base: var(--_stack-gap-base, var(--ps1ui-space-md));
+  --_gap-sm: var(--_stack-gap-sm, var(--_gap-base));
+  --_gap-md: var(--_stack-gap-md, var(--_gap-sm));
+  --_gap-lg: var(--_stack-gap-lg, var(--_gap-md));
+  --_gap-xl: var(--_stack-gap-xl, var(--_gap-lg));
+
+  --_align-base: var(--_stack-align-base, normal);
+  --_align-sm: var(--_stack-align-sm, var(--_align-base));
+  --_align-md: var(--_stack-align-md, var(--_align-sm));
+  --_align-lg: var(--_stack-align-lg, var(--_align-md));
+  --_align-xl: var(--_stack-align-xl, var(--_align-lg));
+
+  --_justify-base: var(--_stack-justify-base, normal);
+  --_justify-sm: var(--_stack-justify-sm, var(--_justify-base));
+  --_justify-md: var(--_stack-justify-md, var(--_justify-sm));
+  --_justify-lg: var(--_stack-justify-lg, var(--_justify-md));
+  --_justify-xl: var(--_stack-justify-xl, var(--_justify-lg));
+
+  --_wrap-base: var(--_stack-wrap-base, nowrap);
+  --_wrap-sm: var(--_stack-wrap-sm, var(--_wrap-base));
+  --_wrap-md: var(--_stack-wrap-md, var(--_wrap-sm));
+  --_wrap-lg: var(--_stack-wrap-lg, var(--_wrap-md));
+  --_wrap-xl: var(--_stack-wrap-xl, var(--_wrap-lg));
+
+  --_direction: var(--_direction-base);
+  --_gap: var(--_gap-base);
+  --_align: var(--_align-base);
+  --_justify: var(--_justify-base);
+  --_wrap: var(--_wrap-base);
+
+  flex-direction: var(--_direction);
+  gap: var(--_gap);
+  align-items: var(--_align);
+  justify-content: var(--_justify);
+  flex-wrap: var(--_wrap);
 }
 
-.ps1ui-stack--direction-row {
-  flex-direction: row;
+@container (min-width: 40rem) {
+  .ps1ui-stack {
+    --_direction: var(--_direction-sm);
+    --_gap: var(--_gap-sm);
+    --_align: var(--_align-sm);
+    --_justify: var(--_justify-sm);
+    --_wrap: var(--_wrap-sm);
+  }
 }
-.ps1ui-stack--direction-column {
-  flex-direction: column;
+@container (min-width: 48rem) {
+  .ps1ui-stack {
+    --_direction: var(--_direction-md);
+    --_gap: var(--_gap-md);
+    --_align: var(--_align-md);
+    --_justify: var(--_justify-md);
+    --_wrap: var(--_wrap-md);
+  }
 }
-
-.ps1ui-stack--gap-none {
-  gap: 0;
+@container (min-width: 64rem) {
+  .ps1ui-stack {
+    --_direction: var(--_direction-lg);
+    --_gap: var(--_gap-lg);
+    --_align: var(--_align-lg);
+    --_justify: var(--_justify-lg);
+    --_wrap: var(--_wrap-lg);
+  }
 }
-.ps1ui-stack--gap-xs {
-  gap: var(--ps1ui-space-xs);
-}
-.ps1ui-stack--gap-sm {
-  gap: var(--ps1ui-space-sm);
-}
-.ps1ui-stack--gap-md {
-  gap: var(--ps1ui-space-md);
-}
-.ps1ui-stack--gap-lg {
-  gap: var(--ps1ui-space-lg);
-}
-.ps1ui-stack--gap-xl {
-  gap: var(--ps1ui-space-xl);
-}
-.ps1ui-stack--gap-2xl {
-  gap: var(--ps1ui-space-2xl);
-}
-
-.ps1ui-stack--align-start {
-  align-items: flex-start;
-}
-.ps1ui-stack--align-center {
-  align-items: center;
-}
-.ps1ui-stack--align-end {
-  align-items: flex-end;
-}
-.ps1ui-stack--align-stretch {
-  align-items: stretch;
-}
-.ps1ui-stack--align-baseline {
-  align-items: baseline;
-}
-
-.ps1ui-stack--justify-start {
-  justify-content: flex-start;
-}
-.ps1ui-stack--justify-center {
-  justify-content: center;
-}
-.ps1ui-stack--justify-end {
-  justify-content: flex-end;
-}
-.ps1ui-stack--justify-between {
-  justify-content: space-between;
-}
-.ps1ui-stack--justify-around {
-  justify-content: space-around;
-}
-.ps1ui-stack--justify-evenly {
-  justify-content: space-evenly;
-}
-
-.ps1ui-stack--wrap {
-  flex-wrap: wrap;
+@container (min-width: 80rem) {
+  .ps1ui-stack {
+    --_direction: var(--_direction-xl);
+    --_gap: var(--_gap-xl);
+    --_align: var(--_align-xl);
+    --_justify: var(--_justify-xl);
+    --_wrap: var(--_wrap-xl);
+  }
 }

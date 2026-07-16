@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "../Text/Text";
 import { Grid } from "./Grid";
 
@@ -76,6 +77,30 @@ export const Gaps: Story = {
         </div>
       ))}
     </div>
+  ),
+};
+
+// Responsive columns example. Wrapped in PS1Root so @container queries in
+// Grid.css have a containment ancestor to resolve against. Resize the
+// preview panel to see the column count switch between breakpoints.
+export const ResponsiveColumns: Story = {
+  render: () => (
+    <PS1Root>
+      <Grid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap="md">
+        {["one", "two", "three", "four"].map((l) => cell(l))}
+      </Grid>
+    </PS1Root>
+  ),
+};
+
+// Responsive gap example — gap grows on wider contexts.
+export const ResponsiveGap: Story = {
+  render: () => (
+    <PS1Root>
+      <Grid columns={3} gap={{ base: "xs", md: "md", xl: "xl" }}>
+        {["one", "two", "three"].map((l) => cell(l))}
+      </Grid>
+    </PS1Root>
   ),
 };
 

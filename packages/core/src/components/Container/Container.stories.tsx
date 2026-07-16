@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "../Text/Text";
 import { Container } from "./Container";
 
@@ -76,6 +77,42 @@ export const HorizontalPadding: Story = {
         </Container>
       ))}
     </div>
+  ),
+};
+
+// Responsive size example. Wrapped in PS1Root so the @container queries in
+// Container.css have a containment ancestor to resolve against. Resize the
+// preview panel to see the max-width switch between breakpoints.
+export const ResponsiveSize: Story = {
+  render: () => (
+    <PS1Root>
+      <Container size={{ base: "sm", md: "lg", xl: "full" }} style={outlineStyle}>
+        <Card style={markerPadding}>
+          <Text>
+            size=&#123;&#123; base: &quot;sm&quot;, md: &quot;lg&quot;, xl: &quot;full&quot;
+            &#125;&#125; — max-width switches from sm (640px) to lg (1024px) at 48rem, then full at
+            80rem.
+          </Text>
+        </Card>
+      </Container>
+    </PS1Root>
+  ),
+};
+
+// Responsive horizontal padding example. Padding shrinks on narrow contexts
+// so content stays edge-to-edge on mobile, comfortable on desktop.
+export const ResponsivePadding: Story = {
+  render: () => (
+    <PS1Root>
+      <Container px={{ base: "sm", md: "lg", xl: "2xl" }} style={outlineStyle}>
+        <Card style={markerPadding}>
+          <Text>
+            px=&#123;&#123; base: &quot;sm&quot;, md: &quot;lg&quot;, xl: &quot;2xl&quot;
+            &#125;&#125; — compact padding on narrow contexts, generous on wide.
+          </Text>
+        </Card>
+      </Container>
+    </PS1Root>
   ),
 };
 

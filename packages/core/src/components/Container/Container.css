@@ -1,42 +1,64 @@
+/* Container — max-width + horizontal padding + auto centering.
+   Establishes an inline-size containment context so descendants respond to
+   Container's width via `@container` queries. Named `ps1ui-container` for
+   future targeted queries.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_container-size-{bp}` / `--_container-px-{bp}` via
+   inline style (see Container.tsx). Each `@container (min-width: X)` block
+   below overrides `--_size` / `--_px` with the value for the matching
+   breakpoint — the fallback chain in `--_size-{bp}` inherits the previous
+   breakpoint's effective value so a partial responsive object cascades
+   naturally.
+
+   Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
+   inline as literal values because `@container` conditions cannot resolve
+   `var()`. Keep them in sync. */
 .ps1ui-container {
+  container: ps1ui-container / inline-size;
   width: 100%;
   margin-inline: auto;
+
+  --_size-base: var(--_container-size-base, var(--ps1ui-container-lg));
+  --_size-sm: var(--_container-size-sm, var(--_size-base));
+  --_size-md: var(--_container-size-md, var(--_size-sm));
+  --_size-lg: var(--_container-size-lg, var(--_size-md));
+  --_size-xl: var(--_container-size-xl, var(--_size-lg));
+
+  --_px-base: var(--_container-px-base, var(--ps1ui-space-lg));
+  --_px-sm: var(--_container-px-sm, var(--_px-base));
+  --_px-md: var(--_container-px-md, var(--_px-sm));
+  --_px-lg: var(--_container-px-lg, var(--_px-md));
+  --_px-xl: var(--_container-px-xl, var(--_px-lg));
+
+  --_size: var(--_size-base);
+  --_px: var(--_px-base);
+
+  max-width: var(--_size);
+  padding-inline: var(--_px);
 }
 
-.ps1ui-container--px-none {
-  padding-inline: 0;
+@container (min-width: 40rem) {
+  .ps1ui-container {
+    --_size: var(--_size-sm);
+    --_px: var(--_px-sm);
+  }
 }
-.ps1ui-container--px-xs {
-  padding-inline: var(--ps1ui-space-xs);
+@container (min-width: 48rem) {
+  .ps1ui-container {
+    --_size: var(--_size-md);
+    --_px: var(--_px-md);
+  }
 }
-.ps1ui-container--px-sm {
-  padding-inline: var(--ps1ui-space-sm);
+@container (min-width: 64rem) {
+  .ps1ui-container {
+    --_size: var(--_size-lg);
+    --_px: var(--_px-lg);
+  }
 }
-.ps1ui-container--px-md {
-  padding-inline: var(--ps1ui-space-md);
-}
-.ps1ui-container--px-lg {
-  padding-inline: var(--ps1ui-space-lg);
-}
-.ps1ui-container--px-xl {
-  padding-inline: var(--ps1ui-space-xl);
-}
-.ps1ui-container--px-2xl {
-  padding-inline: var(--ps1ui-space-2xl);
-}
-
-.ps1ui-container--size-sm {
-  max-width: var(--ps1ui-container-sm);
-}
-.ps1ui-container--size-md {
-  max-width: var(--ps1ui-container-md);
-}
-.ps1ui-container--size-lg {
-  max-width: var(--ps1ui-container-lg);
-}
-.ps1ui-container--size-xl {
-  max-width: var(--ps1ui-container-xl);
-}
-.ps1ui-container--size-full {
-  max-width: none;
+@container (min-width: 80rem) {
+  .ps1ui-container {
+    --_size: var(--_size-xl);
+    --_px: var(--_px-xl);
+  }
 }

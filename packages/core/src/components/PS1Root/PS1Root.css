@@ -1,0 +1,8 @@
+/* PS1Root establishes the app-level responsive containment context.
+   `container-type: inline-size` turns this element into a query context for
+   `@container` rules used by responsive ps1ui components. Named `ps1ui-root`
+   for future targeted queries; unnamed queries in component CSS match this
+   via nearest-ancestor lookup. */
+.ps1ui-root {
+  container: ps1ui-root / inline-size;
+}

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "../Text/Text";
 import { Heading } from "./Heading";
 
@@ -99,6 +100,21 @@ export const AsOverride: Story = {
   ),
 };
 
+// Responsive size — level 1's default (3xl) applies at the base (narrow)
+// context, then steps down at wider containers to keep the heading in scale
+// with body copy. Wrap in PS1Root so the @container queries in Heading.css
+// have a containment ancestor to resolve against.
+export const ResponsiveSize: Story = {
+  args: { level: 1 },
+  render: () => (
+    <PS1Root>
+      <Heading level={1} size={{ base: "xl", md: "2xl", xl: "3xl" }}>
+        Responsive heading
+      </Heading>
+    </PS1Root>
+  ),
+};
+
 export const WithBodyText: Story = {
   args: { level: 1 },
   render: () => (
@@ -113,8 +129,11 @@ export const WithBodyText: Story = {
         Installation
       </Heading>
       <Text>
-        Add <Text as="strong">@ps1ui/core</Text> to your project and import the compiled stylesheet
-        once at your entry point.
+        Add{" "}
+        <Text as="strong" weight="bold">
+          @ps1ui/core
+        </Text>{" "}
+        to your project and import the compiled stylesheet once at your entry point.
       </Text>
 
       <Heading level={3} style={{ marginTop: 12 }}>

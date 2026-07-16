@@ -1,3 +1,8 @@
+export { PS1Root } from "./components/PS1Root/PS1Root";
+export type { PS1RootProps } from "./components/PS1Root/PS1Root";
+
+export type { Breakpoint, Responsive } from "./utils/responsive";
+
 export { Anchor } from "./components/Anchor/Anchor";
 export type { AnchorProps, AnchorVariant } from "./components/Anchor/Anchor";
 
