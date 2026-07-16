@@ -9,28 +9,27 @@
 // tester-iframe setup regresses, this fails loudly BEFORE the component
 // contrast matrices silently pass with no state ever actually applied.
 
-import { beforeEach, describe, expect, test } from "vitest";
-import { userEvent } from "vitest/browser";
+import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { withPseudoState } from "./pseudo-state";
 
 describe("withPseudoState", () => {
-  // Vitest Browser Mode (Playwright provider) does NOT auto-reset the pointer
-  // position between tests or on file bootstrap — only keyboard state is
-  // reset. The provider's initial cursor lands at (0, 0), which overlaps
-  // freshly-rendered probes at the viewport's top-left and matches `:hover`
-  // before any user action fires. Retiring the pointer off the body via
-  // `unhover(document.body)` before each test defuses this. Firefox is the
-  // engine that consistently trips the failure — see
-  // https://github.com/vitest-dev/vitest/discussions/9878 for the same
-  // pattern documented upstream.
-  beforeEach(async () => {
-    await userEvent.unhover(document.body);
-  });
-
   test("applies :hover and releases it after the callback", async () => {
+    // The wrapper's 120 px padding offsets the probe away from the viewport
+    // origin. Vitest Browser Mode (Playwright provider) does NOT auto-reset
+    // the pointer between tests or on file bootstrap — only keyboard state
+    // is reset — and the provider's initial cursor lands at (0, 0), which
+    // otherwise overlaps a top-left-rendered probe and matches `:hover` on
+    // the very first render (observed on the Playwright Firefox provider;
+    // Chromium / WebKit don't reflect the same synchronous hover in
+    // getComputedStyle). We deliberately avoid a beforeEach that moves the
+    // pointer instead — any mouse activity we synthesize would leak into
+    // Firefox's `:focus-visible` modality heuristic and stop the last test
+    // here from matching `:focus-visible` on a Tab-triggered focus. See
+    // https://github.com/vitest-dev/vitest/discussions/9878 for upstream
+    // context on the non-reset pointer.
     const screen = await render(
-      <>
+      <div style={{ padding: 120 }}>
         <style>
           {`.pseudo-state-probe-hover { color: rgb(0, 0, 0); transition: none; }
             .pseudo-state-probe-hover:hover { color: rgb(255, 0, 0); }`}
@@ -38,7 +37,7 @@ describe("withPseudoState", () => {
         <span className="pseudo-state-probe-hover" data-testid="pseudo-state-probe-hover">
           probe
         </span>
-      </>,
+      </div>,
     );
     const probe = screen.container.querySelector<HTMLElement>(
       '[data-testid="pseudo-state-probe-hover"]',
