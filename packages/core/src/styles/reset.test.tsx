@@ -305,8 +305,13 @@ describe("reset — replaced elements", () => {
   test("<audio controls> defaults to display: block", async () => {
     // Bare <audio> without controls is forced to `display: none` by every
     // major UA (there's nothing to render); the reset can only lift it back
-    // to block once the control strip exists.
-    const { get } = await renderProbes(<audio data-testid="probe" controls />);
+    // to block once the control strip exists. Built via `createElement` (not
+    // JSX) to match the neighboring <video>/<svg>/etc. probes above — and
+    // to keep jsx-a11y's `media-has-caption` rule out of a probe that isn't
+    // real user-facing media (no <track> to add).
+    const { get } = await renderProbes(
+      createElement("audio", { "data-testid": "probe", controls: true }),
+    );
     expect(gcs(get("probe")).display).toBe("block");
   });
 
