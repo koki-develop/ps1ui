@@ -43,7 +43,7 @@ Gotchas:
 
 VRT runs in the `vrt` project via Vitest 4's `expect.element(...).toMatchScreenshot()` (docs: https://vitest.dev/guide/browser/visual-regression-testing). Comparator is `pixelmatch` with `threshold: 0.1` (pixelmatch's default — a stricter 0.05 rejected consecutive WebKit/Firefox frames on text-only fixtures) and `allowedMismatchedPixelRatio: 0.01`, kept tight enough that a real token/color drift still trips the diff. Playwright's `animations: "disabled"` and `caret: "hide"` are the provider defaults, so no CSS freeze layer is needed.
 
-Files: `<Component>.vrt.test.tsx` next to the component (every component ships one). VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
+Files: `<Component>.vrt.test.tsx` next to the component (every component ships one, except `PS1Root`). VRT files are excluded from coverage (`vitest.config.ts` `coverage.exclude`).
 
 **`VrtFrame` (`src/testing/vrt.tsx`)** is the shared capture wrapper — dark-canvas background + 20 px padding + `display: inline-block`. Every VRT file uses it so screenshots share the same canvas context (deterministic for `background: transparent` variants), the frame stays tight to the component (no bloated PNGs), and `:focus-visible` shadows/outlines don't clip. Frame carries `data-testid="vrt-frame"` (screenshot target); the component-under-test carries `data-testid="vrt-target"` (pseudo-state selector hook). Interactive template:
 
