@@ -1,6 +1,12 @@
 ---
 import "@ps1ui/core/styles.css";
 import { PS1Root } from "@ps1ui/core";
+// Same file the core stylesheet's @font-face references — the ?url import
+// resolves to the identical hashed asset, so preloading it starts the font
+// download as soon as the HTML arrives instead of after CSS parse. This is
+// what suppresses the first-visit FOUT (font-display: swap flicker). Latin is
+// the only subset this English-only site renders above the fold.
+import jetbrainsMonoLatinUrl from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 
@@ -25,6 +31,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
+    {/* crossorigin is required even same-origin: font requests use CORS mode,
+        and a preload without it is ignored (the font gets fetched twice). */}
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={jetbrainsMonoLatinUrl}
+      crossorigin
+    />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
 
