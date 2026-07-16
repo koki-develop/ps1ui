@@ -13,12 +13,12 @@ export async function deploy({ target, dryRun = false }: Deploy) {
   return apply(target);
 }`;
 
-const tsUsage = `<CodeBlock language="ts" code={source} />`;
+const tsUsage = `<CodeBlock language="typescript" code={source} />`;
 ---
 
 <ComponentPage slug="codeblock">
   <Demo title="Syntax highlighting" code={tsUsage}>
-    <CodeBlock language="ts" code={tsSource} />
+    <CodeBlock language="typescript" code={tsSource} />
   </Demo>
 
   <Stack direction="column" gap="md">
@@ -27,8 +27,8 @@ const tsUsage = `<CodeBlock language="ts" code={source} />`;
       Ships with 40+ Prism grammars registered — the refractor common set
       (bash, css, go, json, python, rust, sql, typescript, yaml, …) plus a
       curated extra layer (dart, docker, graphql, jsx, nginx, powershell,
-      shell-session, toml, tsx, zig). Aliases like ts and html resolve at
-      runtime; unknown languages fall back to unhighlighted text.
+      shell-session, toml, tsx, zig). Unknown languages fall back to
+      unhighlighted text.
     </Text>
   </Stack>
 </ComponentPage>

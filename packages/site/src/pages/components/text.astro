@@ -9,11 +9,11 @@ const variants = `<Text variant="body">body — default foreground</Text>
 <Text variant="primary">primary — brand green</Text>
 <Text variant="accent">accent — warm highlight</Text>`;
 
-const sizes = `<Text size="xs">size xs</Text>
-<Text size="sm">size sm</Text>
-<Text size="md">size md</Text>
+const sizes = `<Text size="xl">size xl</Text>
 <Text size="lg">size lg</Text>
-<Text size="xl">size xl</Text>`;
+<Text size="md">size md</Text>
+<Text size="sm">size sm</Text>
+<Text size="xs">size xs</Text>`;
 
 const truncate = `<div style={{ maxWidth: "16rem" }}>
   <Text truncate>
@@ -35,11 +35,11 @@ const truncate = `<div style={{ maxWidth: "16rem" }}>
 
   <Demo title="Sizes" code={sizes}>
     <Stack direction="column" gap="sm">
-      <Text size="xs">size xs</Text>
-      <Text size="sm">size sm</Text>
-      <Text size="md">size md</Text>
-      <Text size="lg">size lg</Text>
       <Text size="xl">size xl</Text>
+      <Text size="lg">size lg</Text>
+      <Text size="md">size md</Text>
+      <Text size="sm">size sm</Text>
+      <Text size="xs">size xs</Text>
     </Stack>
   </Demo>
 
