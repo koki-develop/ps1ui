@@ -9,11 +9,25 @@
 // tester-iframe setup regresses, this fails loudly BEFORE the component
 // contrast matrices silently pass with no state ever actually applied.
 
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
+import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { withPseudoState } from "./pseudo-state";
 
 describe("withPseudoState", () => {
+  // Vitest Browser Mode (Playwright provider) does NOT auto-reset the pointer
+  // position between tests or on file bootstrap — only keyboard state is
+  // reset. The provider's initial cursor lands at (0, 0), which overlaps
+  // freshly-rendered probes at the viewport's top-left and matches `:hover`
+  // before any user action fires. Retiring the pointer off the body via
+  // `unhover(document.body)` before each test defuses this. Firefox is the
+  // engine that consistently trips the failure — see
+  // https://github.com/vitest-dev/vitest/discussions/9878 for the same
+  // pattern documented upstream.
+  beforeEach(async () => {
+    await userEvent.unhover(document.body);
+  });
+
   test("applies :hover and releases it after the callback", async () => {
     const screen = await render(
       <>
