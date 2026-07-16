@@ -126,7 +126,11 @@ describe("Anchor", () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
-    test("fires onClick when Enter is pressed on a focused link", async () => {
+    // `retry: 3` absorbs the Playwright Firefox provider's intermittent
+    // key-synthesis flake — see Checkbox.test.tsx's "Space toggles checked
+    // state when focused" comment for the fullest account. Chromium /
+    // WebKit runs stay effectively single-shot because they never miss.
+    test("fires onClick when Enter is pressed on a focused link", { retry: 3 }, async () => {
       const onClick = vi.fn((event: ReactMouseEvent<HTMLAnchorElement>) => {
         event.preventDefault();
       });

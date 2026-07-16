@@ -139,18 +139,20 @@ describe("Checkbox", () => {
       expect((el.element() as HTMLInputElement).checked).toBe(false);
     });
 
-    test("Space toggles checked state when focused", async () => {
-      // Known intermittent flake on the Playwright Firefox provider only
-      // (reproduced ~15-20% of full-suite runs under concurrent 3-browser
-      // load, never in isolation): Firefox's native Space-activation sequence
-      // for checkboxes genuinely differs from Chromium/WebKit (it fires an
-      // extra DOMActivate event and reports keypress keyCode 0 instead of 32
-      // — see MDN/Bugzilla discussions of Firefox checkbox Space handling),
-      // and occasionally the synthesized key doesn't complete that sequence
-      // in time under load. A settle-tick between focus() and keyboard() was
-      // tried and made no measurable difference (see src/testing/settle.ts's
-      // comment) — this isn't a render-timing gap, so there's no known fix
-      // from application code. Re-run if this fails in isolation and passes.
+    // Known intermittent flake on the Playwright Firefox provider only
+    // (reproduced ~15-20% of full-suite runs under concurrent 3-browser
+    // load, never in isolation): Firefox's native Space-activation sequence
+    // for checkboxes genuinely differs from Chromium/WebKit (it fires an
+    // extra DOMActivate event and reports keypress keyCode 0 instead of 32
+    // — see MDN/Bugzilla discussions of Firefox checkbox Space handling),
+    // and occasionally the synthesized key doesn't complete that sequence
+    // in time under load. A settle-tick between focus() and keyboard() was
+    // tried and made no measurable difference (see src/testing/settle.ts's
+    // comment) — this isn't a render-timing gap, so there's no known fix
+    // from application code. `retry: 3` absorbs the flake at the CI level
+    // so the suite doesn't need a manual re-run when it lands; Chromium /
+    // WebKit runs stay effectively single-shot because they never miss.
+    test("Space toggles checked state when focused", { retry: 3 }, async () => {
       const screen = await render(<Checkbox aria-label="x" />);
       const el = screen.getByRole("checkbox");
       (el.element() as HTMLElement).focus();

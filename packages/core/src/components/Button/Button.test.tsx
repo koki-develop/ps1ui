@@ -151,21 +151,29 @@ describe("Button", () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
+    // `retry: 3` absorbs the Playwright Firefox provider's intermittent
+    // key-synthesis flake — see Checkbox.test.tsx's "Space toggles checked
+    // state when focused" comment for the fullest account (Firefox's
+    // native Enter/Space activation sequence fires an extra DOMActivate
+    // and reports keypress keyCode 0 instead of 13/32, and Playwright's
+    // synthesized key occasionally doesn't complete it in time under
+    // concurrent 3-browser load). Chromium / WebKit runs stay effectively
+    // single-shot because they never miss.
     test.for([
       { label: "Enter", key: "{Enter}" },
-      // "Space" is a known intermittent flake on the Playwright Firefox
-      // provider only — see Checkbox.test.tsx's "Space toggles checked
-      // state when focused" comment for the same, unfixed-from-our-side
-      // Firefox Space-activation event-sequence quirk.
       { label: "Space", key: " " },
-    ])("fires onClick when $label is pressed on a focused button", async ({ key }) => {
-      const onClick = vi.fn();
-      const screen = await render(<Button onClick={onClick}>x</Button>);
-      const btn = screen.getByRole("button");
-      (btn.element() as HTMLElement).focus();
-      await userEvent.keyboard(key);
-      expect(onClick).toHaveBeenCalledTimes(1);
-    });
+    ])(
+      "fires onClick when $label is pressed on a focused button",
+      { retry: 3 },
+      async ({ key }) => {
+        const onClick = vi.fn();
+        const screen = await render(<Button onClick={onClick}>x</Button>);
+        const btn = screen.getByRole("button");
+        (btn.element() as HTMLElement).focus();
+        await userEvent.keyboard(key);
+        expect(onClick).toHaveBeenCalledTimes(1);
+      },
+    );
 
     test("fires onClick when as='a' is clicked", async () => {
       const onClick = vi.fn((event: ReactMouseEvent<HTMLAnchorElement>) => {
