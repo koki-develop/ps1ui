@@ -87,6 +87,45 @@ describe("CodeBlock", () => {
     });
   });
 
+  // The `code` prop exists so consumers can bypass the `children` mechanism
+  // in environments that rewrap JSX children (Astro `.astro` → React island,
+  // React Server Components → Client Components). Named props are passed
+  // through as-is by those boundaries, so `<CodeBlock code={snippet} />`
+  // survives them where `<CodeBlock>{snippet}</CodeBlock>` breaks.
+  describe("code prop", () => {
+    test("renders the string from `code` prop when children are omitted", async () => {
+      const screen = await render(<CodeBlock data-testid="cb" code={TS_SAMPLE} />);
+      const pre = screen.getByTestId("cb").element();
+      expect(pre.textContent).toBe(TS_SAMPLE);
+    });
+
+    test("highlights the `code` prop when language is registered", async () => {
+      const screen = await render(
+        <CodeBlock data-testid="cb" code={TS_SAMPLE} language="typescript" />,
+      );
+      const pre = screen.getByTestId("cb").element();
+      expect(pre.querySelectorAll("span.token").length).toBeGreaterThan(0);
+      expect(pre.textContent).toBe(TS_SAMPLE);
+    });
+
+    test("`code` wins over `children` when both are supplied", async () => {
+      const screen = await render(
+        <CodeBlock data-testid="cb" code={TS_SAMPLE}>
+          {BASH_SAMPLE}
+        </CodeBlock>,
+      );
+      const pre = screen.getByTestId("cb").element();
+      expect(pre.textContent).toBe(TS_SAMPLE);
+    });
+
+    test("renders an empty <code> when neither `code` nor `children` are supplied", async () => {
+      const screen = await render(<CodeBlock data-testid="cb" />);
+      const pre = screen.getByTestId("cb").element();
+      expect(pre.querySelector("code")).not.toBeNull();
+      expect(pre.textContent).toBe("");
+    });
+  });
+
   describe("language-* class on <code>", () => {
     test("adds `language-<lang>` when language is registered", async () => {
       const screen = await render(

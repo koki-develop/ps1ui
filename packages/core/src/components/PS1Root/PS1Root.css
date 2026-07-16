@@ -3,6 +3,8 @@
    `@container` rules used by responsive ps1ui components. Named `ps1ui-root`
    for future targeted queries; unnamed queries in component CSS match this
    via nearest-ancestor lookup. */
+/* Containment side-effect defense (align-self / justify-self / min-width) lives
+   in components.css's shared selector list — see the block header there. */
 .ps1ui-root {
   container: ps1ui-root / inline-size;
 }

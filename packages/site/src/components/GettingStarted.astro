@@ -1,0 +1,29 @@
+---
+import { CodeBlock, Container, Heading, Stack, Text } from "@ps1ui/core";
+
+const install = "pnpm add @ps1ui/core react react-dom";
+
+const usage = `import "@ps1ui/core/styles.css";
+import { PS1Root, Button, Heading } from "@ps1ui/core";
+
+export function App() {
+  return (
+    <PS1Root>
+      <Heading level={1}>Hello, PS1 UI</Heading>
+      <Button variant="primary">Click me</Button>
+    </PS1Root>
+  );
+}`;
+---
+
+<section id="get-started">
+  <Container size="lg" px={{ base: "md", md: "xl" }}>
+    <Stack direction="column" gap={{ base: "md", md: "lg" }}>
+      <Heading level={2} size={{ base: "xl", md: "2xl" }}>Getting Started</Heading>
+      <Text variant="muted">Install the package and its React peer deps:</Text>
+      <CodeBlock language="bash" code={install} />
+      <Text variant="muted">Wrap your app in PS1Root and start composing:</Text>
+      <CodeBlock language="tsx" code={usage} />
+    </Stack>
+  </Container>
+</section>

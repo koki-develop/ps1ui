@@ -14,6 +14,8 @@
    Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
    inline as literal values because `@container` conditions cannot resolve
    `var()`. Keep them in sync. */
+/* Containment side-effect defense (align-self / justify-self / min-width) lives
+   in components.css's shared selector list — see the block header there. */
 .ps1ui-container {
   container: ps1ui-container / inline-size;
   width: 100%;

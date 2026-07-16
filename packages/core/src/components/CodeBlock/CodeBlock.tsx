@@ -18,8 +18,16 @@ export type { CodeBlockLanguage };
 // is a BCP47 natural-language tag ("en", "ja") — a different concept that
 // remains part of the base <pre> attrs and passes through untouched. See
 // CodeBlock.test.tsx for the passthrough assertion.
+//
+// `code` is an alternative to `children` for environments that wrap JSX
+// children on the way to a React tree — e.g. Astro's `.astro` → React island
+// boundary rewraps `children` as an AstroComponentInstance, breaking the
+// `children: string` contract. Named props are passed through as-is, so
+// `<CodeBlock code={snippet}>` survives that boundary. `code` wins when both
+// are supplied; the same string appears in the rendered DOM either way.
 export type CodeBlockProps = Omit<ComponentProps<"pre">, "children"> & {
-  children: string;
+  code?: string;
+  children?: string;
   // `CodeBlockLanguage | (string & {})` is TypeScript's "loose union" pattern:
   // canonical language names surface in autocomplete, but aliases (`ts`, `html`, ...)
   // and dynamically-sourced strings (e.g. from a markdown fenced-code parser) still
@@ -28,12 +36,17 @@ export type CodeBlockProps = Omit<ComponentProps<"pre">, "children"> & {
 };
 
 export function CodeBlock({
+  code,
   children,
   language,
   className,
   ref: forwardedRef,
   ...rest
 }: CodeBlockProps) {
+  // `code` takes precedence — see the type doc for the Astro/RSC-wrapped-children
+  // rationale. Empty string is the "neither provided" fallback so the component
+  // renders a valid empty <pre> instead of throwing on `.highlight(undefined)`.
+  const source = code ?? children ?? "";
   // `registered` captures both "language was provided" and "refractor knows it" —
   // used for the highlight path, the language-<x> class, and to keep the class
   // off unhighlighted blocks (so downstream tools and consumer Prism themes
@@ -48,10 +61,10 @@ export function CodeBlock({
     return {
       registered: isRegistered,
       highlighted: isRegistered
-        ? toJsxRuntime(refractor.highlight(children, language), { Fragment, jsx, jsxs })
-        : children,
+        ? toJsxRuntime(refractor.highlight(source, language), { Fragment, jsx, jsxs })
+        : source,
     };
-  }, [children, language]);
+  }, [source, language]);
 
   // axe scrollable-region-focusable: a <pre> with `overflow-x: auto` must be
   // keyboard-reachable IF its content actually overflows. Setting tabIndex=0
@@ -71,7 +84,7 @@ export function CodeBlock({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [children]);
+  }, [source]);
 
   // Merge the caller's ref with our internal preRef so both get the DOM node.
   // Matches the pattern in Checkbox.tsx — see that file for the rationale.

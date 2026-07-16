@@ -148,6 +148,29 @@ describe("Container", () => {
       const el = screen.getByTestId("c").element() as HTMLDivElement;
       expect(getComputedStyle(el).containerName).toBe("ps1ui-container");
     });
+
+    // `container-type: inline-size` implies `contain: inline-size`, which
+    // treats intrinsic width as 0. Placing Container inside a shrink-to-fit
+    // flex parent (`align-items: flex-start` in a column) would otherwise
+    // collapse it to width 0. The shared containment-defense rule in
+    // components.css (`.ps1ui-root, .ps1ui-container, .ps1ui-grid, .ps1ui-stack`)
+    // sets `align-self: stretch` (+ `justify-self`, `min-width: 0`) to keep
+    // it filling the cross-axis of the parent.
+    test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
+      const screen = await render(
+        <div
+          data-testid="p"
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
+        >
+          <Container data-testid="c">
+            <span>x</span>
+          </Container>
+        </div>,
+      );
+      const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(getComputedStyle(el).alignSelf).toBe("stretch");
+      expect(el.getBoundingClientRect().width).toBe(500);
+    });
   });
 
   describe("inline style CSS variables", () => {

@@ -25,6 +25,8 @@
    Each default matches the property's own initial-value behaviour so
    omitting the corresponding prop is equivalent to not writing the
    declaration at all. */
+/* Containment side-effect defense (align-self / justify-self / min-width) lives
+   in components.css's shared selector list — see the block header there. */
 .ps1ui-stack {
   container: ps1ui-stack / inline-size;
   display: flex;

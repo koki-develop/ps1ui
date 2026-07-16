@@ -1,0 +1,22 @@
+---
+import { Anchor, Container, Heading, Stack, Text } from "@ps1ui/core";
+---
+
+<section id="top">
+  <Container size="lg" px={{ base: "md", md: "xl" }}>
+    <Stack direction="column" gap={{ base: "md", md: "xl" }} align="start">
+      <Heading level={1} size={{ base: "2xl", md: "3xl" }}>PS1 UI</Heading>
+      <Text size={{ base: "md", md: "lg" }} variant="muted">
+        For engineers who never left the terminal.
+      </Text>
+      <Anchor
+        href="https://github.com/koki-develop/ps1ui"
+        variant="subtle"
+        target="_blank"
+        rel="noreferrer"
+      >
+        GitHub
+      </Anchor>
+    </Stack>
+  </Container>
+</section>

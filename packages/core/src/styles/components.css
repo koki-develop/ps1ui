@@ -12,3 +12,33 @@
 @import "../components/Stack/Stack.css";
 @import "../components/Text/Text.css";
 @import "../components/Heading/Heading.css";
+
+/* Containment side-effect defense — applied uniformly to every primitive that
+   establishes a `container-type: inline-size` context (i.e. every layout
+   primitive whose responsive props drive `@container` queries).
+
+   `container-type: inline-size` implies `contain: inline-size`, which treats
+   the element's intrinsic inline-size as 0 for parent sizing. Placing any of
+   these primitives inside a shrink-to-fit flex/grid parent (`align-items:
+   flex-start`, `justify-items: start`, etc.) would otherwise collapse them to
+   0 wide, silently degrading every `@container`-driven descendant.
+
+   `align-self: stretch` and `justify-self: stretch` force fill-cross-axis /
+   fill-inline-track in flex and grid contexts respectively (both no-ops in
+   block context). `min-width: 0` lets the primitive shrink below content-min
+   inside a narrow row parent so inner overflow-scroll surfaces (CodeBlock)
+   take over instead of bursting the row open.
+
+   Adding a new responsive-container primitive means adding its class to this
+   selector list — that's the load-bearing invariant. Per-primitive regression
+   tests (Stack.test.tsx / Container.test.tsx / Grid.test.tsx / PS1Root.test.tsx's
+   "resists collapse via align-self: stretch in shrink-wrap flex parent") catch
+   accidental removal. */
+.ps1ui-root,
+.ps1ui-container,
+.ps1ui-grid,
+.ps1ui-stack {
+  align-self: stretch;
+  justify-self: stretch;
+  min-width: 0;
+}

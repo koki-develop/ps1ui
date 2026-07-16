@@ -1,0 +1,45 @@
+---
+import "@ps1ui/core/styles.css";
+import { PS1Root } from "@ps1ui/core";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "PS1 UI",
+  description = "For engineers who never left the terminal.",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <title>{title}</title>
+  </head>
+  <body>
+    <PS1Root>
+      <div style="padding-block: clamp(2rem, 6vw, 4rem)">
+        <slot />
+      </div>
+    </PS1Root>
+  </body>
+</html>

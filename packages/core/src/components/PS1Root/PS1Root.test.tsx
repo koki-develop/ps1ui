@@ -54,6 +54,30 @@ describe("PS1Root", () => {
       expect(cs.containerType).toBe("inline-size");
     });
 
+    // `container-type: inline-size` implies `contain: inline-size`, which
+    // treats intrinsic width as 0. Placing PS1Root inside a shrink-to-fit
+    // flex parent (`align-items: flex-start` in a column) would otherwise
+    // collapse it to width 0 — silently degrading every `@container`-driven
+    // descendant. The shared containment-defense rule in components.css
+    // (`.ps1ui-root, .ps1ui-container, .ps1ui-grid, .ps1ui-stack`) sets
+    // `align-self: stretch` (+ `justify-self`, `min-width: 0`) to keep it
+    // filling the cross-axis of the parent.
+    test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
+      const screen = await render(
+        <div
+          data-testid="p"
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
+        >
+          <PS1Root data-testid="root">
+            <span>x</span>
+          </PS1Root>
+        </div>,
+      );
+      const el = screen.getByTestId("root").element() as HTMLDivElement;
+      expect(getComputedStyle(el).alignSelf).toBe("stretch");
+      expect(el.getBoundingClientRect().width).toBe(500);
+    });
+
     test("names the container context `ps1ui-root`", async () => {
       // Named containers let downstream authors write scoped queries
       // (e.g. `@container ps1ui-root (...)`). Locking the name in tests

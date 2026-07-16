@@ -25,3 +25,6 @@ packages/*/src/testing/__screenshots__/
 
 # cork
 .cork
+
+# astro
+.astro/

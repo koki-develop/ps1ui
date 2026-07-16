@@ -170,6 +170,27 @@ describe("Stack", () => {
       const el = screen.getByTestId("s").element() as HTMLDivElement;
       expect(getComputedStyle(el).containerName).toBe("ps1ui-stack");
     });
+
+    // `container-type: inline-size` implies `contain: inline-size`, which
+    // treats intrinsic width as 0. Placing Stack inside a shrink-to-fit flex
+    // parent (`align-items: flex-start` in a column) would otherwise collapse
+    // it to width 0. Stack.css sets `align-self: stretch` (+ `justify-self`,
+    // `min-width: 0`) to keep it filling the cross-axis of the parent.
+    test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
+      const screen = await render(
+        <div
+          data-testid="p"
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
+        >
+          <Stack data-testid="s">
+            <span>x</span>
+          </Stack>
+        </div>,
+      );
+      const stack = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(getComputedStyle(stack).alignSelf).toBe("stretch");
+      expect(stack.getBoundingClientRect().width).toBe(500);
+    });
   });
 
   describe("inline style CSS variables", () => {

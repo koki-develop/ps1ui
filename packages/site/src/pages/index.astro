@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import GettingStarted from "../components/GettingStarted.astro";
+import { Stack } from "@ps1ui/core";
+---
+
+<BaseLayout>
+  <Stack direction="column" gap={{ base: "xl", md: "2xl" }}>
+    <Hero />
+    <GettingStarted />
+  </Stack>
+</BaseLayout>
