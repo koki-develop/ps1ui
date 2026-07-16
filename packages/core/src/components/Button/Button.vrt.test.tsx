@@ -59,4 +59,26 @@ describe("Button VRT", () => {
         .toMatchScreenshot(`${variant}-${state}`);
     });
   });
+
+  // Regression net for the polymorphic `as` prop: a Button rendered as an <a> must
+  // look visually identical to a native <button>. Guards against accidental
+  // tag-scoped CSS regressions (e.g. `button.ps1ui-button { … }`) that would
+  // silently break the link-as-button use case. One baseline per variant is
+  // enough — the pseudo-state matrix above is already covered by the <button>
+  // baselines, and any tag-conditional CSS would show up in the default paint.
+  test.for(VARIANTS.map((variant) => ({ variant })))(
+    "as='a' / variant=$variant matches the button baseline",
+    async ({ variant }) => {
+      const screen = await render(
+        <VrtFrame>
+          <Button as="a" href="#" variant={variant} data-testid="vrt-target">
+            save changes
+          </Button>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${variant}-as-a-default`);
+    },
+  );
 });
