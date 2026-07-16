@@ -9,14 +9,18 @@ import { Anchor, Container, Heading, Stack, Text } from "@ps1ui/core";
       <Text size={{ base: "md", md: "lg" }} variant="muted">
         For engineers who never left the terminal.
       </Text>
-      <Anchor
-        href="https://github.com/koki-develop/ps1ui"
-        variant="subtle"
-        target="_blank"
-        rel="noreferrer"
-      >
-        GitHub
-      </Anchor>
+      <Stack direction="row" gap="md">
+        <Anchor
+          href="https://github.com/koki-develop/ps1ui"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </Anchor>
+        <Anchor href={`${import.meta.env.BASE_URL}storybook/`} variant="subtle">
+          Storybook
+        </Anchor>
+      </Stack>
     </Stack>
   </Container>
 </section>
