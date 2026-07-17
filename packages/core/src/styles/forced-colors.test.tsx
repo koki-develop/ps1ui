@@ -26,6 +26,7 @@ import { server } from "vitest/browser";
 import { Button } from "../components/Button/Button";
 import { Checkbox } from "../components/Checkbox/Checkbox";
 import { CodeBlock } from "../components/CodeBlock/CodeBlock";
+import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
 import { disableForcedColors, enableForcedColors } from "../testing/forced-colors";
 import { withPseudoState, type PseudoClass } from "../testing/pseudo-state";
@@ -59,6 +60,10 @@ describe("forced-colors adjustments", () => {
   // names. `webkitSkip` marks the :focus-visible cases — WebKit's
   // Full-Keyboard-Access default excludes non-text controls from Tab, so
   // :focus-visible is unreachable there (Input uses :focus and needs no skip).
+  // `selector` (optional) overrides the pseudo-state + assertion target when
+  // the focusable element is nested inside the rendered fixture — e.g.
+  // Details, whose focus lives on the internal <summary>, not on the outer
+  // <details> element the fixture attaches data-testid to.
   const FOCUS_CASES = [
     {
       name: "Checkbox",
@@ -92,23 +97,51 @@ describe("forced-colors adjustments", () => {
         </div>
       ),
     },
+    {
+      name: "Details (summary)",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      selector: ".ps1ui-details__summary",
+      ui: (
+        <Details summary="Components" data-testid="fc-target">
+          body
+        </Details>
+      ),
+    },
   ] as const satisfies ReadonlyArray<{
     name: string;
     pseudo: PseudoClass;
     webkitSkip: boolean;
+    selector?: string;
     ui: ReactElement;
   }>;
 
-  test.for(FOCUS_CASES)(
+  type FocusCase = (typeof FOCUS_CASES)[number] & { selector?: string };
+
+  test.for(FOCUS_CASES as readonly FocusCase[])(
     "$name :$pseudo falls back to a real outline (box-shadow is force-stripped)",
-    async ({ pseudo, webkitSkip, ui }, ctx) => {
+    async ({ pseudo, webkitSkip, selector, ui }, ctx) => {
       ctx.skip(
         webkitSkip && server.browser === "webkit",
         "WebKit's Full-Keyboard-Access default excludes non-text controls from Tab; :focus-visible unreachable",
       );
-      const screen = await render(ui);
-      await withPseudoState('[data-testid="fc-target"]', [pseudo], async () => {
-        const s = getComputedStyle(screen.getByTestId("fc-target").element());
+      await render(ui);
+      const target = selector ?? '[data-testid="fc-target"]';
+      await withPseudoState(target, [pseudo], async () => {
+        // Strict-mode singularity check: querySelectorAll + length assertion
+        // recovers the guarantee that `screen.getByTestId(...)` used to give
+        // us (fail-loud on multiple matches). vitest-browser's LocatorSelectors
+        // don't expose a raw-CSS locator, so we do the check by hand for the
+        // selector-override cases. Silent fall-through to the first match
+        // would let a fixture that renders two `.ps1ui-details__summary`
+        // instances pass while asserting against the wrong element.
+        const matches = document.querySelectorAll<HTMLElement>(target);
+        if (matches.length !== 1) {
+          throw new Error(
+            `forced-colors target selector "${target}" matched ${matches.length} elements (expected exactly 1)`,
+          );
+        }
+        const s = getComputedStyle(matches[0]!);
         expect(s.outlineStyle).toBe("solid");
         expect(s.outlineWidth).toBe("2px");
         expect(s.outlineOffset).toBe("2px");

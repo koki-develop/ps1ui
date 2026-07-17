@@ -1,0 +1,65 @@
+---
+import { Anchor, Details, Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+import { href } from "../../lib/url";
+
+const basic = `<Details summary="Components">
+  Button, Anchor, Card, Checkbox…
+</Details>`;
+
+const open = `<Details summary="Components" open>
+  <Stack direction="column" gap="xs">
+    <Anchor href="#anchor">Anchor</Anchor>
+    <Anchor href="#button">Button</Anchor>
+    <Anchor href="#card">Card</Anchor>
+  </Stack>
+</Details>`;
+
+const accordion = `<Stack direction="column" gap="sm">
+  <Details name="faq" summary="Is this JS-free?">
+    Yes — Details wraps the native disclosure element.
+  </Details>
+  <Details name="faq" summary="Does it hydrate?">
+    No hydration is required.
+  </Details>
+</Stack>`;
+---
+
+<ComponentPage slug="details">
+  <Demo title="Basic" code={basic}>
+    <Details summary="Components">
+      Button, Anchor, Card, Checkbox…
+    </Details>
+  </Demo>
+
+  <Demo title="Open by default" code={open}>
+    <Details summary="Components" open>
+      <Stack direction="column" gap="xs">
+        <Anchor href={href("components/anchor/")}>Anchor</Anchor>
+        <Anchor href={href("components/button/")}>Button</Anchor>
+        <Anchor href={href("components/card/")}>Card</Anchor>
+      </Stack>
+    </Details>
+  </Demo>
+
+  {/*
+    A ReactNode summary demo is deliberately omitted here — Astro Fragments
+    passed to a React component prop compile to Astro template objects, not
+    ReactNodes, and rendering fails at build time. The API still accepts any
+    ReactNode (covered by @ps1ui/core's Details.stories.tsx RichSummary story
+    and the unit test suite); it's just this doc page's Astro-JSX bridge that
+    can't demonstrate it inline. See @ps1ui/core Storybook for the full API.
+  */}
+
+  <Demo title="Exclusive accordion" code={accordion}>
+    <Stack direction="column" gap="sm">
+      <Details name="faq" summary="Is this JS-free?">
+        Yes — Details wraps the native disclosure element.
+      </Details>
+      <Details name="faq" summary="Does it hydrate?">
+        No hydration is required.
+      </Details>
+    </Stack>
+  </Demo>
+</ComponentPage>

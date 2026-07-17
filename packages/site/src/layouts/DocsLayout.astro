@@ -1,9 +1,8 @@
 ---
-import { Anchor, Container, Stack, Text } from "@ps1ui/core";
+import { Container, Details } from "@ps1ui/core";
 import BaseLayout from "./BaseLayout.astro";
-import { COMPONENT_GROUPS } from "../lib/components";
+import SidebarNav from "../components/SidebarNav.astro";
 import { CONTAINER_PX } from "../lib/site";
-import { href } from "../lib/url";
 
 interface Props {
   title: string;
@@ -17,31 +16,29 @@ const { title, description, current } = Astro.props;
 <BaseLayout title={title} description={description}>
   <Container size="xl" px={CONTAINER_PX}>
     <div class="docs">
-      <nav class="sidebar" aria-label="Components">
-        <Stack direction="column" gap="lg">
-          {
-            COMPONENT_GROUPS.map((group) => (
-              <Stack direction="column" gap="sm">
-                <Text as="span" size="xs" variant="subtle" weight="semibold">
-                  {group.title}
-                </Text>
-                <ul>
-                  {group.items.map((c) => (
-                    <li>
-                      <Anchor
-                        href={href(`components/${c.slug}/`)}
-                        variant={c.slug === current ? "primary" : "subtle"}
-                        aria-current={c.slug === current ? "page" : undefined}
-                      >
-                        {c.name}
-                      </Anchor>
-                    </li>
-                  ))}
-                </ul>
-              </Stack>
-            ))
-          }
-        </Stack>
+      {/*
+        Two sidebar variants, CSS-swapped at 48rem. Rendering both is
+        cheaper than reaching for JS to conditionally hydrate — the mobile
+        <Details> would otherwise need client-side state to swap in.
+        `display: none` removes the hidden variant from the a11y tree, so
+        AT users only see the visible surface.
+
+        The mobile variant deliberately has NO <nav aria-label="Components">
+        wrapper: the <Details summary="Components"> disclosure is itself
+        the labeled control, so wrapping in a same-name landmark would
+        double-announce "Components" for screen-reader users AND — if the
+        display:none swap fails (CSS load delay, reader-mode extensions) —
+        would leave two identical "Components" landmarks visible at once.
+        Only the desktop variant is a nav landmark; the mobile disclosure
+        stands alone.
+      */}
+      <div class="sidebar sidebar--mobile">
+        <Details summary="Components">
+          <SidebarNav current={current} />
+        </Details>
+      </div>
+      <nav class="sidebar sidebar--desktop" aria-label="Components">
+        <SidebarNav current={current} />
       </nav>
       <div class="content">
         <slot />
@@ -57,11 +54,8 @@ const { title, description, current } = Astro.props;
     gap: var(--ps1ui-space-2xl);
   }
 
-  ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ps1ui-space-xs) var(--ps1ui-space-md);
-    font-size: var(--ps1ui-font-size-sm);
+  .sidebar--desktop {
+    display: none;
   }
 
   .content {
@@ -75,16 +69,15 @@ const { title, description, current } = Astro.props;
       grid-template-columns: 11rem minmax(0, 1fr);
     }
 
-    .sidebar {
+    .sidebar--mobile {
+      display: none;
+    }
+
+    .sidebar--desktop {
+      display: block;
       position: sticky;
       top: var(--ps1ui-space-2xl);
       align-self: start;
-    }
-
-    ul {
-      flex-direction: column;
-      flex-wrap: nowrap;
-      gap: var(--ps1ui-space-xs);
     }
   }
 </style>

@@ -1,0 +1,65 @@
+.ps1ui-details {
+  background: var(--ps1ui-color-surface);
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-md);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.6;
+}
+
+.ps1ui-details__summary {
+  padding: var(--ps1ui-control-padding-y) var(--ps1ui-space-md);
+  cursor: pointer;
+  user-select: none;
+  color: var(--ps1ui-color-fg);
+  border-radius: var(--ps1ui-radius-md);
+  transition:
+    color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+  /* base.css's reset keeps summary's default `display: list-item`; kill the
+     marker so our ::before glyph is the only disclosure indicator. */
+  list-style: none;
+}
+
+/* Older WebKit (Safari < 17) renders a native disclosure triangle via its
+   private ::-webkit-details-marker pseudo — `list-style: none` alone doesn't
+   suppress it there. Explicitly hide it so ::before is the only glyph. */
+.ps1ui-details__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Terminal-style disclosure marker: `▸` when closed, `▾` when open. Fixed
+   inline-block width so the summary text baseline stays put across states —
+   the two glyphs don't measure identically in the JetBrains Mono fallback
+   monospace stack. Colored with fg-muted so the arrow reads as chrome, not
+   content; ::before is not exposed to the a11y tree so this is safe. */
+.ps1ui-details__summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 1.25ch;
+  margin-right: var(--ps1ui-space-sm);
+  color: var(--ps1ui-color-fg-muted);
+}
+
+.ps1ui-details[open] > .ps1ui-details__summary::before {
+  content: "▾";
+}
+
+.ps1ui-details__summary:hover {
+  color: var(--ps1ui-color-primary);
+}
+
+/* Focus ring lives on the summary (the interactive element), not on details
+   itself — .ps1ui-details__summary:focus-visible is registered in
+   styles/components.css's forced-colors grouped selector so the box-shadow
+   ring falls back to a real outline in high-contrast mode. */
+.ps1ui-details__summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-details__body {
+  padding: var(--ps1ui-space-md);
+  border-top: 1px solid var(--ps1ui-color-border);
+}

@@ -1,0 +1,53 @@
+---
+// Shared body markup for the docs sidebar. Rendered twice by DocsLayout —
+// once inside a <Details> for the mobile drawer and once directly as the
+// sticky desktop column. Kept as a partial so the two paths never drift
+// from a single source of truth.
+import { Anchor, Stack, Text } from "@ps1ui/core";
+import { COMPONENT_GROUPS } from "../lib/components";
+import { href } from "../lib/url";
+
+interface Props {
+  current?: string;
+}
+
+const { current } = Astro.props;
+---
+
+<Stack direction="column" gap="lg">
+  {
+    COMPONENT_GROUPS.map((group) => (
+      <Stack direction="column" gap="sm">
+        <Text as="span" size="xs" variant="subtle" weight="semibold">
+          {group.title}
+        </Text>
+        <ul>
+          {group.items.map((c) => (
+            <li>
+              <Anchor
+                href={href(`components/${c.slug}/`)}
+                variant={c.slug === current ? "primary" : "subtle"}
+                aria-current={c.slug === current ? "page" : undefined}
+              >
+                {c.name}
+              </Anchor>
+            </li>
+          ))}
+        </ul>
+      </Stack>
+    ))
+  }
+</Stack>
+
+<style>
+  /* Vertical stack regardless of viewport. On mobile the list lives inside
+     a <Details> body (already narrow, one column reads better); on desktop
+     the sidebar is a fixed 11rem column. The previous horizontal-wrap
+     fallback (for mobile without Details) is no longer needed. */
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ps1ui-space-xs);
+    font-size: var(--ps1ui-font-size-sm);
+  }
+</style>
