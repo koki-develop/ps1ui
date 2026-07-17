@@ -1,13 +1,13 @@
 {
   "name": "@ps1ui/core",
   "version": "0.0.0",
-  "author": "koki-develop <kou.pg.0131@gmail.com>",
   "homepage": "https://github.com/koki-develop/ps1ui",
+  "license": "MIT",
+  "author": "koki-develop <kou.pg.0131@gmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/koki-develop/ps1ui.git"
   },
-  "license": "MIT",
   "files": [
     "dist"
   ],
