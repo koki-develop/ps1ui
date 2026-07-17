@@ -9,6 +9,7 @@ import { PS1Root } from "@ps1ui/core";
 import jetbrainsMonoLatinUrl from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { href } from "../lib/url.ts";
 
 interface Props {
   title?: string;
@@ -23,6 +24,9 @@ const { title, description = "For engineers who never left the terminal." } =
 const fullTitle = title ? `${title} | PS1 UI` : "PS1 UI";
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+// public/ assets aren't base-prefixed automatically (unlike ESM asset
+// imports), so route them through href() same as internal links.
+const ogImage = new URL(href("og.png"), Astro.site).toString();
 ---
 
 <!doctype html>
@@ -42,15 +46,18 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
     />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href={href("favicon.png")} />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
 
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
 
     <title>{fullTitle}</title>
   </head>
