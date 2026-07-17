@@ -538,39 +538,58 @@ describe("Grid", () => {
   // "nested Stack does not inherit outer's per-breakpoint input vars" describe
   // for the fullest account and Grid.css's @property block for the fix.
   describe("nested Grid does not inherit outer's per-breakpoint input vars", () => {
-    test("outer columns md=8 leaks into inner columns? (inner scalar columns=2 → stays 2 at md)", async () => {
-      const screen = await render(
-        <div style={{ width: 900 }}>
-          <Grid columns={{ base: 2, md: 8 }} data-testid="outer">
-            <Grid columns={2} data-testid="inner">
-              x
-            </Grid>
-          </Grid>
-        </div>,
-      );
-      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
-      const tracks = getComputedStyle(inner)
-        .gridTemplateColumns.trim()
-        .split(/\s+/)
-        .filter(Boolean);
-      // Without the leak fix, inner inherits outer's --_grid-columns-md = 8
-      // and reports 8 tracks. With the fix, inner keeps its own scalar 2.
-      expect(tracks).toHaveLength(2);
-    });
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
 
-    test("outer gap md=2xl leaks into inner gap? (inner scalar gap='sm' → stays 8px at md)", async () => {
-      const screen = await render(
-        <div style={{ width: 900 }}>
-          <Grid gap={{ base: "sm", md: "2xl" }} data-testid="outer">
-            <Grid gap="sm" data-testid="inner">
-              x
+    type GridLeakAxis = keyof typeof GRID_LEAK_TABLE;
+    type GridLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
+      inner: Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    const GRID_LEAK_TABLE = {
+      columns: {
+        outerFor: (bp) => ({ columns: { base: 2, [bp]: 8 } }),
+        inner: { columns: 2 },
+        computed: (cs) => String(cs.gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length),
+        expected: "2",
+      },
+      gap: {
+        outerFor: (bp) => ({ gap: { base: "sm", [bp]: "2xl" } }),
+        inner: { gap: "sm" },
+        computed: (cs) => cs.rowGap,
+        expected: "8px",
+      },
+    } as const satisfies Record<"columns" | "gap", GridLeakCase>;
+
+    const CASES = (Object.keys(GRID_LEAK_TABLE) as GridLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...GRID_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Grid {...outerFor(bp)} data-testid="outer">
+              <Grid {...inner} data-testid="inner">
+                x
+              </Grid>
             </Grid>
-          </Grid>
-        </div>,
-      );
-      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
-      expect(getComputedStyle(inner).rowGap).toBe("8px");
-    });
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
   });
 
   describe("nested Grid responds to outer Grid width", () => {

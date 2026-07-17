@@ -493,40 +493,64 @@ describe("Container", () => {
   // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
   // "nested Stack does not inherit outer's per-breakpoint input vars" describe
   // for the fullest account and Container.css's @property block for the fix.
+  // Wraps in a `container-type: inline-size` div so the OUTER Container's own
+  // @container query fires at each target breakpoint, guaranteeing outer's
+  // inline-size exceeds the threshold and inner's query fires too.
   describe("nested Container does not inherit outer's per-breakpoint input vars", () => {
-    test("outer size md=xl leaks into inner size? (inner scalar size='sm' → stays 640px at md)", async () => {
-      const screen = await render(
-        <div style={{ width: 900 }}>
-          <Container size={{ base: "sm", md: "xl" }} px="none" data-testid="outer">
-            <Container size="sm" px="none" data-testid="inner">
-              x
-            </Container>
-          </Container>
-        </div>,
-      );
-      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
-      // Outer's inline-size = 900px = 56.25rem → its md @container query
-      // fires on descendants. Without the leak fix, inner inherits outer's
-      // --_container-size-md (var(--ps1ui-container-xl) = 1280px) and
-      // reports max-width 1280px. With the fix, inner's own scalar `sm`
-      // (640px) wins because inherited md is blocked.
-      expect(getComputedStyle(inner).maxWidth).toBe("640px");
-    });
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
 
-    test("outer px md=2xl leaks into inner px? (inner scalar px='none' → stays 0px at md)", async () => {
-      const screen = await render(
-        <div style={{ width: 900 }}>
-          <Container size="full" px={{ base: "none", md: "2xl" }} data-testid="outer">
-            <Container size="full" px="none" data-testid="inner">
-              x
+    type ContainerLeakAxis = keyof typeof CONTAINER_LEAK_TABLE;
+    type ContainerLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Container>[0], "children" | "ref">>;
+      inner: Partial<Omit<Parameters<typeof Container>[0], "children" | "ref">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    const CONTAINER_LEAK_TABLE = {
+      size: {
+        // Other axes held constant on both outer and inner so only `size`
+        // can leak between them.
+        outerFor: (bp) => ({ size: { base: "sm", [bp]: "xl" }, px: "none" }),
+        inner: { size: "sm", px: "none" },
+        computed: (cs) => cs.maxWidth,
+        expected: "640px",
+      },
+      px: {
+        outerFor: (bp) => ({ size: "full", px: { base: "none", [bp]: "2xl" } }),
+        inner: { size: "full", px: "none" },
+        computed: (cs) => cs.paddingInlineStart,
+        expected: "0px",
+      },
+    } as const satisfies Record<"size" | "px", ContainerLeakCase>;
+
+    const CASES = (Object.keys(CONTAINER_LEAK_TABLE) as ContainerLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...CONTAINER_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Container {...outerFor(bp)} data-testid="outer">
+              <Container {...inner} data-testid="inner">
+                x
+              </Container>
             </Container>
-          </Container>
-        </div>,
-      );
-      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
-      expect(getComputedStyle(inner).paddingInlineStart).toBe("0px");
-      expect(getComputedStyle(inner).paddingInlineEnd).toBe("0px");
-    });
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
   });
 
   describe("nested Container responds to outer Container width", () => {
