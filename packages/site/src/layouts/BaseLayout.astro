@@ -19,8 +19,8 @@ const { title, description = "For engineers who never left the terminal." } =
   Astro.props;
 
 // Pages pass a short title ("Button", "Getting Started"); the site suffix is
-// composed here once so no call site carries " — PS1 UI" itself.
-const fullTitle = title ? `${title} — PS1 UI` : "PS1 UI";
+// composed here once so no call site carries " | PS1 UI" itself.
+const fullTitle = title ? `${title} | PS1 UI` : "PS1 UI";
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 ---
