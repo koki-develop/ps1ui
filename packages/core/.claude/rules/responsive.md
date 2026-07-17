@@ -1,13 +1,13 @@
 ---
 paths:
-  - "**/src/components/{Container,Grid,Stack,Heading,Text,PS1Root}/**"
+  - "**/src/components/{Container,Grid,GridItem,Stack,Heading,Text,PS1Root}/**"
   - "**/src/utils/responsive.ts"
   - "**/scripts/check-responsive-property-coverage.mjs"
 ---
 
 # Responsive props (container-query based)
 
-`Responsive<T>` props resolve via `resolveResponsive(value, "--_<comp>-<axis>", transform)` (`src/utils/responsive.ts`) into inline `--_*` custom properties; component CSS cascades them through `@container` breakpoint blocks (sm 40rem / md 48rem / lg 64rem / xl 80rem). Offered on Container, Grid, Stack, Heading, Text. Read `responsive.ts` and an existing component's CSS for the mechanism; Heading's `withResponsiveBase` handles prop-dependent base defaults.
+`Responsive<T>` props resolve via `resolveResponsive(value, "--_<comp>-<axis>", transform)` (`src/utils/responsive.ts`) into inline `--_*` custom properties; component CSS cascades them through `@container` breakpoint blocks (sm 40rem / md 48rem / lg 64rem / xl 80rem). Offered on Container, Grid, GridItem, Stack, Heading, Text. Read `responsive.ts` and an existing component's CSS for the mechanism; Heading's `withResponsiveBase` handles prop-dependent base defaults.
 
 ## The load-bearing invariant
 

@@ -1,5 +1,5 @@
 ---
-import { Grid } from "@ps1ui/core";
+import { Grid, GridItem } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 import DemoBox from "../../components/DemoBox.astro";
@@ -20,6 +20,23 @@ const responsive = `<Grid columns={{ base: 1, sm: 2, md: 3 }} gap="md">
   <div>04</div>
   <div>05</div>
   <div>06</div>
+</Grid>`;
+
+const gridItemSpan = `<Grid columns={4} gap="md">
+  <GridItem colSpan={2}>hero</GridItem>
+  <GridItem>02</GridItem>
+  <GridItem>03</GridItem>
+  <GridItem>04</GridItem>
+  <GridItem>05</GridItem>
+  <GridItem>06</GridItem>
+</Grid>`;
+
+const gridItemResponsive = `<Grid columns={4} gap="md">
+  <GridItem colSpan={{ base: 4, md: 2, lg: 4 }}>hero</GridItem>
+  <GridItem>02</GridItem>
+  <GridItem>03</GridItem>
+  <GridItem>04</GridItem>
+  <GridItem>05</GridItem>
 </Grid>`;
 ---
 
@@ -43,6 +60,27 @@ const responsive = `<Grid columns={{ base: 1, sm: 2, md: 3 }} gap="md">
       <DemoBox>04</DemoBox>
       <DemoBox>05</DemoBox>
       <DemoBox>06</DemoBox>
+    </Grid>
+  </Demo>
+
+  <Demo title="Column span with GridItem" code={gridItemSpan}>
+    <Grid columns={4} gap="md">
+      <GridItem colSpan={2}><DemoBox>hero</DemoBox></GridItem>
+      <GridItem><DemoBox>02</DemoBox></GridItem>
+      <GridItem><DemoBox>03</DemoBox></GridItem>
+      <GridItem><DemoBox>04</DemoBox></GridItem>
+      <GridItem><DemoBox>05</DemoBox></GridItem>
+      <GridItem><DemoBox>06</DemoBox></GridItem>
+    </Grid>
+  </Demo>
+
+  <Demo title="Responsive column span" code={gridItemResponsive}>
+    <Grid columns={4} gap="md">
+      <GridItem colSpan={{ base: 4, md: 2, lg: 4 }}><DemoBox>hero</DemoBox></GridItem>
+      <GridItem><DemoBox>02</DemoBox></GridItem>
+      <GridItem><DemoBox>03</DemoBox></GridItem>
+      <GridItem><DemoBox>04</DemoBox></GridItem>
+      <GridItem><DemoBox>05</DemoBox></GridItem>
     </Grid>
   </Demo>
 </ComponentPage>

@@ -19,6 +19,7 @@ description: Add a new component to @ps1ui/core, including its @ps1ui/site docs 
 ## packages/site
 
 5. Add the component's entry to `src/lib/components.ts` (drives sidebar, index, page headers) AND a matching `src/pages/components/<slug>.astro` page using the `ComponentPage` layout + `Demo` blocks. Demos render statically — avoid demos that need client JS to look right.
+   - **Exception — child-only helpers.** A component that only makes sense as a child of another primitive (e.g. `GridItem` inside `Grid`) skips the registry entry and its own page; document it with `Demo` blocks on the parent's page instead. Sidebar carries one entry per top-level primitive, so a child helper listed separately reads as an independent choice and fragments the story.
 
 ## VRT
 

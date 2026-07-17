@@ -1,0 +1,85 @@
+/* Input custom properties emitted by GridItem.tsx per set responsive-prop
+   breakpoint (`--_griditem-col-span-<bp>`). Registered as non-inheriting for
+   the same reason as Stack — see Stack.css's @property block for the full
+   rationale. Any new responsive axis added to GridItem.tsx must add matching
+   @property blocks here. */
+@property --_griditem-col-span-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_griditem-col-span-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_griditem-col-span-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_griditem-col-span-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_griditem-col-span-xl {
+  syntax: "*";
+  inherits: false;
+}
+
+/* GridItem — child of Grid that spans multiple column tracks.
+   GridItem is a leaf: it queries an ancestor containment context (typically
+   the parent Grid, which establishes `container: ps1ui-grid / inline-size`),
+   but does NOT establish one itself. Establishing containment on every
+   GridItem would fragment the query surface for descendants and impose a
+   `contain: layout` side effect on every cell — needless overhead for a
+   component whose only job is to declare its own column span.
+
+   Responsive values propagate via a CSS custom-property cascade. The
+   component emits `--_griditem-col-span-{bp}` via inline style (see
+   GridItem.tsx). Each `@container (min-width: X)` block below overrides
+   `--_col-span` with the value for the matching breakpoint; the fallback
+   chain in `--_col-span-{bp}` inherits the previous breakpoint's effective
+   value so a partial responsive object cascades naturally.
+
+   Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
+   inline as literal values because `@container` conditions cannot resolve
+   `var()`. Keep them in sync.
+
+   Fallback default: `1` — a bare `<GridItem>` with no colSpan behaves
+   exactly like a plain grid child (`grid-column: span 1`), so wrapping
+   existing Grid children in `<GridItem>` never changes layout by itself.
+
+   Used outside a display:grid parent, `grid-column` is an inert property —
+   the item still renders, the declaration is simply ignored. That matches
+   the "no runtime enforcement of parent type" convention used across the
+   library. */
+.ps1ui-griditem {
+  --_col-span-base: var(--_griditem-col-span-base, 1);
+  --_col-span-sm: var(--_griditem-col-span-sm, var(--_col-span-base));
+  --_col-span-md: var(--_griditem-col-span-md, var(--_col-span-sm));
+  --_col-span-lg: var(--_griditem-col-span-lg, var(--_col-span-md));
+  --_col-span-xl: var(--_griditem-col-span-xl, var(--_col-span-lg));
+
+  --_col-span: var(--_col-span-base);
+
+  grid-column: span var(--_col-span);
+}
+
+@container (min-width: 40rem) {
+  .ps1ui-griditem {
+    --_col-span: var(--_col-span-sm);
+  }
+}
+@container (min-width: 48rem) {
+  .ps1ui-griditem {
+    --_col-span: var(--_col-span-md);
+  }
+}
+@container (min-width: 64rem) {
+  .ps1ui-griditem {
+    --_col-span: var(--_col-span-lg);
+  }
+}
+@container (min-width: 80rem) {
+  .ps1ui-griditem {
+    --_col-span: var(--_col-span-xl);
+  }
+}
