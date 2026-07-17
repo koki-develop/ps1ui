@@ -21,6 +21,9 @@ export type { LabelProps } from "./components/Label/Label";
 export { Card } from "./components/Card/Card";
 export type { CardProps } from "./components/Card/Card";
 
+export { Details } from "./components/Details/Details";
+export type { DetailsProps } from "./components/Details/Details";
+
 export type { SpaceScale } from "./utils/spacing";
 
 export { Container } from "./components/Container/Container";

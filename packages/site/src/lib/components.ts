@@ -98,6 +98,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         name: "CodeBlock",
         description: "Syntax-highlighted code powered by Prism grammars.",
       },
+      {
+        slug: "details",
+        name: "Details",
+        description: "Collapsible section built on the native <details>/<summary> element.",
+      },
     ],
   },
 ];
