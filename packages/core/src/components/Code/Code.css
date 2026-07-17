@@ -1,0 +1,46 @@
+/* Code — inline code chip.
+
+   Companion to <CodeBlock>, but for inline fragments that live inside body
+   text: `<Text>call <Code>useState()</Code> to add state.</Text>`.
+
+   Font-size is `0.9em` (relative) so the chip auto-scales with the surrounding
+   text. Inside a default `<Text size="sm">` (14 px) the chip renders at
+   ~12.6 px, matching a small-caps rhythm without overriding the parent's
+   size axis. Consumers who want an absolute size still can — an inline
+   `style={{ fontSize: ... }}` outranks this rule.
+
+   `overflow-wrap: anywhere` lets long identifiers (`veryLongIdentifier`,
+   `a.b.c.d`, file paths) break inside a narrow container instead of forcing
+   a horizontal scroll on the parent. `break-word` was rejected because it
+   only fires when NO other soft-wrap opportunity exists on the line — that
+   fails the common "long path inside a short label" case. `anywhere` is
+   the correct choice for inline code fragments where preserving whole-word
+   integrity has no value (code has no natural word breaks).
+
+   Font-family is set explicitly (rather than relying on base.css's `code {
+   font-family: var(--ps1ui-font-mono); }` reset) because Code must render
+   the same way when consumed via the components-only CSS entry, which
+   ships no reset. Same reason Card/Text/etc. redeclare font-family.
+
+   No variant axis: inline code is overwhelmingly used at a single visual
+   weight. Consumers who need a colored fragment can override via inline
+   style (`style={{ color: "var(--ps1ui-color-primary)" }}`) or a caller
+   className — the base chip stays a single API surface.
+
+   `padding-block: 0.1em` assumes the parent's line-height leaves at least
+   ~0.1em of vertical slack per side. Inline padding does NOT extend the
+   line box (per CSS 2.1 §10.8), so an outer `line-height: 1` container
+   would paint the chip's background/border into the adjacent line. All
+   in-repo callers (Text = 1.6, Heading = 1.3) leave ample slack;
+   consumers who tighten line-height below ~1.2 need to widen it around
+   inline `<Code>` themselves. */
+.ps1ui-code {
+  font-family: var(--ps1ui-font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  background: var(--ps1ui-color-surface);
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-md);
+  color: var(--ps1ui-color-fg);
+  overflow-wrap: anywhere;
+}

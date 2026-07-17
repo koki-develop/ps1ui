@@ -94,6 +94,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Bordered surface for grouping related content.",
       },
       {
+        slug: "code",
+        name: "Code",
+        description: "Inline code chip for identifiers and short fragments in running text.",
+      },
+      {
         slug: "codeblock",
         name: "CodeBlock",
         description: "Syntax-highlighted code powered by Prism grammars.",

@@ -1,5 +1,5 @@
 ---
-import { Anchor, CodeBlock, Container, Heading, Stack, Text } from "@ps1ui/core";
+import { Anchor, Code, CodeBlock, Container, Heading, Stack, Text } from "@ps1ui/core";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { CONTAINER_PX, INSTALL_COMMAND } from "../lib/site";
 import { href } from "../lib/url";
@@ -46,11 +46,12 @@ export function App() {
       </Stack>
 
       <Stack direction="column" gap="md">
-        <Heading level={2} size="lg">Wrap your app in PS1Root</Heading>
+        <Heading level={2} size="lg">Wrap your app in <Code>PS1Root</Code></Heading>
         <Text>
-          PS1Root establishes the container-query context that responsive props
-          resolve against. Without it, responsive props silently fall back to
-          their base values. Wrap once, at the top of your tree.
+          <Code>PS1Root</Code> establishes the container-query context that responsive props
+          resolve against. Without it, responsive props silently fall back to their <Code
+            >base</Code
+          > values. Wrap once, at the top of your tree.
         </Text>
         <CodeBlock language="tsx" code={usage} />
       </Stack>

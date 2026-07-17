@@ -1,5 +1,5 @@
 ---
-import { CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
+import { Code, CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 
@@ -14,6 +14,24 @@ export async function deploy({ target, dryRun = false }: Deploy) {
 }`;
 
 const tsUsage = `<CodeBlock language="typescript" code={source} />`;
+
+// Kept as data so the prose in the Text below stays one editable unit and
+// oxfmt can't split each <Code> tag mid-attribute. Sync with
+// packages/core/src/components/CodeBlock/refractor.ts's KNOWN_LANGS if the
+// registered set changes.
+const COMMON = ["bash", "css", "go", "json", "python", "rust", "sql", "typescript", "yaml"];
+const EXTRA = [
+  "dart",
+  "docker",
+  "graphql",
+  "jsx",
+  "nginx",
+  "powershell",
+  "shell-session",
+  "toml",
+  "tsx",
+  "zig",
+];
 ---
 
 <ComponentPage slug="codeblock">
@@ -24,11 +42,23 @@ const tsUsage = `<CodeBlock language="typescript" code={source} />`;
   <Stack direction="column" gap="md">
     <Heading level={2} size="lg">Languages</Heading>
     <Text>
-      Ships with 40+ Prism grammars registered — the refractor common set
-      (bash, css, go, json, python, rust, sql, typescript, yaml, …) plus a
-      curated extra layer (dart, docker, graphql, jsx, nginx, powershell,
-      shell-session, toml, tsx, zig). Unknown languages fall back to
-      unhighlighted text.
+      Ships with 40+ Prism grammars registered — the refractor common set (
+      {
+        COMMON.map((lang, i) => (
+          <Fragment>
+            {i > 0 ? ", " : null}
+            <Code>{lang}</Code>
+          </Fragment>
+        ))
+      }, …) plus a curated extra layer (
+      {
+        EXTRA.map((lang, i) => (
+          <Fragment>
+            {i > 0 ? ", " : null}
+            <Code>{lang}</Code>
+          </Fragment>
+        ))
+      }). Unknown languages fall back to unhighlighted text.
     </Text>
   </Stack>
 </ComponentPage>

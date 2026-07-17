@@ -1,0 +1,58 @@
+---
+import { Card, Code, Text } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const basic = `<Code>useState()</Code>`;
+
+const inText = `<Text>
+  Call <Code>useState()</Code> to add local state, or{" "}
+  <Code>useReducer()</Code> when the transitions get complex.
+</Text>`;
+
+const onSurface = `<Card>
+  <Text>
+    Run <Code>pnpm dev</Code> to start the dev server, then edit{" "}
+    <Code>packages/site/src/pages/index.astro</Code>.
+  </Text>
+</Card>`;
+
+const longIdentifier = `<div style={{ maxWidth: "12.5rem" }}>
+  <Text>
+    See <Code>packages/core/src/components/CodeBlock/CodeBlock.tsx</Code>{" "}
+    for the full implementation.
+  </Text>
+</div>`;
+---
+
+<ComponentPage slug="code">
+  <Demo title="Basic" code={basic}>
+    <Code>useState()</Code>
+  </Demo>
+
+  <Demo title="In running text" code={inText}>
+    <Text>
+      Call <Code>useState()</Code> to add local state, or <Code>useReducer()</Code> when the
+      transitions get complex.
+    </Text>
+  </Demo>
+
+  <Demo title="On a surface" code={onSurface}>
+    <Card>
+      <Text>
+        Run <Code>pnpm dev</Code> to start the dev server, then edit <Code
+          >packages/site/src/pages/index.astro</Code
+        >.
+      </Text>
+    </Card>
+  </Demo>
+
+  <Demo title="Long identifiers wrap" code={longIdentifier}>
+    <div style="max-width: 12.5rem">
+      <Text>
+        See <Code>packages/core/src/components/CodeBlock/CodeBlock.tsx</Code> for the full
+        implementation.
+      </Text>
+    </div>
+  </Demo>
+</ComponentPage>

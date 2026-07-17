@@ -1,5 +1,5 @@
 ---
-import { CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
+import { Code, CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 
 const usage = `import { PS1Root } from "@ps1ui/core";
@@ -17,9 +17,9 @@ export function App() {
   <Stack direction="column" gap="md">
     <Heading level={2} size="lg">Usage</Heading>
     <Text>
-      Wrap your app in PS1Root once, at the top of the tree. Responsive props
-      on descendant components resolve against it — without a PS1Root ancestor
-      they silently fall back to their base values.
+      Wrap your app in <Code>PS1Root</Code> once, at the top of the tree. Responsive props on
+      descendant components resolve against it — without a <Code>PS1Root</Code> ancestor they
+      silently fall back to their <Code>base</Code> values.
     </Text>
     <CodeBlock language="tsx" code={usage} />
   </Stack>
