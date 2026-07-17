@@ -5,7 +5,11 @@
   gap: var(--ps1ui-space-sm);
   font-family: var(--ps1ui-font-mono);
   font-size: var(--ps1ui-font-size-sm);
-  font-weight: 500;
+  /* Applied at base rather than per-variant so primary and secondary read as
+     equal-weight siblings — variant should encode affordance (fill vs outline),
+     not typography weight. A per-variant weight difference used to make
+     secondary feel "one size smaller" next to primary. */
+  font-weight: 600;
   line-height: 1;
   /* 14px: 2× the 7px vertical rhythm; deliberately off the space scale. */
   padding: var(--ps1ui-control-padding-y) 14px;
@@ -33,7 +37,6 @@
   background: var(--ps1ui-color-primary);
   color: var(--ps1ui-color-primary-fg);
   border-color: var(--ps1ui-color-primary);
-  font-weight: 600;
 }
 .ps1ui-button--primary:hover:not(:disabled) {
   background: var(--ps1ui-color-primary-hover);
@@ -52,7 +55,11 @@
 .ps1ui-button--secondary {
   background: transparent;
   color: var(--ps1ui-color-fg);
-  border-color: var(--ps1ui-color-border-strong);
+  /* fg-subtle (~5:1 vs --ps1ui-color-bg) instead of border-strong (~1.7:1) so
+     the 1px outline actually defines the click target on the dark canvas —
+     otherwise the boundary reads as a ghost and the button visually shrinks
+     down to its text glyphs next to a solid primary. */
+  border-color: var(--ps1ui-color-fg-subtle);
 }
 .ps1ui-button--secondary:hover:not(:disabled) {
   border-color: var(--ps1ui-color-primary);
