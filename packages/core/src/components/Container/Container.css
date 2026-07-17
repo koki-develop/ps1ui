@@ -1,3 +1,51 @@
+/* Input custom properties emitted by Container.tsx per set responsive-prop
+   breakpoint (`--_container-<axis>-<bp>`). Registered as non-inheriting for
+   the same reason as Stack — see Stack.css's @property block for the full
+   rationale (CSS Custom Properties Level 1 §2 inheritance default;
+   `unset`/`revert` won't block; only `initial` or `@property inherits:false`
+   works). Any new responsive axis added to Container.tsx must add matching
+   @property blocks here. */
+@property --_container-size-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-size-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-size-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-size-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-size-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-px-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-px-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-px-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-px-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_container-px-xl {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Container — max-width + horizontal padding + auto centering.
    Establishes an inline-size containment context so descendants respond to
    Container's width via `@container` queries. Named `ps1ui-container` for

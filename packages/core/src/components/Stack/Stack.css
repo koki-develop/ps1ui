@@ -1,3 +1,121 @@
+/* Input custom properties emitted by Stack.tsx per set responsive-prop
+   breakpoint (`--_stack-<axis>-<bp>`). Registered as non-inheriting so a
+   parent Stack's `--_stack-gap-md` (etc.) does NOT cascade into a nested
+   Stack — CSS custom properties inherit by default (css-variables §2), and
+   without this guard the `var(--_stack-<axis>-<bp>, fallback)` chain below
+   picks up the ancestor's value on every descendant and silently overrides
+   the child's own responsive resolution when the matching @container query
+   fires. `syntax: "*"` lets us omit `initial-value` — the default value is
+   the guaranteed-invalid value, which makes the fallback branch of each
+   `var()` in the intermediate chain fire exactly as intended. Only inline
+   styles emitted by Stack.tsx (author-origin, inline specificity) set these
+   per-element, which beats the @property registration in the cascade. If a
+   new responsive axis is added to Stack.tsx, a matching @property block MUST
+   be added here; the nested-Stack regression tests in Stack.test.tsx cover
+   every axis so a forgotten one trips CI immediately. `unset` / `revert` /
+   `revert-layer` are NOT interchangeable with this approach for custom
+   properties — they resolve to the inherited value, defeating the block. */
+@property --_stack-direction-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-direction-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-direction-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-direction-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-direction-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-gap-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-gap-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-gap-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-gap-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-gap-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-align-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-align-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-align-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-align-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-align-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-justify-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-justify-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-justify-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-justify-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-justify-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-wrap-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-wrap-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-wrap-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-wrap-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_stack-wrap-xl {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Stack — flexbox composition of children along one axis.
    Establishes an inline-size containment context so descendants respond to
    Stack's width via `@container` queries. Named `ps1ui-stack` for future

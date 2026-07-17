@@ -534,6 +534,45 @@ describe("Grid", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
+  // "nested Stack does not inherit outer's per-breakpoint input vars" describe
+  // for the fullest account and Grid.css's @property block for the fix.
+  describe("nested Grid does not inherit outer's per-breakpoint input vars", () => {
+    test("outer columns md=8 leaks into inner columns? (inner scalar columns=2 → stays 2 at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Grid columns={{ base: 2, md: 8 }} data-testid="outer">
+            <Grid columns={2} data-testid="inner">
+              x
+            </Grid>
+          </Grid>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      const tracks = getComputedStyle(inner)
+        .gridTemplateColumns.trim()
+        .split(/\s+/)
+        .filter(Boolean);
+      // Without the leak fix, inner inherits outer's --_grid-columns-md = 8
+      // and reports 8 tracks. With the fix, inner keeps its own scalar 2.
+      expect(tracks).toHaveLength(2);
+    });
+
+    test("outer gap md=2xl leaks into inner gap? (inner scalar gap='sm' → stays 8px at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Grid gap={{ base: "sm", md: "2xl" }} data-testid="outer">
+            <Grid gap="sm" data-testid="inner">
+              x
+            </Grid>
+          </Grid>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      expect(getComputedStyle(inner).rowGap).toBe("8px");
+    });
+  });
+
   describe("nested Grid responds to outer Grid width", () => {
     test("inner Grid inside a 900px-wide outer Grid → responds to outer's inline-size", async () => {
       const screen = await render(

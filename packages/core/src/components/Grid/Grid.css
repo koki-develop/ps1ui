@@ -1,3 +1,49 @@
+/* Input custom properties emitted by Grid.tsx per set responsive-prop
+   breakpoint (`--_grid-<axis>-<bp>`). Registered as non-inheriting for the
+   same reason as Stack — see Stack.css's @property block for the full
+   rationale. Any new responsive axis added to Grid.tsx must add matching
+   @property blocks here. */
+@property --_grid-columns-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-columns-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-columns-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-columns-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-columns-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-gap-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-gap-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-gap-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-gap-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_grid-gap-xl {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Grid — display:grid + N-column tracks + gap.
    Establishes an inline-size containment context so descendants respond to
    Grid's width via `@container` queries. Named `ps1ui-grid` for future

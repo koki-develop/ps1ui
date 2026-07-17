@@ -490,6 +490,45 @@ describe("Container", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
+  // "nested Stack does not inherit outer's per-breakpoint input vars" describe
+  // for the fullest account and Container.css's @property block for the fix.
+  describe("nested Container does not inherit outer's per-breakpoint input vars", () => {
+    test("outer size md=xl leaks into inner size? (inner scalar size='sm' → stays 640px at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Container size={{ base: "sm", md: "xl" }} px="none" data-testid="outer">
+            <Container size="sm" px="none" data-testid="inner">
+              x
+            </Container>
+          </Container>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      // Outer's inline-size = 900px = 56.25rem → its md @container query
+      // fires on descendants. Without the leak fix, inner inherits outer's
+      // --_container-size-md (var(--ps1ui-container-xl) = 1280px) and
+      // reports max-width 1280px. With the fix, inner's own scalar `sm`
+      // (640px) wins because inherited md is blocked.
+      expect(getComputedStyle(inner).maxWidth).toBe("640px");
+    });
+
+    test("outer px md=2xl leaks into inner px? (inner scalar px='none' → stays 0px at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Container size="full" px={{ base: "none", md: "2xl" }} data-testid="outer">
+            <Container size="full" px="none" data-testid="inner">
+              x
+            </Container>
+          </Container>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      expect(getComputedStyle(inner).paddingInlineStart).toBe("0px");
+      expect(getComputedStyle(inner).paddingInlineEnd).toBe("0px");
+    });
+  });
+
   describe("nested Container responds to outer Container width", () => {
     test("inner Container inside a 700px-wide outer Container → effective size = sm entry", async () => {
       const screen = await render(

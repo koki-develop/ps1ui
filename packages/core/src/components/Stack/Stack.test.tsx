@@ -697,6 +697,91 @@ describe("Stack", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak: CSS custom properties
+  // inherit by default (css-variables §2), so a parent Stack's inline
+  // `--_stack-gap-md` would otherwise cascade into every nested Stack and
+  // corrupt the child's own `var(--_stack-gap-md, fallback)` chain when the
+  // md container query fires. Stack.css declares each `--_stack-<axis>-<bp>`
+  // as `@property { inherits: false }` to block that leak. If that guard is
+  // removed or an axis is forgotten, these tests trip.
+  //
+  // Shape: outer Stack sets ONLY the leaking breakpoint (`md`) with a value
+  // distinct from every fallback the child would compute; inner Stack sets
+  // ONLY `base` scalar. At 900px container, both Stacks' md container query
+  // fires — the child must compute its own base, NOT the inherited md.
+  describe("nested Stack does not inherit outer's per-breakpoint input vars", () => {
+    test("outer gap md=2xl leaks into inner gap? (inner scalar gap='sm' → stays 8px at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Stack gap={{ base: "sm", md: "2xl" }} data-testid="outer">
+            <Stack gap="sm" data-testid="inner">
+              x
+            </Stack>
+          </Stack>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      // md container query is active (outer inline-size = 900px = 56.25rem);
+      // without the leak fix, inner would inherit outer's --_stack-gap-md
+      // (var(--ps1ui-space-2xl) = 32px) and render `gap: 32px`. With the fix,
+      // inner's --_stack-gap-md is guaranteed-invalid, the var() falls
+      // through to --_gap-base = 8px.
+      expect(getComputedStyle(inner).rowGap).toBe("8px");
+    });
+
+    test("outer direction md=row leaks into inner direction? (inner scalar direction='column' → stays column at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Stack direction={{ base: "column", md: "row" }} data-testid="outer">
+            <Stack direction="column" data-testid="inner">
+              x
+            </Stack>
+          </Stack>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      expect(getComputedStyle(inner).flexDirection).toBe("column");
+    });
+
+    test("outer justify md=between leaks into inner justify? (inner unset → stays flex-start at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Stack justify={{ base: "start", md: "between" }} data-testid="outer">
+            <Stack data-testid="inner">x</Stack>
+          </Stack>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      // Inner didn't pass `justify` at all — its computed justify-content
+      // must be the CSS default (`normal`), not the inherited `space-between`.
+      expect(getComputedStyle(inner).justifyContent).toBe("normal");
+    });
+
+    test("outer align md=center leaks into inner align? (inner unset → stays normal at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Stack align={{ base: "start", md: "center" }} data-testid="outer">
+            <Stack data-testid="inner">x</Stack>
+          </Stack>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      expect(getComputedStyle(inner).alignItems).toBe("normal");
+    });
+
+    test("outer wrap md=true leaks into inner wrap? (inner unset → stays nowrap at md)", async () => {
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Stack wrap={{ base: false, md: true }} data-testid="outer">
+            <Stack data-testid="inner">x</Stack>
+          </Stack>
+        </div>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+      expect(getComputedStyle(inner).flexWrap).toBe("nowrap");
+    });
+  });
+
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(
