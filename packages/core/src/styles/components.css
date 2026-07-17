@@ -30,6 +30,7 @@
 @import "../components/Input/Input.css";
 @import "../components/Label/Label.css";
 @import "../components/Card/Card.css";
+@import "../components/Code/Code.css";
 @import "../components/CodeBlock/CodeBlock.css";
 @import "../components/Details/Details.css";
 @import "../components/Stack/Stack.css";

@@ -41,6 +41,9 @@ export type {
   StackProps,
 } from "./components/Stack/Stack";
 
+export { Code } from "./components/Code/Code";
+export type { CodeProps } from "./components/Code/Code";
+
 export { CodeBlock } from "./components/CodeBlock/CodeBlock";
 export type { CodeBlockLanguage, CodeBlockProps } from "./components/CodeBlock/CodeBlock";
 
