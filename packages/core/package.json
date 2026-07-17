@@ -1,6 +1,12 @@
 {
   "name": "@ps1ui/core",
   "version": "0.0.0",
+  "author": "koki-develop <kou.pg.0131@gmail.com>",
+  "homepage": "https://github.com/koki-develop/ps1ui",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koki-develop/ps1ui.git"
+  },
   "license": "MIT",
   "files": [
     "dist"
@@ -24,6 +30,7 @@
     "access": "public"
   },
   "scripts": {
+    "prepublishOnly": "pnpm build",
     "build": "pnpm check && pnpm build:js && pnpm build:css && pnpm check:dist",
     "build:js": "tsdown",
     "build:css": "postcss src/styles/styles.css src/styles/base.css src/styles/components.css --dir dist/",
