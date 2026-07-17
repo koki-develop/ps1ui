@@ -108,6 +108,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         name: "Details",
         description: "Collapsible section built on the native <details>/<summary> element.",
       },
+      {
+        slug: "list",
+        name: "List",
+        description: "Ordered or unordered <ul>/<ol> with terminal-style markers.",
+      },
     ],
   },
 ];

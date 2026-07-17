@@ -1,0 +1,96 @@
+/* List — semantic <ul>/<ol> wrapper with terminal-style markers.
+
+   The global reset in base.css sets `list-style: none` on every <ul>/<ol>,
+   which strips the UA bullet/number glyph. List re-introduces a marker via
+   `::before` on each direct <li> — `-` for unordered, `NN.` for ordered —
+   so the "reset removes bullets" side effect turns into an on-brand
+   terminal glyph rather than a hole.
+
+   The ordered marker uses `counter(list-item)` — the browser-maintained
+   list-item counter that already honours `<ol start>`, `<ol reversed>`,
+   and per-item `<li value>`. Using a hand-rolled `counter-reset` /
+   `counter-increment` would silently ignore all three attributes and
+   diverge from what assistive tech announcing the native counter reads.
+
+   `::before` (not `::marker`) is used because `::marker` styleability
+   lands late in some engines (custom `content` on `::marker` only reached
+   Safari 17) and because the inline-block `::before` + negative margin
+   pattern composes cleanly with block-flow content — a nested <List>
+   inside a <li> flows below the item text, with its own indent stacking
+   on top of the outer's. An earlier `display: grid` layout collided here
+   (nested list fell into the marker column and shoved the outer text
+   right); block flow avoids all of it.
+
+   Forced-colors (Windows High Contrast) repaints the `::before` glyph
+   with `CanvasText` — the marker survives as system-foreground ink; no
+   forced-colors-specific defense is needed. */
+
+.ps1ui-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ps1ui-space-xs);
+  padding: 0;
+  margin: 0;
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.6;
+}
+
+/* Hanging indent — `padding-left` reserves the marker column; the ::before
+   is inline-block with a negative `margin-left` that pulls it into that
+   reservation. Wrapped item text continues from the padding-left position
+   on line 2+, so long items don't slip back under the marker. Block-flow
+   content nested inside the <li> (a sub <List>, a paragraph, etc.) also
+   respects the padding-left, so it renders indented under the item's text
+   rather than under the marker.
+
+   Marker column widths are hard-coded per variant (not lifted to a custom
+   property) because the same numeric value shows up in `padding-left` on
+   the <li> and in `width` / `margin-left` on the ::before; a shared var
+   would need to be either non-inheriting (breaking pseudo-element access)
+   or inheriting (leaking into descendants and violating the codebase's
+   `--_*` = non-inheriting convention). Duplicating a `1ch` / `3ch`
+   literal is the smaller cost.
+
+   Ordered's `3ch` marker column fits `1.` through `99.`; lists past 99
+   items visually break the right-align column — an acceptable trade for
+   the common < 100 case. */
+
+.ps1ui-list--unordered > li {
+  padding-left: calc(1ch + var(--ps1ui-space-sm));
+}
+
+.ps1ui-list--ordered > li {
+  padding-left: calc(3ch + var(--ps1ui-space-sm));
+}
+
+.ps1ui-list > li::before {
+  display: inline-block;
+  padding-right: var(--ps1ui-space-sm);
+  color: var(--ps1ui-color-fg-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ps1ui-list--unordered > li::before {
+  content: "-";
+  width: 1ch;
+  margin-left: calc((1ch + var(--ps1ui-space-sm)) * -1);
+}
+
+.ps1ui-list--ordered > li::before {
+  content: counter(list-item) ".";
+  width: 3ch;
+  margin-left: calc((3ch + var(--ps1ui-space-sm)) * -1);
+}
+
+/* Breathing room above a nested <List>. Descendant combinator (not child)
+   so the rule still applies when a consumer wraps the sublist in a layout
+   primitive — `<li><Stack><List>…</List></Stack></li>` gets the same gap
+   as `<li><List>…</List></li>`. The outer flex `gap` on `.ps1ui-list`
+   only reaches direct children, so without this rule any nested list
+   loses breathing room. */
+.ps1ui-list li .ps1ui-list {
+  margin-top: var(--ps1ui-space-xs);
+}

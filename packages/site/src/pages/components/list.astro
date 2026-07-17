@@ -1,0 +1,65 @@
+---
+import { List, ListItem } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const unordered = `<List>
+  <ListItem>install the package</ListItem>
+  <ListItem>import the styles entry</ListItem>
+  <ListItem>wrap your tree in PS1Root</ListItem>
+</List>`;
+
+const ordered = `<List ordered>
+  <ListItem>parse the argv</ListItem>
+  <ListItem>resolve the config</ListItem>
+  <ListItem>dispatch the command</ListItem>
+  <ListItem>write the exit code</ListItem>
+</List>`;
+
+const nested = `<List ordered>
+  <ListItem>build the package</ListItem>
+  <ListItem>
+    run the checks
+    <List ordered>
+      <ListItem>typecheck</ListItem>
+      <ListItem>unit tests</ListItem>
+      <ListItem>visual regression</ListItem>
+    </List>
+  </ListItem>
+  <ListItem>publish</ListItem>
+</List>`;
+---
+
+<ComponentPage slug="list">
+  <Demo title="Unordered" code={unordered}>
+    <List>
+      <ListItem>install the package</ListItem>
+      <ListItem>import the styles entry</ListItem>
+      <ListItem>wrap your tree in PS1Root</ListItem>
+    </List>
+  </Demo>
+
+  <Demo title="Ordered" code={ordered}>
+    <List ordered>
+      <ListItem>parse the argv</ListItem>
+      <ListItem>resolve the config</ListItem>
+      <ListItem>dispatch the command</ListItem>
+      <ListItem>write the exit code</ListItem>
+    </List>
+  </Demo>
+
+  <Demo title="Nested" code={nested}>
+    <List ordered>
+      <ListItem>build the package</ListItem>
+      <ListItem>
+        run the checks
+        <List ordered>
+          <ListItem>typecheck</ListItem>
+          <ListItem>unit tests</ListItem>
+          <ListItem>visual regression</ListItem>
+        </List>
+      </ListItem>
+      <ListItem>publish</ListItem>
+    </List>
+  </Demo>
+</ComponentPage>
