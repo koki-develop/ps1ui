@@ -32,6 +32,9 @@ export type { ContainerProps, ContainerSize } from "./components/Container/Conta
 export { Grid } from "./components/Grid/Grid";
 export type { GridGap, GridProps } from "./components/Grid/Grid";
 
+export { GridItem } from "./components/GridItem/GridItem";
+export type { GridItemProps } from "./components/GridItem/GridItem";
+
 export { Stack } from "./components/Stack/Stack";
 export type {
   StackAlign,

@@ -21,3 +21,5 @@ Astro 7 landing page for `@ps1ui/core`. Deployed to https://koki-develop.github.
 ## Component pages
 
 `/components/<slug>/` pages are hand-written `src/pages/components/<slug>.astro` files using the `ComponentPage` layout + `Demo` blocks, driven by the registry in `src/lib/components.ts`. Adding a core component requires both a registry entry and a page file — the `new-component` skill in `packages/core` has the full checklist.
+
+**Exception — child-only helpers.** A component that only makes sense as a child of another primitive (e.g. `GridItem` inside `Grid`) is documented on the parent's page with `Demo` blocks; it skips the registry entry AND its own page. Rationale: the sidebar carries one entry per top-level primitive, and listing a child helper as a sibling of the parent reads as an independent choice, fragmenting the story exactly where it needs to stay together.
