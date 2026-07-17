@@ -56,6 +56,24 @@ export type { CodeProps } from "./components/Code/Code";
 export { CodeBlock } from "./components/CodeBlock/CodeBlock";
 export type { CodeBlockLanguage, CodeBlockProps } from "./components/CodeBlock/CodeBlock";
 
+export { Table } from "./components/Table/Table";
+export type { TableProps } from "./components/Table/Table";
+
+export { Thead } from "./components/Thead/Thead";
+export type { TheadProps } from "./components/Thead/Thead";
+
+export { Tbody } from "./components/Tbody/Tbody";
+export type { TbodyProps } from "./components/Tbody/Tbody";
+
+export { Tr } from "./components/Tr/Tr";
+export type { TrProps } from "./components/Tr/Tr";
+
+export { Th } from "./components/Th/Th";
+export type { ThProps } from "./components/Th/Th";
+
+export { Td } from "./components/Td/Td";
+export type { TdProps } from "./components/Td/Td";
+
 export { Text } from "./components/Text/Text";
 export type {
   TextElement,

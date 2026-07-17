@@ -1,0 +1,8 @@
+/* Thead — no rules of its own.
+
+   The `.ps1ui-thead` class is a stable API hook for consumers. All header
+   rendering (surface background, strong bottom rule) lives on
+   `.ps1ui-table thead th` in Table.css so a bare <thead> inside <Table>
+   continues to render identically to <Thead>. Keeping this file present
+   (and imported from components.css) matches the per-component file layout
+   the `new-component` skill enforces — same precedent as ListItem.css. */

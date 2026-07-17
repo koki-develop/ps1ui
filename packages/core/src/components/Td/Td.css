@@ -1,0 +1,8 @@
+/* Td — no rules of its own.
+
+   The `.ps1ui-td` class is a stable API hook for consumers. All data-cell
+   rendering (grid border, padding, alignment) lives on `.ps1ui-table td` in
+   Table.css so a bare <td> inside <Table> continues to render identically to
+   <Td>. Keeping this file present (and imported from components.css) matches
+   the per-component file layout the `new-component` skill enforces — same
+   precedent as ListItem.css. */

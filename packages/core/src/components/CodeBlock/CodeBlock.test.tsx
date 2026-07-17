@@ -247,6 +247,31 @@ describe("CodeBlock", () => {
       );
       expect(ref.current).toBe(screen.getByTestId("cb").element());
     });
+
+    test("honors a React 19 cleanup-returning callback ref (cleanup runs on unmount, never called with null)", async () => {
+      // A cleanup-style ref's body is written to never receive null — React 19
+      // drives detachment through the returned cleanup instead. The merged ref
+      // must preserve that contract, not downgrade it to a null call.
+      const calls: Array<HTMLPreElement | null> = [];
+      const cleanup = vi.fn();
+      const screen = await render(
+        <CodeBlock
+          ref={(node: HTMLPreElement) => {
+            calls.push(node);
+            return cleanup;
+          }}
+        >
+          {TS_SAMPLE}
+        </CodeBlock>,
+      );
+      expect(calls.length).toBe(1);
+      expect(calls[0]).toBeInstanceOf(HTMLPreElement);
+      expect(cleanup).not.toHaveBeenCalled();
+      screen.unmount();
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      // The callback itself was never re-invoked with null.
+      expect(calls.length).toBe(1);
+    });
   });
 
   describe("tabIndex (scrollable-region-focusable)", () => {
@@ -313,6 +338,56 @@ describe("CodeBlock", () => {
       );
       await vi.waitFor(() => {
         expect(el.getAttribute("tabindex")).toBe("0");
+      });
+    });
+
+    test("keeps the focused pre in the tab order when content shrinks to fit; drops it after blur", async () => {
+      // Removing tabindex from the focused element would blur it to <body>,
+      // teleporting a keyboard user's position — useScrollableFocus keeps the
+      // tab stop while focused and the onBlur re-measure drops it after.
+      const long = "abcdefghij".repeat(60);
+      const screen = await render(
+        <CodeBlock data-testid="cb" style={{ maxWidth: 120 }}>
+          {long}
+        </CodeBlock>,
+      );
+      const el = screen.getByTestId("cb").element() as HTMLPreElement;
+      await vi.waitFor(() => {
+        expect(el.getAttribute("tabindex")).toBe("0");
+      });
+      el.focus();
+      expect(document.activeElement).toBe(el);
+      screen.rerender(
+        <CodeBlock data-testid="cb" style={{ maxWidth: 120 }}>
+          short
+        </CodeBlock>,
+      );
+      // Let the source-keyed re-measure settle, then confirm focus survived.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      expect(document.activeElement).toBe(el);
+      expect(el.getAttribute("tabindex")).toBe("0");
+      el.blur();
+      await vi.waitFor(() => {
+        expect(el.getAttribute("tabindex")).toBeNull();
+      });
+    });
+
+    test("chains a caller-supplied onBlur with the internal re-measure", async () => {
+      const onBlur = vi.fn();
+      const long = "abcdefghij".repeat(60);
+      const screen = await render(
+        <CodeBlock data-testid="cb" style={{ maxWidth: 120 }} onBlur={onBlur}>
+          {long}
+        </CodeBlock>,
+      );
+      const el = screen.getByTestId("cb").element() as HTMLPreElement;
+      await vi.waitFor(() => {
+        expect(el.getAttribute("tabindex")).toBe("0");
+      });
+      el.focus();
+      el.blur();
+      await vi.waitFor(() => {
+        expect(onBlur).toHaveBeenCalledTimes(1);
       });
     });
   });

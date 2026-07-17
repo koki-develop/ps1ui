@@ -81,6 +81,30 @@ describe("Checkbox", () => {
       const node = cb.mock.calls[0]?.[0];
       expect(node).toBeInstanceOf(HTMLInputElement);
     });
+
+    test("honors a React 19 cleanup-returning callback ref (cleanup runs on unmount, never called with null)", async () => {
+      // A cleanup-style ref's body is written to never receive null — React 19
+      // drives detachment through the returned cleanup instead. The merged ref
+      // must preserve that contract, not downgrade it to a null call.
+      const calls: Array<HTMLInputElement | null> = [];
+      const cleanup = vi.fn();
+      const screen = await render(
+        <Checkbox
+          aria-label="x"
+          ref={(node: HTMLInputElement) => {
+            calls.push(node);
+            return cleanup;
+          }}
+        />,
+      );
+      expect(calls.length).toBe(1);
+      expect(calls[0]).toBeInstanceOf(HTMLInputElement);
+      expect(cleanup).not.toHaveBeenCalled();
+      screen.unmount();
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      // The callback itself was never re-invoked with null.
+      expect(calls.length).toBe(1);
+    });
   });
 
   describe("indeterminate", () => {

@@ -28,6 +28,10 @@ import { Checkbox } from "../components/Checkbox/Checkbox";
 import { CodeBlock } from "../components/CodeBlock/CodeBlock";
 import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
+import { Table } from "../components/Table/Table";
+import { Tbody } from "../components/Tbody/Tbody";
+import { Td } from "../components/Td/Td";
+import { Tr } from "../components/Tr/Tr";
 import { disableForcedColors, enableForcedColors } from "../testing/forced-colors";
 import { withPseudoState, type PseudoClass } from "../testing/pseudo-state";
 
@@ -106,6 +110,26 @@ describe("forced-colors adjustments", () => {
         <Details summary="Components" data-testid="fc-target">
           body
         </Details>
+      ),
+    },
+    {
+      name: "Table (scroller)",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      // Focus lives on the internal scroll wrapper, not the <table> the
+      // fixture's data-testid lands on. Narrow wrapper + an unbreakable cell
+      // so the table measures as scrollable and the scroller keeps tabIndex=0.
+      selector: ".ps1ui-table__scroller",
+      ui: (
+        <div style={{ width: 120 }}>
+          <Table data-testid="fc-target">
+            <Tbody>
+              <Tr>
+                <Td>{"veryLongUnbreakableCellContentThatDefinitelyOverflows"}</Td>
+              </Tr>
+            </Tbody>
+          </Table>
+        </div>
       ),
     },
   ] as const satisfies ReadonlyArray<{

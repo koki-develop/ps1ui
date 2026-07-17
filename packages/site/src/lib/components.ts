@@ -113,6 +113,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         name: "List",
         description: "Ordered or unordered <ul>/<ol> with terminal-style markers.",
       },
+      {
+        slug: "table",
+        name: "Table",
+        description: "Semantic <table> with terminal-style grid borders and horizontal scrolling.",
+      },
     ],
   },
 ];
