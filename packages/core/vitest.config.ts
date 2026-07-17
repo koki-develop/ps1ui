@@ -116,6 +116,16 @@ export default defineConfig({
         test: {
           name: "vrt",
           include: ["src/**/*.vrt.test.tsx"],
+          // Absorbs sub-pixel rasterisation drift on Firefox/WebKit that
+          // slips past `toMatchScreenshot`'s Stable Screenshot Detection
+          // and pixelmatch's threshold. Genuinely stuck cases (the two
+          // `focus-visible + transparent bg` Firefox pairs documented in
+          // CLAUDE.md's "Known VRT flakes") stay skipped — retry can't
+          // rescue a 100% failure — but the intermittent 2-6% drifts that
+          // otherwise force an unrelated PR onto the auto-heal treadmill
+          // absorb here. Kept at the project level rather than per-test
+          // so a new *.vrt.test.tsx file inherits it automatically.
+          retry: 3,
           // Waits for JetBrains Mono to be resident before every capture —
           // see src/testing/vrt-setup.ts for the font-load race this closes.
           setupFiles: ["./src/testing/vrt-setup.ts"],
