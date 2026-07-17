@@ -1,0 +1,8 @@
+/* Tbody — no rules of its own.
+
+   The `.ps1ui-tbody` class is a stable API hook for consumers. All cell
+   rendering lives on `.ps1ui-table th / td` in Table.css so a bare <tbody>
+   inside <Table> continues to render identically to <Tbody>. Keeping this
+   file present (and imported from components.css) matches the per-component
+   file layout the `new-component` skill enforces — same precedent as
+   ListItem.css. */

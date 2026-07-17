@@ -4,25 +4,9 @@ import { createRef, type ReactElement } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import { resolveColorToken } from "../../testing/color";
 import { Text } from "../Text/Text";
 import { Code } from "./Code";
-
-// Resolve a --ps1ui-* color token to its computed rgb() string via a throwaway
-// probe. Both `color` and `background-color` computed values normalize to the
-// same rgb() form, so a single probe on the `color` property is enough to
-// compare against either — callers pass the token name and the returned string
-// is directly comparable to `getComputedStyle(el).color` or `.backgroundColor`
-// on the element under test.
-function resolveColorToken(name: string): string {
-  const probe = document.createElement("span");
-  probe.style.color = `var(${name})`;
-  document.body.appendChild(probe);
-  try {
-    return getComputedStyle(probe).color;
-  } finally {
-    probe.remove();
-  }
-}
 
 describe("Code", () => {
   describe("rendering", () => {

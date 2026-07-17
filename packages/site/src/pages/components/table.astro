@@ -1,0 +1,133 @@
+---
+import { Table, Tbody, Td, Th, Thead, Tr } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const basic = `<Table>
+  <Thead>
+    <Tr>
+      <Th scope="col">Prop</Th>
+      <Th scope="col">Type</Th>
+      <Th scope="col">Default</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Td>ordered</Td>
+      <Td>boolean</Td>
+      <Td>false</Td>
+    </Tr>
+    <Tr>
+      <Td>className</Td>
+      <Td>string</Td>
+      <Td>—</Td>
+    </Tr>
+  </Tbody>
+</Table>`;
+
+const rowHeaders = `<Table>
+  <Thead>
+    <Tr>
+      <Th scope="col">Component</Th>
+      <Th scope="col">Element</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Th scope="row">Button</Th>
+      <Td>button</Td>
+    </Tr>
+    <Tr>
+      <Th scope="row">Anchor</Th>
+      <Td>a</Td>
+    </Tr>
+  </Tbody>
+</Table>`;
+
+const scroll = `<div style={{ maxWidth: 320 }}>
+  <Table>
+    <Thead>
+      <Tr>
+        <Th scope="col">Prop</Th>
+        <Th scope="col">Type</Th>
+        <Th scope="col">Description</Th>
+      </Tr>
+    </Thead>
+    <Tbody>
+      <Tr>
+        <Td>language</Td>
+        <Td>CodeBlockLanguage</Td>
+        <Td>Prism grammar used to tokenize the snippet</Td>
+      </Tr>
+    </Tbody>
+  </Table>
+</div>`;
+---
+
+<ComponentPage slug="table">
+  <Demo title="Basic" code={basic}>
+    <Table>
+      <Thead>
+        <Tr>
+          <Th scope="col">Prop</Th>
+          <Th scope="col">Type</Th>
+          <Th scope="col">Default</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        <Tr>
+          <Td>ordered</Td>
+          <Td>boolean</Td>
+          <Td>false</Td>
+        </Tr>
+        <Tr>
+          <Td>className</Td>
+          <Td>string</Td>
+          <Td>—</Td>
+        </Tr>
+      </Tbody>
+    </Table>
+  </Demo>
+
+  <Demo title="Row headers" code={rowHeaders}>
+    <Table>
+      <Thead>
+        <Tr>
+          <Th scope="col">Component</Th>
+          <Th scope="col">Element</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        <Tr>
+          <Th scope="row">Button</Th>
+          <Td>button</Td>
+        </Tr>
+        <Tr>
+          <Th scope="row">Anchor</Th>
+          <Td>a</Td>
+        </Tr>
+      </Tbody>
+    </Table>
+  </Demo>
+
+  <Demo title="Horizontal scroll" code={scroll}>
+    <div style="max-width: 320px;">
+      <Table>
+        <Thead>
+          <Tr>
+            <Th scope="col">Prop</Th>
+            <Th scope="col">Type</Th>
+            <Th scope="col">Description</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          <Tr>
+            <Td>language</Td>
+            <Td>CodeBlockLanguage</Td>
+            <Td>Prism grammar used to tokenize the snippet</Td>
+          </Tr>
+        </Tbody>
+      </Table>
+    </div>
+  </Demo>
+</ComponentPage>

@@ -1,17 +1,11 @@
 "use client";
 
-import {
-  Fragment,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-} from "react";
+import { Fragment, useLayoutEffect, useMemo, type ComponentProps } from "react";
 import { jsx, jsxs } from "react/jsx-runtime";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import { cx } from "../../utils/cx";
+import { useMergedRef } from "../../utils/useMergedRef";
+import { useScrollableFocus } from "../../utils/useScrollableFocus";
 import { refractor, type CodeBlockLanguage } from "./refractor";
 
 export type { CodeBlockLanguage };
@@ -42,6 +36,7 @@ export function CodeBlock({
   children,
   language,
   className,
+  onBlur,
   ref: forwardedRef,
   ...rest
 }: CodeBlockProps) {
@@ -68,44 +63,32 @@ export function CodeBlock({
     };
   }, [source, language]);
 
-  // axe scrollable-region-focusable: a <pre> with `overflow-x: auto` must be
-  // keyboard-reachable IF its content actually overflows. Setting tabIndex=0
-  // unconditionally would drop every tiny snippet into the tab order for no
-  // benefit and paint a focus ring on hover-focus, so we measure the pre's
-  // scrollWidth and only expose it as focusable when it exceeds clientWidth.
-  // The initial state is `true` so long code is never *un*reachable on the
-  // very first paint, even before useLayoutEffect has had a chance to measure.
-  const preRef = useRef<HTMLPreElement | null>(null);
-  const [scrollable, setScrollable] = useState(true);
-  useLayoutEffect(() => {
-    // preRef.current is always populated before useLayoutEffect fires (React sets
-    // refs during commit, effects run after), so no defensive null check.
-    const el = preRef.current!;
-    const measure = () => setScrollable(el.scrollWidth > el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [source]);
+  // Keyboard reachability of the <pre> (its own scroll container) — tabIndex
+  // only while the code actually overflows, kept while focused, safe-side
+  // under static SSR — is the shared useScrollableFocus contract (see the
+  // hook's header for the full account). The overflowing content is the
+  // inline <code>, whose box a ResizeObserver can't watch, so content-driven
+  // re-measures are keyed on the source string instead.
+  const { scrollerRef, tabIndex, measure } = useScrollableFocus<HTMLPreElement>();
+  useLayoutEffect(() => measure(), [measure, source]);
 
-  // Merge the caller's ref with our internal preRef so both get the DOM node.
-  // Matches the pattern in Checkbox.tsx — see that file for the rationale.
-  const mergedRef = useCallback(
-    (node: HTMLPreElement | null) => {
-      preRef.current = node;
-      if (typeof forwardedRef === "function") forwardedRef(node);
-      else if (forwardedRef) forwardedRef.current = node;
-    },
-    [forwardedRef],
-  );
+  // Merge the caller's ref with the hook's so both get the <pre> node.
+  const mergedRef = useMergedRef(scrollerRef, forwardedRef);
 
   return (
     <pre
-      // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- axe scrollable-region-focusable requires the <pre> be keyboard-reachable when its content overflows; the effect above gates this on measured overflow so short snippets stay out of the tab order.
-      tabIndex={scrollable ? 0 : undefined}
+      // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- axe scrollable-region-focusable requires the <pre> be keyboard-reachable when its content overflows; useScrollableFocus gates this on measured overflow so short snippets stay out of the tab order.
+      tabIndex={tabIndex}
       {...rest}
       ref={mergedRef}
       className={cx("ps1ui-codeblock", className)}
+      // Chained (not spread) so the caller's handler still runs: the
+      // re-measure drops the kept-while-focused tab stop once focus leaves —
+      // see useScrollableFocus.
+      onBlur={(event) => {
+        onBlur?.(event);
+        measure();
+      }}
     >
       <code className={registered ? `language-${language}` : undefined}>{highlighted}</code>
     </pre>

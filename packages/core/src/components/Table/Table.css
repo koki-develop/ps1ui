@@ -1,0 +1,75 @@
+/* Table — semantic <table> with terminal-style grid borders, wrapped in a
+   horizontal-scroll container.
+
+   Scroll wrapper: `display: table` boxes don't honor overflow, so Table.tsx
+   renders a dedicated `__scroller` div with `overflow-x: auto`. It follows
+   CodeBlock's keyboard contract — tabIndex=0 only while the table actually
+   overflows — and reuses the shared box-shadow focus ring, so
+   `.ps1ui-table__scroller:focus-visible` is registered in the forced-colors
+   grouped selector in styles/components.css (box-shadow is force-stripped in
+   high-contrast mode; the grouped rule restores a real outline).
+
+   Grid borders: `border-collapse: collapse` + a uniform 1px cell border in
+   --ps1ui-color-border draw the closed single-stroke grid a terminal
+   box-drawing table (┌─┬─┐) renders — collapsing is what merges adjacent
+   cell edges into one shared rule. The header row separates on two axes:
+   a surface background and a border-strong bottom rule. That rule is
+   declared on the <th> (cell origin) deliberately — in border-collapse
+   conflict resolution, equal-width equal-style borders from two adjacent
+   cells resolve to the topmost cell's color, so the th's strong bottom edge
+   wins over the first body row's plain top edge. Declaring it on the row or
+   row group instead would lose (cell origin outranks both).
+
+   All rules target `.ps1ui-table <element>` selectors, not the
+   ps1ui-thead/tbody/tr/th/td wrapper classes: a bare <thead>/<tr>/<th>/<td>
+   inside <Table> must render identically to the wrapper components (same
+   contract as `.ps1ui-list > li` vs ListItem). The wrapper classes are
+   stable hooks only.
+
+   Self-sufficiency: `border-collapse` and the <th> font-weight/text-align
+   neutralizations are declared here even though base.css's reset also
+   collapses table borders — the components.css entry ships without the
+   reset, and UA <th> defaults (bold, center) would leak through. */
+
+.ps1ui-table__scroller {
+  overflow-x: auto;
+}
+
+.ps1ui-table__scroller:focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+/* No width override — the UA's shrink-to-fit keeps the grid hugging its
+   content like a box-drawing table. Call sites that want a full-bleed table
+   (e.g. a props table filling a docs column) opt in with `width: 100%`. */
+.ps1ui-table {
+  border-collapse: collapse;
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.6;
+}
+
+.ps1ui-table th,
+.ps1ui-table td {
+  border: 1px solid var(--ps1ui-color-border);
+  padding: var(--ps1ui-space-sm) var(--ps1ui-space-md);
+  /* `start` (not `left`): tables carry natural-language content and should
+     mirror in RTL contexts — unlike CodeBlock, which pins `left` because
+     source code stays LTR. Explicit on both cell kinds because the UA
+     default for <th> is center. */
+  text-align: start;
+  /* Multi-line cells align their first lines instead of drifting toward
+     vertical centers of unequal-height neighbors. */
+  vertical-align: top;
+}
+
+.ps1ui-table th {
+  background: var(--ps1ui-color-surface);
+  font-weight: 600;
+}
+
+.ps1ui-table thead th {
+  border-bottom-color: var(--ps1ui-color-border-strong);
+}

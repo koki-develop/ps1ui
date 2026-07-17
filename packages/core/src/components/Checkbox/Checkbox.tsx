@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, type ComponentProps } from "react";
+import { useLayoutEffect, useRef, type ComponentProps } from "react";
 import { cx } from "../../utils/cx";
+import { useMergedRef } from "../../utils/useMergedRef";
 
 export type CheckboxProps = Omit<ComponentProps<"input">, "type"> & {
   indeterminate?: boolean;
@@ -20,14 +21,8 @@ export function Checkbox({
     localRef.current!.indeterminate = indeterminate;
   }, [indeterminate]);
 
-  const mergedRef = useCallback(
-    (node: HTMLInputElement | null) => {
-      localRef.current = node;
-      if (typeof forwardedRef === "function") forwardedRef(node);
-      else if (forwardedRef) forwardedRef.current = node;
-    },
-    [forwardedRef],
-  );
+  // Both the indeterminate sync above and the caller get the <input> node.
+  const mergedRef = useMergedRef(localRef, forwardedRef);
 
   return (
     <input {...rest} ref={mergedRef} type="checkbox" className={cx("ps1ui-checkbox", className)} />
