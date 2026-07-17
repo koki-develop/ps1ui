@@ -697,6 +697,118 @@ describe("Stack", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak: CSS custom properties
+  // inherit by default (css-variables §2), so a parent Stack's inline
+  // `--_stack-<axis>-<bp>` would otherwise cascade into every nested Stack and
+  // corrupt the child's own `var(--_stack-<axis>-<bp>, fallback)` chain when
+  // the matching container query fires. Stack.css declares each
+  // `--_stack-<axis>-<bp>` as `@property { inherits: false }` to block that
+  // leak. If ANY of those 25 @property blocks is removed, at least one test
+  // in this matrix trips.
+  //
+  // Shape: for each responsive axis × each non-base breakpoint, outer sets
+  // ONLY that breakpoint's value (distinct from every fallback the child
+  // would compute); inner sets ONLY `base` scalar (or omits the prop
+  // entirely — CSS default takes over). Rendered inside a
+  // `container-type: inline-size` wrapper at a width where the target
+  // breakpoint is the highest match (see BREAKPOINT_WIDTHS), so the outer's
+  // OWN @container query fires — that guarantees the outer's inline-size
+  // exceeds the target and inner's @container query fires too. The child
+  // must resolve to its own base, NOT the inherited breakpoint value.
+  //
+  // Axis table declared with `satisfies` over a Record keyed by every
+  // responsive prop Stack currently exposes — adding a new responsive prop
+  // to StackProps fails compilation here until the table is updated. The
+  // build check `check-responsive-property-coverage.mjs` catches the CSS
+  // side (missing @property for a new axis) as a separate structural gate.
+  describe("nested Stack does not inherit outer's per-breakpoint input vars", () => {
+    // Wrapper width picked so the named breakpoint is the HIGHEST @container
+    // query match — outer's OWN queries then fire at that breakpoint too, so
+    // outer's inline-size clears the threshold and inner's query also fires.
+    // sm=40rem/640, md=48rem/768, lg=64rem/1024, xl=80rem/1280.
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
+
+    type StackLeakAxis = keyof typeof STACK_LEAK_TABLE;
+    type StackLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Stack>[0], "children" | "ref">>;
+      inner: Partial<Omit<Parameters<typeof Stack>[0], "children" | "ref">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    // Record keyed by every responsive axis Stack currently exposes.
+    // TypeScript ensures every key here is a valid StackProps responsive
+    // axis and forbids typos; the accompanying `satisfies` clause below
+    // pins the value shape. Adding `newAxis` to StackProps means updating
+    // the union below AND adding an entry here — either half missing is a
+    // compile error.
+    const STACK_LEAK_TABLE = {
+      direction: {
+        outerFor: (bp) => ({ direction: { base: "column", [bp]: "row" } }),
+        inner: { direction: "column" },
+        computed: (cs) => cs.flexDirection,
+        expected: "column",
+      },
+      gap: {
+        outerFor: (bp) => ({ gap: { base: "sm", [bp]: "2xl" } }),
+        inner: { gap: "sm" },
+        computed: (cs) => cs.rowGap,
+        expected: "8px",
+      },
+      align: {
+        // Inner omits the prop entirely — its computed value must be the
+        // CSS default (`normal`), not the ancestor's `-<bp>` value.
+        outerFor: (bp) => ({ align: { base: "start", [bp]: "center" } }),
+        inner: {},
+        computed: (cs) => cs.alignItems,
+        expected: "normal",
+      },
+      justify: {
+        // `normal` is Stack.css's declared fallback for `--_justify-base`;
+        // in a flex-row context `normal` renders as `flex-start`, but the
+        // computed keyword IS `normal` — assert what getComputedStyle returns.
+        outerFor: (bp) => ({ justify: { base: "start", [bp]: "between" } }),
+        inner: {},
+        computed: (cs) => cs.justifyContent,
+        expected: "normal",
+      },
+      wrap: {
+        outerFor: (bp) => ({ wrap: { base: false, [bp]: true } }),
+        inner: {},
+        computed: (cs) => cs.flexWrap,
+        expected: "nowrap",
+      },
+    } as const satisfies Record<"direction" | "gap" | "align" | "justify" | "wrap", StackLeakCase>;
+
+    const CASES = (Object.keys(STACK_LEAK_TABLE) as StackLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...STACK_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Stack {...outerFor(bp)} data-testid="outer">
+              <Stack {...inner} data-testid="inner">
+                x
+              </Stack>
+            </Stack>
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
+  });
+
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(

@@ -1,3 +1,48 @@
+/* Input custom properties emitted by Text.tsx per set responsive-prop
+   breakpoint (`--_text-<axis>-<bp>`). Registered as non-inheriting for the
+   same reason as Stack — see Stack.css's @property block for the full
+   rationale. */
+@property --_text-size-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-size-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-size-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-size-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-size-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-weight-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-weight-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-weight-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-weight-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_text-weight-xl {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Text — typography primitive.
    Text is a leaf component: it queries an ancestor containment context (a
    PS1Root / Container / Grid / Stack), but does NOT establish one itself.

@@ -1,3 +1,48 @@
+/* Input custom properties emitted by Heading.tsx per set responsive-prop
+   breakpoint (`--_heading-<axis>-<bp>`). Registered as non-inheriting for
+   the same reason as Stack — see Stack.css's @property block for the full
+   rationale. */
+@property --_heading-size-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-size-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-size-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-size-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-size-xl {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-weight-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-weight-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-weight-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-weight-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_heading-weight-xl {
+  syntax: "*";
+  inherits: false;
+}
+
 /* Heading — semantic heading primitive with level-driven typography.
    Like Text, Heading is a leaf: it queries an ancestor containment context
    but does not establish one itself. See Text.css for the rationale.

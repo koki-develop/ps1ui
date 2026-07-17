@@ -1,7 +1,7 @@
 import "../../styles/styles.css";
 
 import type { CSSProperties, ReactElement } from "react";
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
@@ -383,6 +383,85 @@ describe("Heading", () => {
       // reduces to that value at every breakpoint.
       expect(getComputedStyle(el).fontSize).toBe(FONT_SIZE_PX.xl);
     });
+  });
+
+  // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
+  // "nested Stack does not inherit outer's per-breakpoint input vars" describe
+  // for the fullest account and Heading.css's @property block for the fix.
+  // Nesting `<h1><h2>...</h2></h1>` is invalid HTML (heading content only
+  // permits phrasing content), but React renders whatever JSX asserts — the
+  // resulting DOM has h1 containing h2, and CSS custom property inheritance
+  // flows regardless. That's what makes the leak reachable in practice
+  // (e.g., a caller composing a headline with a nested subheading via a
+  // wrapper component). Both outer and inner use `withResponsiveBase` to
+  // stamp level defaults at `base`, so `-base` never leaks; only per-
+  // breakpoint entries can.
+  describe("nested Heading does not inherit outer's per-breakpoint input vars", () => {
+    // React logs `<h1> cannot contain a nested <h2>.` for every render below
+    // (heading content only permits phrasing content per HTML5). The nesting
+    // is INTENTIONAL — we're exercising CSS custom property inheritance,
+    // which flows regardless of the HTML validity of the DOM parent chain.
+    // Silence the noise so a real regression's failure output isn't buried.
+    let consoleError: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      consoleError.mockRestore();
+    });
+
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
+
+    type HeadingLeakAxis = keyof typeof HEADING_LEAK_TABLE;
+    type HeadingLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Heading>[0], "children" | "ref" | "level" | "as">>;
+      inner: Partial<Omit<Parameters<typeof Heading>[0], "children" | "ref" | "level" | "as">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    const HEADING_LEAK_TABLE = {
+      size: {
+        outerFor: (bp) => ({ size: { base: "sm", [bp]: "3xl" } }),
+        inner: { size: "sm" },
+        computed: (cs) => cs.fontSize,
+        expected: FONT_SIZE_PX.sm,
+      },
+      weight: {
+        outerFor: (bp) => ({ weight: { base: "regular", [bp]: "bold" } }),
+        inner: { weight: "regular" },
+        computed: (cs) => cs.fontWeight,
+        expected: WEIGHT_VALUE.regular,
+      },
+    } as const satisfies Record<"size" | "weight", HeadingLeakCase>;
+
+    const CASES = (Object.keys(HEADING_LEAK_TABLE) as HeadingLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...HEADING_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Heading level={1} {...outerFor(bp)} data-testid="outer">
+              <Heading level={2} {...inner} data-testid="inner">
+                x
+              </Heading>
+            </Heading>
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
   });
 
   describe("Heading does NOT establish its own containment context (leaf component)", () => {

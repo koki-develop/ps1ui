@@ -534,6 +534,64 @@ describe("Grid", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
+  // "nested Stack does not inherit outer's per-breakpoint input vars" describe
+  // for the fullest account and Grid.css's @property block for the fix.
+  describe("nested Grid does not inherit outer's per-breakpoint input vars", () => {
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
+
+    type GridLeakAxis = keyof typeof GRID_LEAK_TABLE;
+    type GridLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
+      inner: Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    const GRID_LEAK_TABLE = {
+      columns: {
+        outerFor: (bp) => ({ columns: { base: 2, [bp]: 8 } }),
+        inner: { columns: 2 },
+        computed: (cs) => String(cs.gridTemplateColumns.trim().split(/\s+/).filter(Boolean).length),
+        expected: "2",
+      },
+      gap: {
+        outerFor: (bp) => ({ gap: { base: "sm", [bp]: "2xl" } }),
+        inner: { gap: "sm" },
+        computed: (cs) => cs.rowGap,
+        expected: "8px",
+      },
+    } as const satisfies Record<"columns" | "gap", GridLeakCase>;
+
+    const CASES = (Object.keys(GRID_LEAK_TABLE) as GridLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...GRID_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Grid {...outerFor(bp)} data-testid="outer">
+              <Grid {...inner} data-testid="inner">
+                x
+              </Grid>
+            </Grid>
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
+  });
+
   describe("nested Grid responds to outer Grid width", () => {
     test("inner Grid inside a 900px-wide outer Grid → responds to outer's inline-size", async () => {
       const screen = await render(

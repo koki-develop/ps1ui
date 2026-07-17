@@ -498,6 +498,72 @@ describe("Text", () => {
     });
   });
 
+  // Regression net for the responsive-prop cascade leak — see Stack.test.tsx's
+  // "nested Stack does not inherit outer's per-breakpoint input vars" describe
+  // for the fullest account and Text.css's @property block for the fix. Text
+  // is a leaf (no container-type of its own), so BOTH outer and inner Text
+  // query the wrapper's containerType directly. The leak still fires because
+  // CSS custom property inheritance flows down the DOM chain regardless of
+  // container-type. Nested Text is rare in practice (usually you'd use one
+  // Text with a `<span>` child), but the invariant matters for any pattern
+  // where a Text descendant lives inside a Text ancestor — e.g. `<Text
+  // as="p"><Text as="strong">emphasis</Text></Text>`. Nested via `as="span"`
+  // to keep the HTML valid (span-in-span; p-in-p would auto-close outer).
+  describe("nested Text does not inherit outer's per-breakpoint input vars", () => {
+    const BREAKPOINT_WIDTHS = { sm: 700, md: 900, lg: 1200, xl: 1400 } as const;
+
+    type TextLeakAxis = keyof typeof TEXT_LEAK_TABLE;
+    type TextLeakCase = {
+      outerFor: (
+        bp: Exclude<Breakpoint, "base">,
+      ) => Partial<Omit<Parameters<typeof Text<"span">>[0], "children" | "ref" | "as">>;
+      inner: Partial<Omit<Parameters<typeof Text<"span">>[0], "children" | "ref" | "as">>;
+      computed: (cs: CSSStyleDeclaration) => string;
+      expected: string;
+    };
+
+    const TEXT_LEAK_TABLE = {
+      size: {
+        outerFor: (bp) => ({ size: { base: "sm", [bp]: "xl" } }),
+        inner: { size: "sm" },
+        computed: (cs) => cs.fontSize,
+        expected: FONT_SIZE_PX.sm,
+      },
+      weight: {
+        outerFor: (bp) => ({ weight: { base: "regular", [bp]: "bold" } }),
+        inner: { weight: "regular" },
+        computed: (cs) => cs.fontWeight,
+        expected: FONT_WEIGHT.regular,
+      },
+    } as const satisfies Record<"size" | "weight", TextLeakCase>;
+
+    const CASES = (Object.keys(TEXT_LEAK_TABLE) as TextLeakAxis[]).flatMap((axis) =>
+      BREAKPOINTS_NON_BASE.map((bp) => ({
+        axis,
+        bp,
+        width: BREAKPOINT_WIDTHS[bp],
+        ...TEXT_LEAK_TABLE[axis],
+      })),
+    );
+
+    test.for(CASES)(
+      "outer $axis leak at $bp does not reach inner",
+      async ({ outerFor, inner, computed, expected, bp, width }) => {
+        const screen = await render(
+          <div style={{ containerType: "inline-size", width } as CSSProperties}>
+            <Text as="span" {...outerFor(bp)} data-testid="outer">
+              <Text as="span" {...inner} data-testid="inner">
+                x
+              </Text>
+            </Text>
+          </div>,
+        );
+        const innerEl = screen.getByTestId("inner").element() as HTMLElement;
+        expect(computed(getComputedStyle(innerEl))).toBe(expected);
+      },
+    );
+  });
+
   describe("Text does NOT establish its own containment context (leaf component)", () => {
     test("container-type is not `inline-size` — Text is not a container query ancestor", async () => {
       const screen = await render(<Text data-testid="t">x</Text>);
