@@ -7,7 +7,15 @@ import { spaceToVar, type SpaceScale } from "../../utils/spacing";
 export type GridGap = SpaceScale;
 
 export type GridProps = ComponentProps<"div"> & {
+  /**
+   * Number of equal-width columns.
+   * @default 1
+   */
   columns?: Responsive<number>;
+  /**
+   * Gap between cells on the space scale.
+   * @default "md"
+   */
   gap?: Responsive<GridGap>;
 };
 

@@ -9,10 +9,24 @@ export type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
 export type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
 
 export type StackProps = ComponentProps<"div"> & {
+  /**
+   * Main-axis direction.
+   * @default "column"
+   */
   direction?: Responsive<StackDirection>;
+  /**
+   * Gap between items on the space scale.
+   * @default "md"
+   */
   gap?: Responsive<StackGap>;
+  /** Cross-axis alignment (align-items). */
   align?: Responsive<StackAlign>;
+  /** Main-axis distribution (justify-content). */
   justify?: Responsive<StackJustify>;
+  /**
+   * Wrap items onto multiple lines instead of overflowing.
+   * @default false
+   */
   wrap?: Responsive<boolean>;
 };
 

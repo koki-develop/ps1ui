@@ -37,6 +37,7 @@ Each component: `src/components/<Name>/` with `<Name>.tsx / .css / .test.tsx / .
 - Class naming: `ps1ui-<component>` base, `ps1ui-<component>--<modifier>` for variants. Existing names are public API — don't rename.
 - `style` merge order is `{ ...callerStyle, ...resolvedVars }` — internal `--_*` vars intentionally win over same-named caller keys.
 - **Every new component must be re-exported from `src/index.ts`** (component + types) — the public API surface.
+- Give every own prop (the non-passthrough ones) a one-line `/** ... */` doc comment — `@ps1ui/site`'s auto-generated Props tables and IDE hovers render it. Defaults applied outside destructuring (CSS custom-property fallbacks) are declared with an `@default` tag, never repeated in the prose.
 - Polymorphic `as` + `disabled`: rejected at the type level only (`Button.test-d.tsx`); no runtime guard on purpose.
 - 100% line coverage is enforced but isn't behavior coverage — **every observable behavior a change introduces needs a direct assertion** (computed styles via `withPseudoState`, classes, attributes, handlers). If genuinely untestable, say why in a comment.
 

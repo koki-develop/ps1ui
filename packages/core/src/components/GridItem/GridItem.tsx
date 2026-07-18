@@ -4,6 +4,10 @@ import { safePositiveInt } from "../../utils/numbers";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
 
 export type GridItemProps = ComponentProps<"div"> & {
+  /**
+   * Number of grid columns the item spans.
+   * @default 1
+   */
   colSpan?: Responsive<number>;
 };
 

@@ -1,0 +1,116 @@
+---
+// Auto-generated props reference for a @ps1ui/core component. All data comes
+// from src/lib/props.ts (build-time type extraction) — nothing here is
+// hand-maintained, so the table can never drift from the shipped types.
+// Rendered entirely with core primitives: Table brings the grid borders,
+// cell padding, and the overflow-scroll + keyboard-reachability contract;
+// Code renders the inline fragments; Text colors the secondary text — no
+// hand-maintained colors here.
+import { Code, Heading, Stack, Table, Tbody, Td, Th, Thead, Text, Tr } from "@ps1ui/core";
+import { componentPropsDoc, type PassthroughDoc } from "../lib/props";
+
+interface Props {
+  component: string;
+  title: string;
+}
+
+const { component, title } = Astro.props;
+const doc = componentPropsDoc(component);
+
+function passthroughSentence(entry: PassthroughDoc): string {
+  if (entry.kind === "tag") {
+    const except = entry.omitted.length > 0 ? ` except ${entry.omitted.join(", ")}` : "";
+    return `All native <${entry.tag}> attributes are also accepted${except}.`;
+  }
+  const fallback = entry.defaultTag !== undefined ? ` (default: <${entry.defaultTag}>)` : "";
+  const ref = entry.refExcluded ? "; ref is not supported" : "";
+  return `Also accepts the attributes of the element rendered via ${entry.viaProp}${fallback}${ref}.`;
+}
+---
+
+<Stack direction="column" gap="md">
+  <Heading level={2} size="lg">{title}</Heading>
+
+  {
+    doc.props.length > 0 && (
+      <div class="props-table">
+        <Table>
+          <Thead>
+            <Tr>
+              <Th scope="col">Prop</Th>
+              <Th scope="col">Type</Th>
+              <Th scope="col">Default</Th>
+              <Th scope="col">Description</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {doc.props.map((p) => (
+              <Tr>
+                <Td>
+                  <span class="props-name"><Code>{p.name}</Code></span>
+                  {p.required && (
+                    <Text as="span" variant="accent" title="required">
+                      *
+                    </Text>
+                  )}
+                </Td>
+                <Td>
+                  <span class="props-type"><Code>{p.type}</Code></span>
+                </Td>
+                <Td>
+                  {
+                    p.defaultValue !== undefined ? (
+                      <span class="props-default"><Code>{p.defaultValue}</Code></span>
+                    ) : (
+                      "—"
+                    )
+                  }
+                </Td>
+                <Td>
+                  <div class="props-desc">
+                    {p.description && <Text variant="muted">{p.description}</Text>}
+                  </div>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
+    )
+  }
+
+  <Stack direction="column" gap="xs">
+    {doc.passthrough.map((entry) => (
+      <Text as="p" size="sm" variant="muted">
+        {passthroughSentence(entry)}
+      </Text>
+    ))}
+  </Stack>
+</Stack>
+
+<style>
+  /* Layout-only rules — all colors come from core components (Code / Text).
+     Table's default is shrink-to-fit (box-drawing style); a props reference
+     fills the docs column — the opt-in Table.css anticipates. `:global`
+     because the <table> is rendered by the React component, so it doesn't
+     carry this component's Astro scope attribute. */
+  .props-table :global(.ps1ui-table) {
+    width: 100%;
+  }
+
+  .props-name,
+  .props-default {
+    white-space: nowrap;
+  }
+
+  /* Union types wrap fine at their " | " spaces; Code's own
+     `overflow-wrap: anywhere` would additionally break mid-token
+     ("string" → "strin/g") when the column gets squeezed. */
+  .props-type :global(.ps1ui-code) {
+    overflow-wrap: normal;
+  }
+
+  .props-desc {
+    min-width: 16rem;
+  }
+</style>
