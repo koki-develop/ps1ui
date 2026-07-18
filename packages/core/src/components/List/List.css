@@ -1,10 +1,10 @@
-/* List — semantic <ul>/<ol> wrapper with terminal-style markers.
+/* List — semantic <ul>/<ol> wrapper with plain-text markers.
 
    The global reset in base.css sets `list-style: none` on every <ul>/<ol>,
    which strips the UA bullet/number glyph. List re-introduces a marker via
    `::before` on each direct <li> — `-` for unordered, `NN.` for ordered —
    so the "reset removes bullets" side effect turns into an on-brand
-   terminal glyph rather than a hole.
+   plain-text glyph rather than a hole.
 
    The ordered marker uses `counter(list-item)` — the browser-maintained
    list-item counter that already honours `<ol start>`, `<ol reversed>`,

@@ -1,4 +1,4 @@
-/* Table — semantic <table> with terminal-style grid borders, wrapped in a
+/* Table — semantic <table> with box-drawing-style grid borders, wrapped in a
    horizontal-scroll container.
 
    Scroll wrapper: `display: table` boxes don't honor overflow, so Table.tsx
@@ -10,8 +10,8 @@
    high-contrast mode; the grouped rule restores a real outline).
 
    Grid borders: `border-collapse: collapse` + a uniform 1px cell border in
-   --ps1ui-color-border draw the closed single-stroke grid a terminal
-   box-drawing table (┌─┬─┐) renders — collapsing is what merges adjacent
+   --ps1ui-color-border draw the closed single-stroke grid a box-drawing
+   table (┌─┬─┐) renders — collapsing is what merges adjacent
    cell edges into one shared rule. The header row separates on two axes:
    a surface background and a border-strong bottom rule. That rule is
    declared on the <th> (cell origin) deliberately — in border-collapse

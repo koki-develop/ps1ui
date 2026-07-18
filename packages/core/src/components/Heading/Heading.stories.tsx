@@ -121,8 +121,8 @@ export const WithBodyText: Story = {
     <article style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 520 }}>
       <Heading level={1}>Getting started</Heading>
       <Text>
-        ps1ui ships a Terminal / Mono design system built on JetBrains Mono. Every component is a
-        thin wrapper around a native element, styled with CSS custom properties.
+        ps1ui ships a monospace design system built on JetBrains Mono. Every component is a thin
+        wrapper around a native element, styled with CSS custom properties.
       </Text>
 
       <Heading level={2} style={{ marginTop: 16 }}>

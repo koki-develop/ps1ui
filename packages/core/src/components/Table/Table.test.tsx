@@ -36,7 +36,7 @@ describe("Table", () => {
       expect(getComputedStyle(scroller).overflowX).toBe("auto");
     });
 
-    test("collapses borders into a single-stroke terminal grid", async () => {
+    test("collapses borders into a single-stroke box-drawing grid", async () => {
       const screen = await render(<Table data-testid="t">{FIXTURE}</Table>);
       const table = screen.getByTestId("t").element();
       expect(getComputedStyle(table).borderCollapse).toBe("collapse");

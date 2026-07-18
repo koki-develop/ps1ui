@@ -51,7 +51,7 @@ const JSON_TEXT = `{
 
 const MARKDOWN = `# ps1ui
 
-> Terminal-inspired React component kit.
+> For engineers who think in monospace.
 
 - **mono** — JetBrains Mono everywhere
 - **dark** — surface-first palette

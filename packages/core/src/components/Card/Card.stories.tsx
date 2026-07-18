@@ -23,7 +23,7 @@ export const Default: Story = {
           welcome to ps1ui
         </Text>
         <Text as="p" variant="muted" style={{ marginBottom: 18 }}>
-          A dev-focused React UI kit. Monospace type, dark ground, terminal-adjacent aesthetic.
+          A dev-focused React UI kit. Monospace type, dark ground, single-stroke lines.
         </Text>
         <div style={{ display: "flex", gap: 8 }}>
           <Button variant="primary">try it</Button>

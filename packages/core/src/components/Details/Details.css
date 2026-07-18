@@ -29,7 +29,7 @@
   display: none;
 }
 
-/* Terminal-style disclosure marker: `▸` when closed, `▾` when open. Fixed
+/* Glyph disclosure marker: `▸` when closed, `▾` when open. Fixed
    inline-block width so the summary text baseline stays put across states —
    the two glyphs don't measure identically in the JetBrains Mono fallback
    monospace stack. Colored with fg-muted so the arrow reads as chrome, not

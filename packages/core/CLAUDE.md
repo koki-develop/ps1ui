@@ -1,6 +1,6 @@
 # @ps1ui/core — CLAUDE.md
 
-React UI component library for a Terminal / Mono design system (dark canvas, JetBrains Mono). All commands run from this directory (`packages/core`).
+React UI component library for a monospace design system (dark canvas, JetBrains Mono). All commands run from this directory (`packages/core`).
 
 Domain-specific conventions live in `.claude/rules/` (testing / vrt / responsive / styles) and load when you touch matching files. Long-form rationale lives in header comments of the files involved — read those before changing build config or styles.
 
