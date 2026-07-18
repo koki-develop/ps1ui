@@ -1,8 +1,14 @@
-# @ps1ui/core
+<h1 align="center">
+@ps1ui/core
+</h1>
 
-For engineers who think in monospace.
+<p align="center">
+<i>For engineers who think in monospace.</i>
+</p>
 
-Docs and live examples: [koki-develop.github.io/ps1ui](https://koki-develop.github.io/ps1ui/)
+<p align="center">
+<a href="https://koki-develop.github.io/ps1ui/">Documentation</a> | <a href="https://koki-develop.github.io/ps1ui/getting-started/">Getting Started</a> | <a href="https://koki-develop.github.io/ps1ui/components/">Components</a> | <a href="https://koki-develop.github.io/ps1ui/storybook/">Storybook</a>
+</p>
 
 ## Install
 
@@ -36,7 +42,7 @@ export function App() {
 }
 ```
 
-Browse the full component catalog at [koki-develop.github.io/ps1ui/components/](https://koki-develop.github.io/ps1ui/components/).
+Browse the full component catalog at [koki-develop.github.io/ps1ui/components](https://koki-develop.github.io/ps1ui/components/).
 
 ## License
 
