@@ -5,7 +5,9 @@ import { cx } from "../../utils/cx";
 export type ButtonVariant = "primary" | "secondary";
 
 type ButtonOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the native <button> — e.g. "a" or a router Link. */
   as?: E;
+  /** Visual style: "primary" for the main action, "secondary" for supporting actions. */
   variant?: ButtonVariant;
 };
 
@@ -26,6 +28,10 @@ type ButtonOwnProps<E extends ElementType> = {
  * unavailable, render a native `<Button disabled>` (or no link at all) instead of a
  * link. Untyped JS callers and `as={Component}` escapes that pass `disabled` anyway
  * get a leaked no-op attribute — no visual or behavioral disabling happens.
+ *
+ * `type` on the native tag: when rendering a native <button>, `type` defaults to
+ * "button" (not the browser's implicit "submit"), so a Button inside a <form>
+ * never submits implicitly — pass type="submit" explicitly to submit.
  */
 export type ButtonProps<E extends ElementType = "button"> = ButtonOwnProps<E> &
   Omit<ComponentPropsWithoutRef<E>, keyof ButtonOwnProps<E>>;

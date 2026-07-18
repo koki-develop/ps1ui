@@ -1,6 +1,7 @@
 ---
 import { CodeBlock, Heading, Stack, Text } from "@ps1ui/core";
 import DocsLayout from "./DocsLayout.astro";
+import PropsTable from "../components/PropsTable.astro";
 import { componentBySlug } from "../lib/components";
 
 interface Props {
@@ -22,5 +23,10 @@ const importCode = `import { ${meta.name} } from "@ps1ui/core";`;
       <CodeBlock language="tsx" code={importCode} />
     </Stack>
     <slot />
+    {/* Auto-generated from @ps1ui/core's types at build time — see src/lib/props.ts. */}
+    <PropsTable component={meta.name} title="Props" />
+    {(meta.childComponents ?? []).map((child) => (
+      <PropsTable component={child} title={`${child} Props`} />
+    ))}
   </Stack>
 </DocsLayout>

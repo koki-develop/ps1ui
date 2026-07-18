@@ -14,10 +14,18 @@ export type TextSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type TextWeight = FontWeight;
 
 type TextOwnProps<E extends TextElement> = {
+  /** Element to render. */
   as?: E;
+  /** Color variant. */
   variant?: TextVariant;
+  /**
+   * Font size on the type scale.
+   * @default "sm"
+   */
   size?: Responsive<TextSize>;
+  /** Font weight. */
   weight?: Responsive<TextWeight>;
+  /** Truncate overflowing text with an ellipsis instead of wrapping. */
   truncate?: boolean;
 };
 

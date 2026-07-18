@@ -5,7 +5,9 @@ import { cx } from "../../utils/cx";
 export type AnchorVariant = "primary" | "subtle";
 
 type AnchorOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the native <a> — e.g. a router Link. */
   as?: E;
+  /** Visual style: "primary" for standalone links, "subtle" for links inside running text. */
   variant?: AnchorVariant;
 };
 

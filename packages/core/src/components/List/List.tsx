@@ -8,8 +8,14 @@ import { cx } from "../../utils/cx";
 // drawn by `::before`, not the browser's `::marker`, so `type="a"` would
 // silently not affect the visible numbering.
 export type ListProps =
-  | ({ ordered?: false } & ComponentProps<"ul">)
-  | ({ ordered: true } & Omit<ComponentProps<"ol">, "type">);
+  | ({
+      /** Render an <ol> with numbered markers instead of an <ul>. */
+      ordered?: false;
+    } & ComponentProps<"ul">)
+  | ({
+      /** Render an <ol> with numbered markers instead of an <ul>. */
+      ordered: true;
+    } & Omit<ComponentProps<"ol">, "type">);
 
 // Return type annotated so tsdown emits a small ReactElement in the .d.mts
 // instead of the wide DetailedReactHTMLElement createElement infers for a

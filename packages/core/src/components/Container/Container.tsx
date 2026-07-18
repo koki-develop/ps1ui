@@ -6,7 +6,15 @@ import { spaceToVar, type SpaceScale } from "../../utils/spacing";
 export type ContainerSize = "sm" | "md" | "lg" | "xl" | "full";
 
 export type ContainerProps = ComponentProps<"div"> & {
+  /**
+   * Max-width preset; "full" removes the cap.
+   * @default "lg"
+   */
   size?: Responsive<ContainerSize>;
+  /**
+   * Horizontal padding on the space scale.
+   * @default "lg"
+   */
   px?: Responsive<SpaceScale>;
 };
 

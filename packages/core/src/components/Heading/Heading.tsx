@@ -14,9 +14,13 @@ export type HeadingSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 export type HeadingWeight = FontWeight;
 
 type HeadingOwnProps<E extends HeadingElement> = {
+  /** Semantic level: renders the matching h1–h6 tag and sets the default size and weight. */
   level: HeadingLevel;
+  /** Heading tag to render when it should differ from level — visual defaults stay driven by level. */
   as?: E;
+  /** Font size. Defaults to the level's size. */
   size?: Responsive<HeadingSize>;
+  /** Font weight. Defaults to the level's weight. */
   weight?: Responsive<HeadingWeight>;
 };
 

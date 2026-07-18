@@ -5,6 +5,7 @@ import { cx } from "../../utils/cx";
 import { useMergedRef } from "../../utils/useMergedRef";
 
 export type CheckboxProps = Omit<ComponentProps<"input">, "type"> & {
+  /** Render the indeterminate ("mixed") visual state. Purely visual — checked is unaffected. */
   indeterminate?: boolean;
 };
 

@@ -7,6 +7,12 @@ export type ComponentMeta = {
   slug: string;
   name: string;
   description: string;
+  /**
+   * Child-only helpers documented on this page (e.g. GridItem on Grid's page).
+   * They get their own auto-generated props table but no sidebar entry or page
+   * — see the child-only-helper exception in this package's CLAUDE.md.
+   */
+  childComponents?: string[];
 };
 
 export type ComponentGroup = {
@@ -37,6 +43,7 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         slug: "grid",
         name: "Grid",
         description: "Equal-column CSS grid with responsive column counts.",
+        childComponents: ["GridItem"],
       },
     ],
   },
@@ -112,11 +119,13 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         slug: "list",
         name: "List",
         description: "Ordered or unordered <ul>/<ol> with terminal-style markers.",
+        childComponents: ["ListItem"],
       },
       {
         slug: "table",
         name: "Table",
         description: "Semantic <table> with terminal-style grid borders and horizontal scrolling.",
+        childComponents: ["Thead", "Tbody", "Tr", "Th", "Td"],
       },
     ],
   },

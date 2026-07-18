@@ -2,6 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { cx } from "../../utils/cx";
 
 export type DetailsProps = ComponentProps<"details"> & {
+  /** Content of the always-visible summary row. */
   summary: ReactNode;
 };
 

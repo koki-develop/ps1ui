@@ -22,12 +22,15 @@ export type { CodeBlockLanguage };
 // `<CodeBlock code={snippet}>` survives that boundary. `code` wins when both
 // are supplied; the same string appears in the rendered DOM either way.
 export type CodeBlockProps = Omit<ComponentProps<"pre">, "children"> & {
+  /** Code to render. Takes precedence over children; use it where JSX children get rewrapped (e.g. Astro islands). */
   code?: string;
+  /** Code to render, as the element's only child. */
   children?: string;
   // `CodeBlockLanguage | (string & {})` is TypeScript's "loose union" pattern:
   // canonical language names surface in autocomplete, but aliases (`ts`, `html`, ...)
   // and dynamically-sourced strings (e.g. from a markdown fenced-code parser) still
   // pass through the type and are resolved at runtime via refractor's alias table.
+  /** Prism language name or alias. Unknown or omitted values render as plain text. */
   language?: CodeBlockLanguage | (string & {});
 };
 
