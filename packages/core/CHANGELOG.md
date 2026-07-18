@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.0](https://github.com/koki-develop/ps1ui/compare/core-v0.0.1...core-v0.1.0) (2026-07-18)
+
+
+### Features
+
+* Auto-generate props reference tables on @ps1ui/site component pages ([#36](https://github.com/koki-develop/ps1ui/issues/36)) ([825ec07](https://github.com/koki-develop/ps1ui/commit/825ec07b26d82e9955d15a1b54401195f04f0a41))
+* Release v0.1.0 ([42aa388](https://github.com/koki-develop/ps1ui/commit/42aa38860c1b0a13361125fa665940c3408a6f43))
+
+
+### Bug Fixes
+
+* **deps:** pin dependency @fontsource-variable/jetbrains-mono to 5.2.8 ([#4](https://github.com/koki-develop/ps1ui/issues/4)) ([cd3e4f4](https://github.com/koki-develop/ps1ui/commit/cd3e4f43cb076c985865459ab87c75adbbb82c62))
+
 ## 0.0.1 (2026-07-17)
 
 
