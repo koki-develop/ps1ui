@@ -11,7 +11,7 @@ importers:
   packages/core:
     dependencies:
       '@fontsource-variable/jetbrains-mono':
-        specifier: ^5.2.8
+        specifier: 5.2.8
         version: 5.2.8
       hast-util-to-jsx-runtime:
         specifier: 2.3.6

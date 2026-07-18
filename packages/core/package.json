@@ -53,7 +53,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "5.2.8",
     "hast-util-to-jsx-runtime": "2.3.6",
     "refractor": "5.0.0"
   },
