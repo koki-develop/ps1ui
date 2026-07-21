@@ -4,10 +4,12 @@ import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 
 const variants = `<Button variant="primary">Deploy</Button>
-<Button variant="secondary">Cancel</Button>`;
+<Button variant="secondary">Cancel</Button>
+<Button variant="danger">Delete</Button>`;
 
 const disabled = `<Button disabled>Deploy</Button>
-<Button variant="secondary" disabled>Cancel</Button>`;
+<Button variant="secondary" disabled>Cancel</Button>
+<Button variant="danger" disabled>Delete</Button>`;
 
 const asLink = `<Button as="a" href="https://github.com/koki-develop/ps1ui">
   View on GitHub
@@ -19,6 +21,7 @@ const asLink = `<Button as="a" href="https://github.com/koki-develop/ps1ui">
     <Stack direction="row" gap="md" wrap>
       <Button variant="primary">Deploy</Button>
       <Button variant="secondary">Cancel</Button>
+      <Button variant="danger">Delete</Button>
     </Stack>
   </Demo>
 
@@ -26,6 +29,7 @@ const asLink = `<Button as="a" href="https://github.com/koki-develop/ps1ui">
     <Stack direction="row" gap="md" wrap>
       <Button disabled>Deploy</Button>
       <Button variant="secondary" disabled>Cancel</Button>
+      <Button variant="danger" disabled>Delete</Button>
     </Stack>
   </Demo>
 

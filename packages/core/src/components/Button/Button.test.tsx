@@ -7,7 +7,7 @@ import { Button, type ButtonVariant } from "./Button";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 
-const VARIANTS = ["primary", "secondary"] as const satisfies readonly ButtonVariant[];
+const VARIANTS = ["primary", "secondary", "danger"] as const satisfies readonly ButtonVariant[];
 
 describe("Button", () => {
   describe("rendering", () => {

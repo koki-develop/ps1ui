@@ -20,6 +20,7 @@ const VARIANTS = [
   "subtle",
   "primary",
   "accent",
+  "danger",
 ] as const satisfies readonly TextVariant[];
 const SIZES = ["xs", "sm", "md", "lg", "xl"] as const satisfies readonly TextSize[];
 const WEIGHTS = ["regular", "medium", "semibold", "bold"] as const satisfies readonly TextWeight[];

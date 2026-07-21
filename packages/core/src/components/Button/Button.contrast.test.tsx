@@ -15,7 +15,7 @@ import { expectNoAxeViolations } from "../../testing/axe";
 import { withPseudoState } from "../../testing/pseudo-state";
 import { Button, type ButtonVariant } from "./Button";
 
-const VARIANTS = ["primary", "secondary"] as const satisfies readonly ButtonVariant[];
+const VARIANTS = ["primary", "secondary", "danger"] as const satisfies readonly ButtonVariant[];
 const STATES = ["default", "hover", "active", "focus-visible"] as const;
 
 const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));

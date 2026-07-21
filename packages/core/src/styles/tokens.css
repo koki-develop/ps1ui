@@ -18,6 +18,17 @@
   --ps1ui-color-primary-active: #3fb950;
   --ps1ui-color-primary-fg: #0b0f14;
   --ps1ui-color-accent: #ffa657;
+  /* Destructive / error signalling. Hue sits in the rose-coral band the code
+     palette already inhabits (--ps1ui-code-keyword / -tag / -deleted) so the
+     surface reads as one system; luminance is tuned so the base color hits
+     ≥ 4.5:1 vs BOTH --ps1ui-color-bg and --ps1ui-color-surface (verified by
+     Text.contrast.test.tsx) and danger-fg on each danger-* fill hits the
+     same threshold (verified by Button.contrast.test.tsx). Hover/active
+     progressively darken while staying above contrast. */
+  --ps1ui-color-danger: #ff7d8d;
+  --ps1ui-color-danger-hover: #f0637a;
+  --ps1ui-color-danger-active: #e04a60;
+  --ps1ui-color-danger-fg: #0b0f14;
   --ps1ui-color-focus-ring-soft: color-mix(in srgb, var(--ps1ui-color-primary) 14%, transparent);
   --ps1ui-shadow-focus-ring: 0 0 0 3px var(--ps1ui-color-focus-ring-soft);
 

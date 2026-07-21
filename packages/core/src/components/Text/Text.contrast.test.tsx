@@ -16,6 +16,7 @@ const VARIANTS = [
   "subtle",
   "primary",
   "accent",
+  "danger",
 ] as const satisfies readonly TextVariant[];
 
 describe("Text contrast", () => {

@@ -9,7 +9,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "inline-radio" },
-      options: ["primary", "secondary"],
+      options: ["primary", "secondary", "danger"],
     },
     disabled: { control: "boolean" },
   },
@@ -33,6 +33,13 @@ export const Secondary: Story = {
   },
 };
 
+export const Danger: Story = {
+  args: {
+    variant: "danger",
+    children: "delete account",
+  },
+};
+
 export const Disabled: Story = {
   args: {
     variant: "primary",
@@ -45,6 +52,14 @@ export const SecondaryDisabled: Story = {
   args: {
     variant: "secondary",
     children: "cancel",
+    disabled: true,
+  },
+};
+
+export const DangerDisabled: Story = {
+  args: {
+    variant: "danger",
+    children: "delete account",
     disabled: true,
   },
 };

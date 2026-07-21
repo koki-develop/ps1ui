@@ -73,3 +73,25 @@
   color: var(--ps1ui-color-fg-subtle);
   border-color: var(--ps1ui-color-border);
 }
+
+/* Same filled shape as --primary — variant only shifts hue, not typographic
+   weight or footprint, so a danger button reads as an equal-weight sibling
+   of a primary one and the visual difference is purely semantic colour. */
+.ps1ui-button--danger {
+  background: var(--ps1ui-color-danger);
+  color: var(--ps1ui-color-danger-fg);
+  border-color: var(--ps1ui-color-danger);
+}
+.ps1ui-button--danger:hover:not(:disabled) {
+  background: var(--ps1ui-color-danger-hover);
+  border-color: var(--ps1ui-color-danger-hover);
+}
+.ps1ui-button--danger:active:not(:disabled) {
+  background: var(--ps1ui-color-danger-active);
+  border-color: var(--ps1ui-color-danger-active);
+}
+.ps1ui-button--danger:disabled {
+  background: transparent;
+  color: var(--ps1ui-color-fg-subtle);
+  border-color: var(--ps1ui-color-border);
+}
