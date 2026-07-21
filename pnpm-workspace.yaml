@@ -7,7 +7,7 @@ minimumReleaseAge: 10080
 allowBuilds:
   esbuild: true
   #
-# TODO: Remove all at 2026-07-21
+  # TODO: Remove all at 2026-07-21
 minimumReleaseAgeExclude:
   - "@rolldown/binding-android-arm64@1.1.5"
   - "@rolldown/binding-darwin-arm64@1.1.5"
@@ -89,8 +89,8 @@ minimumReleaseAgeExclude:
   - "yuku-codegen@0.5.47"
   - "yuku-parser@0.5.47"
 
-  # site (astro): next TODO cleanup 2026-07-23
-  - "astro@7.0.9"
+  # site (astro): next TODO cleanup 2026-07-23 || 7.1.0
+  - "astro@7.0.9 || 7.1.0"
   - "@astrojs/react@6.0.1"
   - "@astrojs/compiler-binding-darwin-arm64@0.3.1"
   - "@astrojs/compiler-binding-darwin-x64@0.3.1"

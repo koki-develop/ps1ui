@@ -111,8 +111,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       astro:
-        specifier: 7.0.9
-        version: 7.0.9(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@24.13.3)(yaml@2.9.0)
+        specifier: 7.1.0
+        version: 7.1.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@24.13.3)(yaml@2.9.0)
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -1966,8 +1966,8 @@ packages:
   ast-v8-to-istanbul@1.0.4:
     resolution: {integrity: sha512-0bC0/4bTSrnwdhU3IsZDwEdojvuPrSg59OYZfKsLRtJZ0u8VBx9DebfqqG8bRdCC0I7vjgxmPi41P0lpkhJHtA==}
 
-  astro@7.0.9:
-    resolution: {integrity: sha512-WB5pA4LLQnmqjBh6EIu0z8aUV4q2/AoThgSZq57Rsp+oqqvPu7OwZ5eF+W4ku20TUTxIhiJW8dccuGvJPiW2UA==}
+  astro@7.1.0:
+    resolution: {integrity: sha512-jXHNZXpO0HOuANLwv5uLg5WFXFmIMyDTMlokIb8sv10y8QItOFaikwrqvp6+Pe0MSqvp+aO7V1SfVriFcCEKgA==}
     engines: {node: '>=22.12.0', npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
     peerDependencies:
@@ -5028,7 +5028,7 @@ snapshots:
       estree-walker: 3.0.3
       js-tokens: 10.0.0
 
-  astro@7.0.9(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@24.13.3)(yaml@2.9.0):
+  astro@7.1.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@24.13.3)(yaml@2.9.0):
     dependencies:
       '@astrojs/compiler-rs': 0.3.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)
       '@astrojs/internal-helpers': 0.10.1
