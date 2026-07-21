@@ -2,12 +2,12 @@ import { createElement } from "react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
 import { cx } from "../../utils/cx";
 
-export type ButtonVariant = "primary" | "secondary";
+export type ButtonVariant = "primary" | "secondary" | "danger";
 
 type ButtonOwnProps<E extends ElementType> = {
   /** Element or component to render instead of the native <button> — e.g. "a" or a router Link. */
   as?: E;
-  /** Visual style: "primary" for the main action, "secondary" for supporting actions. */
+  /** Visual style: "primary" for the main action, "secondary" for supporting actions, "danger" for destructive actions. */
   variant?: ButtonVariant;
 };
 

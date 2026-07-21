@@ -6,7 +6,7 @@ import { fontSizeToVar, weightToValue, type FontWeight } from "../../utils/typog
 
 export type TextElement = "p" | "span" | "div" | "label" | "strong" | "em" | "small";
 
-export type TextVariant = "body" | "muted" | "subtle" | "primary" | "accent";
+export type TextVariant = "body" | "muted" | "subtle" | "primary" | "accent" | "danger";
 export type TextSize = "xs" | "sm" | "md" | "lg" | "xl";
 // TextWeight is a re-export of the shared FontWeight scale. Keeping a
 // component-local alias preserves the public type name (backwards compat)

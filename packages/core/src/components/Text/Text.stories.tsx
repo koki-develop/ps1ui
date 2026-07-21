@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["body", "muted", "subtle", "primary", "accent"],
+      options: ["body", "muted", "subtle", "primary", "accent", "danger"],
     },
     size: {
       control: { type: "select" },
@@ -43,6 +43,7 @@ export const Variants: Story = {
       <Text variant="subtle">subtle — least emphasis</Text>
       <Text variant="primary">primary — accent green</Text>
       <Text variant="accent">accent — accent orange</Text>
+      <Text variant="danger">danger — destructive / error</Text>
     </div>
   ),
 };
@@ -114,6 +115,7 @@ export const OnSurface: Story = {
         <Text variant="subtle">subtle — least emphasis on surface</Text>
         <Text variant="primary">primary — accent green on surface</Text>
         <Text variant="accent">accent — accent orange on surface</Text>
+        <Text variant="danger">danger — destructive / error on surface</Text>
       </div>
     </Card>
   ),

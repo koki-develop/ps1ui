@@ -139,3 +139,6 @@
 .ps1ui-text--accent {
   color: var(--ps1ui-color-accent);
 }
+.ps1ui-text--danger {
+  color: var(--ps1ui-color-danger);
+}
