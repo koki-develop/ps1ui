@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/koki-develop/ps1ui/compare/core-v0.1.0...core-v0.2.0) (2026-07-21)
+
+
+### Features
+
+* Add danger variant to Button and Text ([#48](https://github.com/koki-develop/ps1ui/issues/48)) ([124d04b](https://github.com/koki-develop/ps1ui/commit/124d04b218edcbbbbebef6e141bcb86ab4fa0196))
+* Add Textarea component ([#46](https://github.com/koki-develop/ps1ui/issues/46)) ([dbccb24](https://github.com/koki-develop/ps1ui/commit/dbccb24985d49b1e1c2302ef7641da2e7d20592a))
+
 ## [0.1.0](https://github.com/koki-develop/ps1ui/compare/core-v0.0.1...core-v0.1.0) (2026-07-18)
 
 
