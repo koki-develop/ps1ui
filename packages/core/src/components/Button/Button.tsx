@@ -3,12 +3,15 @@ import type { ComponentPropsWithoutRef, ElementType } from "react";
 import { cx } from "../../utils/cx";
 
 export type ButtonVariant = "primary" | "secondary" | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonOwnProps<E extends ElementType> = {
   /** Element or component to render instead of the native <button> — e.g. "a" or a router Link. */
   as?: E;
   /** Visual style: "primary" for the main action, "secondary" for supporting actions, "danger" for destructive actions. */
   variant?: ButtonVariant;
+  /** Control size — affects font size, padding, and inline gap. */
+  size?: ButtonSize;
 };
 
 // Deliberate exception to the general "use ComponentProps<'tag'>" rule other components follow —
@@ -39,11 +42,17 @@ export type ButtonProps<E extends ElementType = "button"> = ButtonOwnProps<E> &
 export function Button<E extends ElementType = "button">({
   as,
   variant = "primary",
+  size = "md",
   className,
   ...rest
 }: ButtonProps<E>) {
   const tag: ElementType = as ?? "button";
-  const classes = cx("ps1ui-button", `ps1ui-button--${variant}`, className);
+  const classes = cx(
+    "ps1ui-button",
+    `ps1ui-button--${variant}`,
+    `ps1ui-button--size-${size}`,
+    className,
+  );
   const props: Record<string, unknown> = { ...rest, className: classes };
   // `type="button"` is a defensive default so a native <button> inside a <form> never
   // submits implicitly. It only makes sense on the native tag — <a>, <NextLink>, and

@@ -7,7 +7,7 @@ export { Anchor } from "./components/Anchor/Anchor";
 export type { AnchorProps, AnchorVariant } from "./components/Anchor/Anchor";
 
 export { Button } from "./components/Button/Button";
-export type { ButtonProps, ButtonVariant } from "./components/Button/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button/Button";
 
 export { Checkbox } from "./components/Checkbox/Checkbox";
 export type { CheckboxProps } from "./components/Checkbox/Checkbox";

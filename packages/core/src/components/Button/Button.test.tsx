@@ -3,11 +3,12 @@ import type { MouseEvent as ReactMouseEvent, ReactElement, ReactNode } from "rea
 import { describe, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
-import { Button, type ButtonVariant } from "./Button";
+import { Button, type ButtonSize, type ButtonVariant } from "./Button";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 
 const VARIANTS = ["primary", "secondary", "danger"] as const satisfies readonly ButtonVariant[];
+const SIZES = ["sm", "md", "lg"] as const satisfies readonly ButtonSize[];
 
 describe("Button", () => {
   describe("rendering", () => {
@@ -84,23 +85,47 @@ describe("Button", () => {
       await expect.element(btn).toHaveClass(`ps1ui-button--${applied}`);
     });
 
+    test.for([
+      { size: undefined, applied: "md" as const, label: "(default)" },
+      ...SIZES.map((s) => ({ size: s, applied: s, label: s })),
+    ])("size=$size → ps1ui-button--size-$applied", async ({ size, applied, label }) => {
+      const screen = await render(<Button size={size}>{label}</Button>);
+      const btn = screen.getByRole("button", { name: label });
+      await expect.element(btn).toHaveClass("ps1ui-button");
+      await expect.element(btn).toHaveClass(`ps1ui-button--size-${applied}`);
+    });
+
+    test("emits exactly one ps1ui-button--size-* class per render", async () => {
+      // Guards against a future refactor that appends multiple size classes
+      // (e.g. an unremoved default alongside an explicit override) — the CSS
+      // padding/font-size would collide unpredictably.
+      const screen = await render(<Button size="lg">only lg</Button>);
+      const btn = screen.getByRole("button").element();
+      const sizeClasses = Array.from(btn.classList).filter((c) =>
+        c.startsWith("ps1ui-button--size-"),
+      );
+      expect(sizeClasses).toEqual(["ps1ui-button--size-lg"]);
+    });
+
     test("merges caller-supplied className without dropping the base classes", async () => {
       const screen = await render(<Button className="extra">merged</Button>);
       const btn = screen.getByRole("button");
       await expect.element(btn).toHaveClass("ps1ui-button");
       await expect.element(btn).toHaveClass("ps1ui-button--primary");
+      await expect.element(btn).toHaveClass("ps1ui-button--size-md");
       await expect.element(btn).toHaveClass("extra");
     });
 
-    test("applies the same variant classes to an as='a' link", async () => {
+    test("applies the same variant and size classes to an as='a' link", async () => {
       const screen = await render(
-        <Button as="a" href="/x" variant="secondary">
+        <Button as="a" href="/x" variant="secondary" size="lg">
           link
         </Button>,
       );
       const link = screen.getByRole("link");
       await expect.element(link).toHaveClass("ps1ui-button");
       await expect.element(link).toHaveClass("ps1ui-button--secondary");
+      await expect.element(link).toHaveClass("ps1ui-button--size-lg");
     });
   });
 
@@ -196,46 +221,58 @@ describe("Button", () => {
       interact?: (screen: Screen) => Promise<void>;
     };
 
-    const cases: A11yCase[] = VARIANTS.flatMap((variant): A11yCase[] => [
-      {
-        name: `${variant} / default`,
-        node: () => <Button variant={variant}>label</Button>,
-      },
-      {
-        name: `${variant} / disabled`,
-        node: () => (
-          <Button variant={variant} disabled>
-            label
-          </Button>
-        ),
-      },
-      {
-        name: `${variant} / focused`,
-        node: () => <Button variant={variant}>label</Button>,
-        interact: async (screen) => {
-          (screen.getByRole("button").element() as HTMLElement).focus();
+    const cases: A11yCase[] = [
+      ...VARIANTS.flatMap((variant): A11yCase[] => [
+        {
+          name: `${variant} / default`,
+          node: () => <Button variant={variant}>label</Button>,
         },
-      },
-      {
-        name: `${variant} / after click (toggle)`,
-        node: () => (
-          <Button variant={variant} aria-pressed="false">
-            toggle
-          </Button>
-        ),
-        interact: async (screen) => {
-          await screen.getByRole("button").click();
+        {
+          name: `${variant} / disabled`,
+          node: () => (
+            <Button variant={variant} disabled>
+              label
+            </Button>
+          ),
         },
-      },
-      {
-        name: `${variant} / as='a' link`,
-        node: () => (
-          <Button as="a" href="/docs" variant={variant}>
-            label
-          </Button>
-        ),
-      },
-    ]);
+        {
+          name: `${variant} / focused`,
+          node: () => <Button variant={variant}>label</Button>,
+          interact: async (screen) => {
+            (screen.getByRole("button").element() as HTMLElement).focus();
+          },
+        },
+        {
+          name: `${variant} / after click (toggle)`,
+          node: () => (
+            <Button variant={variant} aria-pressed="false">
+              toggle
+            </Button>
+          ),
+          interact: async (screen) => {
+            await screen.getByRole("button").click();
+          },
+        },
+        {
+          name: `${variant} / as='a' link`,
+          node: () => (
+            <Button as="a" href="/docs" variant={variant}>
+              label
+            </Button>
+          ),
+        },
+      ]),
+      // Size does not change the color pair (variant does) so the per-variant
+      // color-contrast surface is already covered by Button.contrast.test.tsx.
+      // These cases pin the semantic-a11y result at each size — role, name,
+      // and ARIA state must all survive a size change.
+      ...SIZES.map(
+        (size): A11yCase => ({
+          name: `size=${size}`,
+          node: () => <Button size={size}>label</Button>,
+        }),
+      ),
+    ];
 
     test.for(cases)("$name → no axe violations", async ({ node, interact }) => {
       const screen = await render(node());

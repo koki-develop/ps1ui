@@ -11,6 +11,10 @@ const meta = {
       control: { type: "inline-radio" },
       options: ["primary", "secondary", "danger"],
     },
+    size: {
+      control: { type: "inline-radio" },
+      options: ["sm", "md", "lg"],
+    },
     disabled: { control: "boolean" },
   },
 } satisfies Meta<typeof Button>;
@@ -62,6 +66,42 @@ export const DangerDisabled: Story = {
     children: "delete account",
     disabled: true,
   },
+};
+
+export const Small: Story = {
+  args: {
+    variant: "primary",
+    size: "sm",
+    children: "save changes",
+  },
+};
+
+export const Medium: Story = {
+  args: {
+    variant: "primary",
+    size: "md",
+    children: "save changes",
+  },
+};
+
+export const Large: Story = {
+  args: {
+    variant: "primary",
+    size: "lg",
+    children: "save changes",
+  },
+};
+
+// Renders the three sizes side by side so relative dimensions read at a glance
+// — the individual size stories above cover each size in isolation.
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+      <Button size="sm">Small</Button>
+      <Button size="md">Medium</Button>
+      <Button size="lg">Large</Button>
+    </div>
+  ),
 };
 
 // Polymorphic `as` — render as a real anchor so a button-shaped CTA can navigate.
