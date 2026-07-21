@@ -1,4 +1,8 @@
 {
   "name": "ps1ui",
-  "private": true
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @ps1ui/site dev",
+    "storybook": "pnpm --filter @ps1ui/core storybook"
+  }
 }
