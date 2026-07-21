@@ -4,7 +4,7 @@ pnpm = "11.11.0"
 lefthook = "2.1.10"
 gitleaks = "8.30.1"
 
-"npm:ui-ux-pro-max-cli" = "2.10.2"
+"npm:ui-ux-pro-max-cli" = "2.11.0"
 
 [tasks.bootstrap]
 run = ["pnpm install", "lefthook install"]
