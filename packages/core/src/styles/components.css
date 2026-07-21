@@ -44,6 +44,7 @@
 @import "../components/Th/Th.css";
 @import "../components/Td/Td.css";
 @import "../components/Text/Text.css";
+@import "../components/Textarea/Textarea.css";
 @import "../components/Heading/Heading.css";
 
 /* Containment side-effect defense — applied uniformly to every primitive that
@@ -88,7 +89,8 @@
   .ps1ui-codeblock:focus-visible,
   .ps1ui-details__summary:focus-visible,
   .ps1ui-input:focus,
-  .ps1ui-table__scroller:focus-visible {
+  .ps1ui-table__scroller:focus-visible,
+  .ps1ui-textarea:focus {
     outline: 2px solid CanvasText;
     outline-offset: 2px;
   }

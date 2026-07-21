@@ -1,0 +1,41 @@
+---
+import { Label, Stack, Textarea } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const basic = `<Textarea placeholder="write your thoughts…" />`;
+
+const rows = `<Textarea rows={6} placeholder="write your thoughts…" />`;
+
+const disabled = `<Textarea
+  defaultValue="the quick brown fox jumps over the lazy dog"
+  disabled
+/>`;
+
+const withLabel = `<Label htmlFor="notes">Notes</Label>
+<Textarea id="notes" placeholder="write your thoughts…" />`;
+---
+
+<ComponentPage slug="textarea">
+  <Demo title="Basic" code={basic}>
+    <Textarea placeholder="write your thoughts…" />
+  </Demo>
+
+  <Demo title="Rows" code={rows}>
+    <Textarea rows={6} placeholder="write your thoughts…" />
+  </Demo>
+
+  <Demo title="Disabled" code={disabled}>
+    <Textarea
+      defaultValue="the quick brown fox jumps over the lazy dog"
+      disabled
+    />
+  </Demo>
+
+  <Demo title="With a label" code={withLabel}>
+    <Stack direction="column" gap="sm" align="start">
+      <Label htmlFor="notes">Notes</Label>
+      <Textarea id="notes" placeholder="write your thoughts…" />
+    </Stack>
+  </Demo>
+</ComponentPage>

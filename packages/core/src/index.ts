@@ -83,6 +83,9 @@ export type {
   TextWeight,
 } from "./components/Text/Text";
 
+export { Textarea } from "./components/Textarea/Textarea";
+export type { TextareaProps } from "./components/Textarea/Textarea";
+
 export { Heading } from "./components/Heading/Heading";
 export type {
   HeadingElement,

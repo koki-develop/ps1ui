@@ -81,6 +81,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Single-line text input.",
       },
       {
+        slug: "textarea",
+        name: "Textarea",
+        description: "Multi-line text input.",
+      },
+      {
         slug: "checkbox",
         name: "Checkbox",
         description: "Checkbox input with indeterminate support.",

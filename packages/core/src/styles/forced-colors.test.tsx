@@ -31,6 +31,7 @@ import { Input } from "../components/Input/Input";
 import { Table } from "../components/Table/Table";
 import { Tbody } from "../components/Tbody/Tbody";
 import { Td } from "../components/Td/Td";
+import { Textarea } from "../components/Textarea/Textarea";
 import { Tr } from "../components/Tr/Tr";
 import { disableForcedColors, enableForcedColors } from "../testing/forced-colors";
 import { withPseudoState, type PseudoClass } from "../testing/pseudo-state";
@@ -86,6 +87,12 @@ describe("forced-colors adjustments", () => {
       pseudo: "focus",
       webkitSkip: false,
       ui: <Input aria-label="name" data-testid="fc-target" />,
+    },
+    {
+      name: "Textarea",
+      pseudo: "focus",
+      webkitSkip: false,
+      ui: <Textarea aria-label="notes" data-testid="fc-target" />,
     },
     {
       name: "CodeBlock",
