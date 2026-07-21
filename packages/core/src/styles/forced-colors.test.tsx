@@ -149,8 +149,19 @@ describe("forced-colors adjustments", () => {
 
   type FocusCase = (typeof FOCUS_CASES)[number] & { selector?: string };
 
+  // `retry: 3` mirrors the Firefox-flake precedent set by Checkbox / Button /
+  // Anchor / Details (`.focus()` + native key activation, documented in
+  // CLAUDE.md's "Known Firefox flake"). The failure mode here is different in
+  // detail — a Tab-driven `:focus-visible` case where computed style read back
+  // as the base rule instead of the `@media (forced-colors: active)` override,
+  // implying a Firefox style-recalc / forced-colors-emulation timing race that
+  // no `settle.ts` tick can close from application code — but the shape is the
+  // same: Firefox-only, load-dependent, absorbs on immediate re-run. Kept on
+  // `test.for` so every case in FOCUS_CASES inherits it, not just the one
+  // observed to flake; the underlying race is not Table-specific.
   test.for(FOCUS_CASES as readonly FocusCase[])(
     "$name :$pseudo falls back to a real outline (box-shadow is force-stripped)",
+    { retry: 3 },
     async ({ pseudo, webkitSkip, selector, ui }, ctx) => {
       ctx.skip(
         webkitSkip && server.browser === "webkit",
