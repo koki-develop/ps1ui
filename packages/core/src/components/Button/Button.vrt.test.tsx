@@ -15,9 +15,10 @@ import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
 import { VrtFrame } from "../../testing/vrt";
-import { Button, type ButtonVariant } from "./Button";
+import { Button, type ButtonSize, type ButtonVariant } from "./Button";
 
 const VARIANTS = ["primary", "secondary", "danger"] as const satisfies readonly ButtonVariant[];
+const SIZES = ["sm", "md", "lg"] as const satisfies readonly ButtonSize[];
 const STATES = ["default", "hover", "focus-visible", "active", "disabled"] as const;
 const PSEUDO_STATES = [
   "hover",
@@ -81,4 +82,49 @@ describe("Button VRT", () => {
         .toMatchScreenshot(`${variant}-as-a-default`);
     },
   );
+
+  // Size axis — captured against the primary variant only. Sizes only alter
+  // font-size / padding / gap; the variant × state matrix already covers the
+  // colour surface, so a per-size × per-variant × per-state expansion would
+  // add ~30 near-duplicate baselines whose only signal repeats what the
+  // primary size row already carries. Any regression in the size CSS is
+  // strictly geometric and shows up on the primary row.
+  test.for(SIZES.map((size) => ({ size })))(
+    "variant=primary / size=$size / default state",
+    async ({ size }) => {
+      const screen = await render(
+        <VrtFrame>
+          <Button variant="primary" size={size} data-testid="vrt-target">
+            save changes
+          </Button>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`primary-size-${size}-default`);
+    },
+  );
+
+  // The three sizes side-by-side in one capture — locks their relative
+  // proportions (font/padding ratios) beyond what per-size captures alone
+  // catch, since baseline vertical alignment across sizes is visible only
+  // when they render together.
+  test("sizes side-by-side keep aligned baselines and proportional dimensions", async () => {
+    const screen = await render(
+      <VrtFrame>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Button variant="primary" size="sm">
+            small
+          </Button>
+          <Button variant="primary" size="md">
+            medium
+          </Button>
+          <Button variant="primary" size="lg">
+            large
+          </Button>
+        </div>
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("sizes-row");
+  });
 });

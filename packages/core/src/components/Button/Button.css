@@ -2,17 +2,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ps1ui-space-sm);
   font-family: var(--ps1ui-font-mono);
-  font-size: var(--ps1ui-font-size-sm);
   /* Applied at base rather than per-variant so primary and secondary read as
      equal-weight siblings — variant should encode affordance (fill vs outline),
      not typography weight. A per-variant weight difference used to make
      secondary feel "one size smaller" next to primary. */
   font-weight: 600;
   line-height: 1;
-  /* 14px: 2× the 7px vertical rhythm; deliberately off the space scale. */
-  padding: var(--ps1ui-control-padding-y) 14px;
   border-radius: var(--ps1ui-radius-md);
   border: 1px solid transparent;
   cursor: pointer;
@@ -21,6 +17,35 @@
     background var(--ps1ui-transition-fast),
     border-color var(--ps1ui-transition-fast),
     color var(--ps1ui-transition-fast);
+}
+
+/* Size modifiers — font-size / padding / gap are size-driven, everything else
+   (color, border, radius, weight) stays uniform across sizes. Horizontal
+   padding is roughly 2× vertical padding at every step to keep the visual
+   proportion identical to the previous single-size button.
+
+   md keeps the pre-size-prop dimensions exactly (--ps1ui-control-padding-y
+   vertical, 14px horizontal, font-size-sm text, space-sm gap) so existing
+   layouts don't shift; sm and lg step down/up from there. Approximate rendered
+   heights at the default 16px root: sm ≈ 22px, md ≈ 30px, lg ≈ 38px. */
+.ps1ui-button--size-sm {
+  font-size: var(--ps1ui-font-size-xs);
+  padding: var(--ps1ui-space-xs) var(--ps1ui-space-sm);
+  gap: var(--ps1ui-space-xs);
+}
+.ps1ui-button--size-md {
+  font-size: var(--ps1ui-font-size-sm);
+  /* 14px horizontal: 2× the 7px vertical rhythm; deliberately off the space
+     scale — matches the original single-size dimensions. */
+  padding: var(--ps1ui-control-padding-y) 14px;
+  gap: var(--ps1ui-space-sm);
+}
+.ps1ui-button--size-lg {
+  font-size: var(--ps1ui-font-size-md);
+  /* 10px / 20px: 2× rhythm continued at the larger step; off the space scale
+     for the same reason as md's 14px. */
+  padding: 10px 20px;
+  gap: var(--ps1ui-space-md);
 }
 
 .ps1ui-button:focus-visible {
