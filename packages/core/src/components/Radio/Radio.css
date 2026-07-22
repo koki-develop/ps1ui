@@ -1,0 +1,90 @@
+.ps1ui-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+  font-family: var(--ps1ui-font-mono);
+  color: var(--ps1ui-color-primary-fg);
+  background: var(--ps1ui-color-bg);
+  border: 1px solid var(--ps1ui-color-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+}
+
+.ps1ui-radio:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-radio:focus-visible {
+  outline: none;
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-radio:checked {
+  background: var(--ps1ui-color-primary);
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-radio:checked:hover:not(:disabled) {
+  background: var(--ps1ui-color-primary-hover);
+  border-color: var(--ps1ui-color-primary-hover);
+}
+
+.ps1ui-radio:checked:active:not(:disabled) {
+  background: var(--ps1ui-color-primary-active);
+  border-color: var(--ps1ui-color-primary-active);
+}
+
+/* Inner dot for the checked state — a 6px filled circle centered inside the
+   16px control. Uses `currentColor` so the disabled state dims the dot by
+   changing `color`, mirroring Checkbox's ✓ mark. */
+.ps1ui-radio:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+/* forced-colors force-replaces author backgrounds, so the background-drawn
+   inner dot would vanish — redraw it as a border ring, which survives as
+   system ink. The focus-outline counterpart lives in the grouped
+   forced-colors rule in styles/components.css. Tested in
+   src/styles/forced-colors.test.tsx. */
+@media (forced-colors: active) {
+  .ps1ui-radio:checked::after {
+    background: none;
+    width: 8px;
+    height: 8px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+}
+
+.ps1ui-radio:disabled {
+  cursor: not-allowed;
+  color: var(--ps1ui-color-fg-subtle);
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}
+
+.ps1ui-radio:disabled:checked {
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}

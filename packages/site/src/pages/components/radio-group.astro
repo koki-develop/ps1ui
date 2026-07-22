@@ -1,0 +1,100 @@
+---
+import { Label, Radio, RadioGroup } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+// Every demo pins name / defaultChecked / disabled directly on each <Radio>
+// instead of relying on <RadioGroup>'s value / defaultValue / disabled props.
+// That's because Astro renders every framework component in a .astro file as
+// its own island, so the React Context that RadioGroup would use to wire
+// name / selection / disabled into its children never crosses the island
+// boundary — the emitted HTML would be bare <input type="radio"> with no
+// name (so groups aren't mutually exclusive), no checked, no disabled. In a
+// real React app (Next.js, Vite, Remix, or Astro with `client:load` on the
+// group), the RadioGroup-based pattern works via context; here in a static
+// docs page it doesn't, so the snippets below match what actually renders.
+
+const basic = `<RadioGroup aria-label="favourite fruit">
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="apple" defaultChecked />
+    apple
+  </Label>
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="banana" />
+    banana
+  </Label>
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="cherry" />
+    cherry
+  </Label>
+</RadioGroup>`;
+
+const disabled = `<RadioGroup aria-label="favourite fruit">
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="apple" defaultChecked disabled />
+    apple
+  </Label>
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="banana" disabled />
+    banana
+  </Label>
+</RadioGroup>`;
+
+const labelledBy = `<Label id="fruit-label">favourite fruit</Label>
+<RadioGroup aria-labelledby="fruit-label">
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="apple" defaultChecked />
+    apple
+  </Label>
+  <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <Radio name="fruit" value="banana" />
+    banana
+  </Label>
+</RadioGroup>`;
+---
+
+<ComponentPage slug="radio-group">
+  <Demo title="Basic" code={basic}>
+    <RadioGroup aria-label="favourite fruit">
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-basic" value="apple" defaultChecked />
+        apple
+      </Label>
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-basic" value="banana" />
+        banana
+      </Label>
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-basic" value="cherry" />
+        cherry
+      </Label>
+    </RadioGroup>
+  </Demo>
+
+  <Demo title="Disabled" code={disabled}>
+    <RadioGroup aria-label="favourite fruit">
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-disabled" value="apple" defaultChecked disabled />
+        apple
+      </Label>
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-disabled" value="banana" disabled />
+        banana
+      </Label>
+    </RadioGroup>
+  </Demo>
+
+  <Demo title="Labelled by external element" code={labelledBy}>
+    <Label id="fruit-labelledby">favourite fruit</Label>
+    <RadioGroup aria-labelledby="fruit-labelledby">
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-labelledby-r" value="apple" defaultChecked />
+        apple
+      </Label>
+      <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Radio name="fruit-labelledby-r" value="banana" />
+        banana
+      </Label>
+    </RadioGroup>
+  </Demo>
+</ComponentPage>

@@ -12,6 +12,12 @@ export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button
 export { Checkbox } from "./components/Checkbox/Checkbox";
 export type { CheckboxProps } from "./components/Checkbox/Checkbox";
 
+export { Radio } from "./components/Radio/Radio";
+export type { RadioProps } from "./components/Radio/Radio";
+
+export { RadioGroup } from "./components/RadioGroup/RadioGroup";
+export type { RadioGroupProps } from "./components/RadioGroup/RadioGroup";
+
 export { Input } from "./components/Input/Input";
 export type { InputProps } from "./components/Input/Input";
 
