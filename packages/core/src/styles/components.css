@@ -32,6 +32,8 @@
 @import "../components/Label/Label.css";
 @import "../components/List/List.css";
 @import "../components/ListItem/ListItem.css";
+@import "../components/Radio/Radio.css";
+@import "../components/RadioGroup/RadioGroup.css";
 @import "../components/Card/Card.css";
 @import "../components/Code/Code.css";
 @import "../components/CodeBlock/CodeBlock.css";
@@ -89,6 +91,7 @@
   .ps1ui-codeblock:focus-visible,
   .ps1ui-details__summary:focus-visible,
   .ps1ui-input:focus,
+  .ps1ui-radio:focus-visible,
   .ps1ui-table__scroller:focus-visible,
   .ps1ui-textarea:focus {
     outline: 2px solid CanvasText;

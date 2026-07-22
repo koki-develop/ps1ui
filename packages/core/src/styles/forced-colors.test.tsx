@@ -28,6 +28,7 @@ import { Checkbox } from "../components/Checkbox/Checkbox";
 import { CodeBlock } from "../components/CodeBlock/CodeBlock";
 import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
+import { Radio } from "../components/Radio/Radio";
 import { Table } from "../components/Table/Table";
 import { Tbody } from "../components/Tbody/Tbody";
 import { Td } from "../components/Td/Td";
@@ -61,6 +62,19 @@ describe("forced-colors adjustments", () => {
     expect(s.borderRadius).toBe("0px");
   });
 
+  test("Radio checked inner dot is border-drawn (background would be force-stripped)", async () => {
+    // The normal-mode dot uses `background: currentColor`, which forced-colors
+    // strips — the border ring replacement survives as system ink. Assert the
+    // ring's geometry (a 2px solid circle) instead of colors, same convention
+    // as the Checkbox case above.
+    const screen = await render(<Radio aria-label="pick" defaultChecked data-testid="fc-target" />);
+    const s = getComputedStyle(screen.getByTestId("fc-target").element(), "::after");
+    expect(s.borderTopWidth).toBe("2px");
+    expect(s.borderTopStyle).toBe("solid");
+    expect(s.width).toBe("8px");
+    expect(s.height).toBe("8px");
+  });
+
   // One case per component the grouped focus rule in styles/components.css
   // names. `webkitSkip` marks the :focus-visible cases — WebKit's
   // Full-Keyboard-Access default excludes non-text controls from Tab, so
@@ -75,6 +89,12 @@ describe("forced-colors adjustments", () => {
       pseudo: "focus-visible",
       webkitSkip: true,
       ui: <Checkbox aria-label="agree" data-testid="fc-target" />,
+    },
+    {
+      name: "Radio",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      ui: <Radio aria-label="pick" data-testid="fc-target" />,
     },
     {
       name: "Button",

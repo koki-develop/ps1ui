@@ -91,6 +91,12 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Checkbox input with indeterminate support.",
       },
       {
+        slug: "radio-group",
+        name: "RadioGroup",
+        description: "Grouped radio buttons with shared name and single-selection semantics.",
+        childComponents: ["Radio"],
+      },
+      {
         slug: "label",
         name: "Label",
         description: "Form label for associating text with controls.",
