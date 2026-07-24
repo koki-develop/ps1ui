@@ -1,0 +1,124 @@
+---
+import { ContributionGraph, type ContributionDay } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+// Deterministic sample data — build-time only, no client hydration. Fixed end
+// date so the page snapshot doesn't change on every rebuild.
+//
+// The same generator lives in @ps1ui/core's `src/testing/contribution-graph-
+// sample.ts` (shared between stories + VRT), but `src/testing/**` intentionally
+// never ships in dist (see packages/core/CLAUDE.md), so this build-time astro
+// page — which imports @ps1ui/core through its public dist exports — can't
+// reach it. The duplication here is the tightest legal solution short of
+// publishing the sample-data generator as a public API, which would be a
+// worse trade (permanent public-API surface for a docs-only helper).
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function makeDays(endIso: string, count: number, seed: number): ContributionDay[] {
+  const rand = mulberry32(seed);
+  const end = new Date(
+    Number(endIso.slice(0, 4)),
+    Number(endIso.slice(5, 7)) - 1,
+    Number(endIso.slice(8, 10)),
+  );
+  const days: ContributionDay[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(end);
+    d.setDate(d.getDate() - i);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const dow = d.getDay();
+    const weekend = dow === 0 || dow === 6;
+    const r = rand();
+    const c = r < (weekend ? 0.55 : 0.25) ? 0 : Math.floor(rand() * 12);
+    days.push({ date: iso, count: c });
+  }
+  return days;
+}
+
+const year = makeDays("2025-12-31", 365, 42);
+const quarter = makeDays("2025-12-31", 7 * 12, 42);
+const twoMonths = makeDays("2025-12-31", 7 * 8, 42);
+
+// The basic demo's code sample shows the exact data shape callers pass —
+// one { date, count } per day, sorted ascending, contiguous. The middle
+// elided so the snippet stays scannable without hiding the format.
+const basic = `const data = [
+  { date: "2025-01-01", count: 0 },
+  { date: "2025-01-02", count: 3 },
+  { date: "2025-01-03", count: 7 },
+  // ...one entry per day, sorted ascending, contiguous...
+  { date: "2025-12-30", count: 5 },
+  { date: "2025-12-31", count: 12 },
+];
+
+<ContributionGraph data={data} />`;
+
+const mondayStart = `<ContributionGraph data={data} weekStartsOn="monday" />`;
+
+const larger = `<ContributionGraph
+  data={data}
+  cellSize={16}
+  cellGap={4}
+  cellRadius={3}
+/>`;
+
+const noLabels = `<ContributionGraph
+  data={data}
+  showMonthLabels={false}
+  showWeekdayLabels={false}
+  showLegend={false}
+/>`;
+
+const customTooltip = `<ContributionGraph
+  data={data}
+  labelForDay={(day) =>
+    day.count > 0
+      ? \`\${day.date} → \${day.count} commit\${day.count === 1 ? "" : "s"}\`
+      : \`\${day.date} → no activity\`
+  }
+/>`;
+---
+
+<ComponentPage slug="contribution-graph">
+  <Demo title="Basic" code={basic}>
+    <ContributionGraph data={year} />
+  </Demo>
+
+  <Demo title="Monday start" code={mondayStart}>
+    <ContributionGraph data={quarter} weekStartsOn="monday" />
+  </Demo>
+
+  <Demo title="Larger cells" code={larger}>
+    <ContributionGraph data={twoMonths} cellSize={16} cellGap={4} cellRadius={3} />
+  </Demo>
+
+  <Demo title="Without labels or legend" code={noLabels}>
+    <ContributionGraph
+      data={quarter}
+      showMonthLabels={false}
+      showWeekdayLabels={false}
+      showLegend={false}
+    />
+  </Demo>
+
+  <Demo title="Custom tooltip" code={customTooltip}>
+    <ContributionGraph
+      data={quarter}
+      labelForDay={(day) =>
+        day.count > 0
+          ? `${day.date} → ${day.count} commit${day.count === 1 ? "" : "s"}`
+          : `${day.date} → no activity`
+      }
+    />
+  </Demo>
+</ComponentPage>

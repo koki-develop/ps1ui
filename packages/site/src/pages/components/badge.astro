@@ -1,0 +1,116 @@
+---
+import { Badge, Stack, Text } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const variants = `<Badge variant="solid">solid</Badge>
+<Badge variant="outline">outline</Badge>
+<Badge variant="subtle">subtle</Badge>`;
+
+const colors = `<Badge color="primary">primary</Badge>
+<Badge color="accent">accent</Badge>
+<Badge color="danger">danger</Badge>
+<Badge color="muted">muted</Badge>`;
+
+const solids = `<Badge variant="solid" color="primary">released</Badge>
+<Badge variant="solid" color="accent">featured</Badge>
+<Badge variant="solid" color="danger">breaking</Badge>
+<Badge variant="solid" color="muted">draft</Badge>`;
+
+const outlines = `<Badge variant="outline" color="primary">stable</Badge>
+<Badge variant="outline" color="accent">preview</Badge>
+<Badge variant="outline" color="danger">deprecated</Badge>
+<Badge variant="outline" color="muted">archived</Badge>`;
+
+// Two forms shown: the string form (which is what the demo below actually
+// renders — Astro cannot serialise React JSX passed as a prop, so the
+// visible chips use plain characters) and the ReactNode form, which is
+// how consumers should compose icons in real .tsx code.
+const leadingString = `<Badge leading="↑">up 24%</Badge>
+<Badge color="danger" leading="↓">down 8%</Badge>`;
+
+const leadingNode = `import { IconArrowUp } from "your-icon-library";
+
+<Badge leading={<IconArrowUp aria-hidden />}>up 24%</Badge>`;
+
+const interactive = `<Badge as="button" variant="outline">
+  filter: react
+</Badge>
+<Badge as="a" href="#" variant="subtle" color="accent">
+  #accent
+</Badge>`;
+
+const disabled = `<Badge as="button" variant="solid" disabled>
+  unavailable
+</Badge>`;
+---
+
+<ComponentPage slug="badge">
+  <Demo title="Variants" code={variants}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge variant="solid">solid</Badge>
+      <Badge variant="outline">outline</Badge>
+      <Badge variant="subtle">subtle</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Colors" code={colors}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge color="primary">primary</Badge>
+      <Badge color="accent">accent</Badge>
+      <Badge color="danger">danger</Badge>
+      <Badge color="muted">muted</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Solid" code={solids}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge variant="solid" color="primary">released</Badge>
+      <Badge variant="solid" color="accent">featured</Badge>
+      <Badge variant="solid" color="danger">breaking</Badge>
+      <Badge variant="solid" color="muted">draft</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Outline" code={outlines}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge variant="outline" color="primary">stable</Badge>
+      <Badge variant="outline" color="accent">preview</Badge>
+      <Badge variant="outline" color="danger">deprecated</Badge>
+      <Badge variant="outline" color="muted">archived</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Leading slot (text)" code={leadingString}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge leading="↑">up 24%</Badge>
+      <Badge color="danger" leading="↓">down 8%</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Leading slot (icon component)" code={leadingNode}>
+    <Text variant="muted">
+      The <code>leading</code> prop accepts any <code>ReactNode</code>, so an icon component
+      slots in the same way — this docs page cannot render the JSX form directly (Astro
+      cannot serialise React children passed as a prop), but the pattern above is how
+      consumers use it in real <code>.tsx</code> code.
+    </Text>
+  </Demo>
+
+  <Demo title="Interactive (as button / link)" code={interactive}>
+    <Stack direction="row" gap="md" wrap>
+      <Badge as="button" variant="outline">filter: react</Badge>
+      <Badge as="a" href="#" variant="subtle" color="accent">#accent</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Disabled" code={disabled}>
+    <Badge as="button" variant="solid" disabled>unavailable</Badge>
+  </Demo>
+
+  <Text variant="muted">
+    Badges render as a plain span by default. Pass as="button" or as="a" to make the chip
+    interactive — the same variant / color styling is preserved, and hover, active, focus-visible,
+    and disabled treatments activate automatically.
+  </Text>
+</ComponentPage>

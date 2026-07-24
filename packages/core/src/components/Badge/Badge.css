@@ -1,0 +1,182 @@
+/* Badge — small chip/label primitive for tags, statuses, counts, category
+   markers. Renders as <span> by default; when a consumer passes
+   `as="button"` / `as="a"`, the :where(button, a) selector block below
+   activates interactive styling (cursor, hover/active feedback, focus ring)
+   automatically — static badges get none of it.
+
+   Vertical padding is 3px (not on the space scale) on purpose: badges
+   need a compact vertical rhythm distinct from Button's 7px so a chip
+   sitting inline with body text does not visually dominate its line box.
+   Horizontal padding is 6px (~2× the vertical) to preserve the same
+   proportional relationship Button uses at every size.
+
+   The colour surface is defined through internal --_badge-* vars: each
+   color (primary/accent/danger/muted) publishes a small palette of
+   --_badge-base / --_badge-base-hover / --_badge-base-active /
+   --_badge-solid-fg vars; each variant (solid/outline/subtle) reads from
+   those. Keeps the 4 × 3 matrix as 4 palette blocks + 3 variant blocks
+   instead of 12 compound selectors — a colour tuning shifts in one place,
+   and the variants pick it up automatically. Names are prefixed with the
+   component slug so they don't collide with a nested Badge (custom
+   properties inherit by default) or with a caller writing style={{
+   '--_badge-base': ... }}. */
+.ps1ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ps1ui-space-xs);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: var(--ps1ui-radius-md);
+  border: 1px solid transparent;
+  vertical-align: baseline;
+}
+
+/* Interactive treatment applies only when the badge renders as button or a.
+   :where(...) keeps the selector at zero specificity so a caller's own
+   higher-specificity override still wins, and it means static <span>
+   badges match no rule here — nothing to reset. */
+.ps1ui-badge:where(button, a) {
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  transition:
+    background var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    color var(--ps1ui-transition-fast);
+}
+
+.ps1ui-badge:where(button, a):focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+/* Disabled treatment — matched via both :disabled (native <button
+   disabled>) AND [aria-disabled="true"] (anchor / span badges that
+   cannot use the DOM disabled attribute, per HTML: <a> is not a
+   form-associated element and ignores :disabled). Without the second
+   selector, `<Badge as="a" aria-disabled="true">` would render with
+   full opacity and pointer cursor while screen readers announce it as
+   disabled — a visible/announced state mismatch. */
+.ps1ui-badge:disabled,
+.ps1ui-badge[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Leading slot — tight inline-flex box so consumer-supplied icons align to
+   the text baseline. The flex gap on the badge root spaces it from the
+   text children; the slot itself does not add its own gap. */
+.ps1ui-badge__leading {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   Colour palettes. Each color publishes:
+     --_badge-base:         fill / border source at rest
+     --_badge-base-hover:   fill / border source when interactive :hover
+     --_badge-base-active:  fill / border source when interactive :active
+     --_badge-solid-fg:     text on solid fills (must contrast against
+                            --_badge-base at rest AND at every interactive
+                            state, since the fg does not change per state)
+   The four hover/active tokens all resolve to first-class semantic-colour
+   tokens in tokens.css (primary-hover, danger-active, accent-hover,
+   muted-hover, ...). Solid interactive states just swap the base variable
+   — no per-Badge color-mix that could drift from Button's hover shades.
+   Contrast for every (variant × color × state) tuple is verified in
+   Badge.contrast.test.tsx. */
+.ps1ui-badge--primary {
+  --_badge-base: var(--ps1ui-color-primary);
+  --_badge-base-hover: var(--ps1ui-color-primary-hover);
+  --_badge-base-active: var(--ps1ui-color-primary-active);
+  --_badge-solid-fg: var(--ps1ui-color-primary-fg);
+}
+
+.ps1ui-badge--accent {
+  --_badge-base: var(--ps1ui-color-accent);
+  --_badge-base-hover: var(--ps1ui-color-accent-hover);
+  --_badge-base-active: var(--ps1ui-color-accent-active);
+  --_badge-solid-fg: var(--ps1ui-color-accent-fg);
+}
+
+.ps1ui-badge--danger {
+  --_badge-base: var(--ps1ui-color-danger);
+  --_badge-base-hover: var(--ps1ui-color-danger-hover);
+  --_badge-base-active: var(--ps1ui-color-danger-active);
+  --_badge-solid-fg: var(--ps1ui-color-danger-fg);
+}
+
+.ps1ui-badge--muted {
+  --_badge-base: var(--ps1ui-color-muted);
+  --_badge-base-hover: var(--ps1ui-color-muted-hover);
+  --_badge-base-active: var(--ps1ui-color-muted-active);
+  --_badge-solid-fg: var(--ps1ui-color-muted-fg);
+}
+
+/* --------------------------------------------------------------------------
+   Variants read from --_badge-base for colour. For outline / subtle the
+   text colour reuses --_badge-base rather than a separate --_badge-fg,
+   because a "coloured chip" reads as one colour: the border tint, the
+   subtle-bg tint, and the text tint all sit on the same hue.
+
+   Subtle bg is a color-mix over transparent (not over surface) so a
+   subtle badge stacks correctly on both the page canvas
+   (--ps1ui-color-bg) and any surface (--ps1ui-color-surface, e.g.
+   inside a Card) without hardcoding either. */
+.ps1ui-badge--solid {
+  background: var(--_badge-base);
+  color: var(--_badge-solid-fg);
+  border-color: var(--_badge-base);
+}
+
+.ps1ui-badge--outline {
+  background: transparent;
+  color: var(--_badge-base);
+  border-color: var(--_badge-base);
+}
+
+.ps1ui-badge--subtle {
+  background: color-mix(in srgb, var(--_badge-base) 15%, transparent);
+  color: var(--_badge-base);
+  border-color: color-mix(in srgb, var(--_badge-base) 30%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Interactive hover / active feedback. Solid variants swap the palette's
+   -hover / -active base var directly — same source of truth as Button's
+   hover treatment, so a token tuning propagates uniformly. Outline / subtle
+   variants keep the color-mix formula because they express feedback as a
+   deeper tint of the same --_badge-base, not as a darker fill; the mix
+   percentage is what shifts per state, not the base itself.
+
+   Guarded by :where(button, a) so static <span> badges get no hover state,
+   and by :not(:disabled):not([aria-disabled="true"]) so a disabled
+   interactive badge stays at its 50%-opacity resting state regardless of
+   the pointer. */
+.ps1ui-badge--solid:where(button, a):hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--_badge-base-hover);
+  border-color: var(--_badge-base-hover);
+}
+.ps1ui-badge--solid:where(button, a):active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--_badge-base-active);
+  border-color: var(--_badge-base-active);
+}
+
+.ps1ui-badge--outline:where(button, a):hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--_badge-base) 10%, transparent);
+}
+.ps1ui-badge--outline:where(button, a):active:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--_badge-base) 18%, transparent);
+}
+
+.ps1ui-badge--subtle:where(button, a):hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--_badge-base) 25%, transparent);
+  border-color: color-mix(in srgb, var(--_badge-base) 45%, transparent);
+}
+.ps1ui-badge--subtle:where(button, a):active:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--_badge-base) 35%, transparent);
+  border-color: color-mix(in srgb, var(--_badge-base) 55%, transparent);
+}

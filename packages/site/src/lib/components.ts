@@ -107,6 +107,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
     title: "Content",
     items: [
       {
+        slug: "badge",
+        name: "Badge",
+        description: "Compact chip for tags, statuses, and count markers.",
+      },
+      {
         slug: "card",
         name: "Card",
         description: "Bordered surface for grouping related content.",
@@ -120,6 +125,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         slug: "codeblock",
         name: "CodeBlock",
         description: "Syntax-highlighted code powered by Prism grammars.",
+      },
+      {
+        slug: "contribution-graph",
+        name: "ContributionGraph",
+        description: "GitHub-style activity heatmap — a year of days as a 7×N grid of intensity cells.",
       },
       {
         slug: "details",

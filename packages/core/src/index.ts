@@ -6,6 +6,9 @@ export type { Breakpoint, Responsive } from "./utils/responsive";
 export { Anchor } from "./components/Anchor/Anchor";
 export type { AnchorProps, AnchorVariant } from "./components/Anchor/Anchor";
 
+export { Badge } from "./components/Badge/Badge";
+export type { BadgeColor, BadgeProps, BadgeVariant } from "./components/Badge/Badge";
+
 export { Button } from "./components/Button/Button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button/Button";
 
@@ -43,6 +46,13 @@ export type { SpaceScale } from "./utils/spacing";
 
 export { Container } from "./components/Container/Container";
 export type { ContainerProps, ContainerSize } from "./components/Container/Container";
+
+export { ContributionGraph } from "./components/ContributionGraph/ContributionGraph";
+export type {
+  ContributionDay,
+  ContributionGraphProps,
+  ContributionGraphWeekStart,
+} from "./components/ContributionGraph/ContributionGraph";
 
 export { Grid } from "./components/Grid/Grid";
 export type { GridGap, GridProps } from "./components/Grid/Grid";
