@@ -199,24 +199,28 @@ describe("Tooltip", () => {
     });
 
     test("hover open is deferred by `delay`", async () => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-      try {
-        const screen = await render(
-          <Tooltip content="tip" delay={400}>
-            <button type="button" data-testid="trigger">
-              open
-            </button>
-          </Tooltip>,
-        );
-        const trigger = screen.getByTestId("trigger");
-        await userEvent.hover(trigger);
-        // Still closed while inside the delay window.
-        expect(document.querySelector('[role="tooltip"]')).toBeNull();
-        vi.advanceTimersByTime(400);
-        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
-      } finally {
-        vi.useRealTimers();
-      }
+      // Real timers + synchronous dispatchEvent: the fake-timer +
+      // `shouldAdvanceTime` variant raced under Firefox CI, where the
+      // async userEvent.hover took long enough for the auto-advancing
+      // fake timer to fire the setTimeout mid-await, revealing the panel
+      // before the "still closed" assertion could observe the delay window.
+      const screen = await render(
+        <Tooltip content="tip" delay={200}>
+          <button type="button" data-testid="trigger">
+            open
+          </button>
+        </Tooltip>,
+      );
+      const trigger = screen.getByTestId("trigger").element() as HTMLButtonElement;
+      trigger.dispatchEvent(
+        new MouseEvent("mouseover", { bubbles: true, relatedTarget: document.body }),
+      );
+      // Still closed while inside the delay window.
+      expect(document.querySelector('[role="tooltip"]')).toBeNull();
+      // Wait comfortably past the delay for the timer to fire.
+      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull(), {
+        timeout: 1000,
+      });
     });
 
     // `.focus()` + subsequent assertions are the known intermittent Firefox
