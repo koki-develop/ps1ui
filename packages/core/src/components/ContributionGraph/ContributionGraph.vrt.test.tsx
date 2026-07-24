@@ -15,12 +15,16 @@
 //     wrapper hugs the SVG's intrinsic width so the legend sits at the
 //     graph's right edge, not the container's far edge. Regression cover
 //     for the width-var / max-width dance in the root selector.
+//   - `focused-cell-with-tooltip`: the interactive state — the keyboard focus
+//     ring (a `stroke`, since neither outline nor box-shadow paints on an SVG
+//     shape) together with the anchored Tooltip panel it opens.
 
 import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { makeSampleDays, mulberry32 } from "../../testing/contribution-graph-sample";
+import { withPseudoState } from "../../testing/pseudo-state";
 import { VrtFrame } from "../../testing/vrt";
 import { ContributionGraph, type ContributionDay } from "./ContributionGraph";
 
@@ -99,6 +103,53 @@ describe("ContributionGraph VRT", () => {
     await expect
       .element(screen.getByTestId("vrt-frame"))
       .toMatchScreenshot("wide-parent-hugs-graph");
+  });
+
+  test("focused-cell-with-tooltip", async () => {
+    // The Tooltip panel is portaled to <body>, so like Tooltip's own VRT this
+    // relies on the element screenshot capturing whatever viewport pixels fall
+    // inside VrtFrame's box, regardless of DOM ancestry. The fixed 240×160
+    // centring box is what guarantees that: one bare week (11px wide, 95px
+    // tall, no labels or legend) lands mid-frame, so the panel above the
+    // top-left cell has room on all sides. `labelForDay` is overridden to a
+    // short constant purely to keep the panel's width — and therefore the
+    // capture's framing — independent of the default sentence's length.
+    const week: ContributionDay[] = makeSampleDays("2025-01-11", 7, 9);
+    const screen = await render(
+      <VrtFrame>
+        <div
+          style={{
+            width: 240,
+            height: 160,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ContributionGraph
+            data={week}
+            showMonthLabels={false}
+            showWeekdayLabels={false}
+            showLegend={false}
+            labelForDay={() => "3 commits"}
+          />
+        </div>
+      </VrtFrame>,
+    );
+    // Focusing the first cell draws the ring and opens the tooltip in one
+    // motion. `focus` rather than `focus-visible`: the ring is keyed on
+    // `:focus` so pointer focus is indicated too (see ContributionGraph.css),
+    // which also keeps this capture reachable on WebKit.
+    await withPseudoState(".ps1ui-contribution-graph__cell", ["focus"], async () => {
+      await expect
+        .poll(
+          () => document.querySelector<HTMLElement>('[role="tooltip"]')?.style.visibility ?? null,
+        )
+        .toBe("visible");
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot("focused-cell-with-tooltip");
+    });
   });
 
   test("narrow-viewport-scrolls", async () => {

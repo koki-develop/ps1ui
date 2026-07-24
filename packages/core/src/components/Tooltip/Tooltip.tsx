@@ -37,22 +37,55 @@ export type TooltipTriggerProps = {
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void;
 };
 
-export type TooltipProps = Omit<ComponentProps<"div">, "children" | "content"> & {
+// Props shared by both anchoring modes.
+type TooltipBaseProps = Omit<ComponentProps<"div">, "children" | "content"> & {
   /** Panel body. Rendered inside a `role="tooltip"` element while open. */
   content: ReactNode;
-  /** Single interactive element the panel anchors to. */
-  children: ReactElement<TooltipTriggerProps>;
   /** Preferred edge to anchor against. The panel flips to the opposite edge when the preferred side would overflow the viewport. */
   placement?: TooltipPlacement;
-  /** Milliseconds the pointer must dwell on the trigger before hover opens the panel. Focus opens immediately. */
+  /** Milliseconds the pointer must dwell on the trigger before hover opens the panel. Focus opens immediately. Trigger mode only — in anchor mode the caller owns the open timing. */
   delay?: number;
-  /** Controlled visibility. When set, hover/focus stop toggling state and only invoke `onOpenChange`. */
-  open?: boolean;
-  /** Fired whenever the internal (or requested, when controlled) open state changes. Guaranteed to alternate `true`/`false`; no duplicate values. */
+  /** Fired whenever the internal (or requested, when controlled) open state changes. Guaranteed to alternate `true`/`false`; no duplicate values. Never fires in anchor mode, where every transition originates from the caller. */
   onOpenChange?: (open: boolean) => void;
   /** Element the panel is portaled into. Defaults to `document.body` so overlays escape the responsive-container context. */
   container?: HTMLElement;
 };
+
+// Two anchoring modes, split at the type level so the impossible combinations
+// (both a trigger and an anchor, or an anchor with no controlled `open`) never
+// typecheck:
+//
+//   - TRIGGER mode — the ergonomic default. Tooltip owns one child element,
+//     clones it to inject the ref + `aria-describedby` + the hover/focus/
+//     Escape state machine, and anchors the panel to it.
+//   - ANCHOR mode — for callers whose "trigger" is not a single React element
+//     Tooltip can clone: one of N interchangeable sub-elements (a cell inside
+//     ContributionGraph's SVG grid), a canvas hit region, a virtualized row.
+//     Those callers already track which sub-element is active and own the
+//     hover/focus bookkeeping, so Tooltip contributes only what it uniquely
+//     owns: the portal, the viewport-aware placement, and the panel chrome.
+//     `open` is required because with no trigger to listen on, nothing inside
+//     Tooltip could ever open the panel.
+//
+// JSDoc lives on the trigger branch only — the site's props extractor unions
+// the branches and takes the one documented copy (duplicating it would risk
+// the two drifting, which it treats as a build error).
+type TooltipModeProps =
+  | {
+      /** Single interactive element the panel anchors to. Cloned to receive a ref, `aria-describedby`, and the hover/focus/Escape handlers. Mutually exclusive with `anchor`. */
+      children: ReactElement<TooltipTriggerProps>;
+      /** DOM node to position the panel against, for callers that own their own trigger geometry and open state (e.g. the active cell of an SVG grid). Mutually exclusive with `children`, and requires a controlled `open`. The panel re-measures when this node changes identity, and on scroll/resize — the same triggers as a cloned child, so a node that moves in place without either is not tracked. */
+      anchor?: undefined;
+      /** Controlled visibility. In trigger mode, setting it stops hover/focus from toggling state — they only invoke `onOpenChange`. Required in anchor mode. */
+      open?: boolean;
+    }
+  | {
+      children?: undefined;
+      anchor: Element | null;
+      open: boolean;
+    };
+
+export type TooltipProps = TooltipBaseProps & TooltipModeProps;
 
 // Gap in px between the trigger's edge and the panel's edge. Not a token
 // yet — no other component uses a "float away from an anchor" offset, so
@@ -133,6 +166,7 @@ function computeLayout(
 export function Tooltip({
   content,
   children,
+  anchor,
   placement = "top",
   delay = 200,
   open: controlledOpen,
@@ -140,6 +174,7 @@ export function Tooltip({
   container,
   className,
   style,
+  id,
   ...rest
 }: TooltipProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
@@ -234,8 +269,12 @@ export function Tooltip({
     [],
   );
 
+  // A caller-supplied `id` wins and becomes the id `aria-describedby` points
+  // at, so the two can never disagree. Anchor-mode callers need this: with no
+  // cloned trigger, Tooltip cannot wire `aria-describedby` itself, so the
+  // caller supplies an id it can reference from its own element.
   const reactId = useId();
-  const panelId = `ps1ui-tooltip-${reactId}`;
+  const panelId = id ?? `ps1ui-tooltip-${reactId}`;
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -247,17 +286,22 @@ export function Tooltip({
   } | null>(null);
 
   const measure = useCallback(() => {
-    const trigger = triggerRef.current;
+    // Anchor mode supplies the element directly; trigger mode reads the one
+    // the cloned child's ref captured. Exactly one is ever populated — the
+    // type-level union rules out a Tooltip that has both.
+    const target = anchor ?? triggerRef.current;
     const panel = panelRef.current;
-    // Defensive: the useLayoutEffect below only calls measure() when both
-    // `mounted` (panel portaled) and `open` (portal rendered under the mount
-    // gate) are true, so both refs are populated at every call site we own.
-    // Kept for scroll/resize handlers that could still fire during the
-    // transition tick after teardown removes the panel but before the
-    // cleanup listener detaches — unreachable from tests without racing.
-    /* c8 ignore next */
-    if (!trigger || !panel) return;
-    const rect = trigger.getBoundingClientRect();
+    // `!panel` is defensive: the useLayoutEffect below only calls measure()
+    // when both `mounted` (panel portaled) and `open` (portal rendered under
+    // the mount gate) are true, so the panel ref is populated at every call
+    // site we own. Kept for scroll/resize handlers that could still fire
+    // during the transition tick after teardown removes the panel but before
+    // the cleanup listener detaches — unreachable from tests without racing.
+    // `!target` IS reachable: an anchor-mode caller may hold `open` true for
+    // a frame while its active element is still null, and the panel then
+    // stays `visibility: hidden` rather than flashing at the viewport origin.
+    if (!target || !panel) return;
+    const rect = target.getBoundingClientRect();
     // offsetWidth/offsetHeight (integer, layout box) instead of
     // getBoundingClientRect on the panel: the fractional sub-pixel values
     // from transformed ancestors would inject jitter into `top`/`left`,
@@ -265,7 +309,7 @@ export function Tooltip({
     const size = { width: panel.offsetWidth, height: panel.offsetHeight };
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     setLayout(computeLayout(rect, size, placement, viewport));
-  }, [placement]);
+  }, [anchor, placement]);
 
   // Portal target guard — SSR renders without `document`, and even with the
   // "use client" boundary the first paint of a hydrated tree happens without
@@ -289,6 +333,18 @@ export function Tooltip({
       return;
     }
     measure();
+    // `content` is a dependency because the panel's measured box is a function
+    // of what it renders: an anchor-mode caller that swaps content while the
+    // panel stays open (sweeping across grid cells) changes the panel's width,
+    // and a `top`/`left` computed from the previous size would misplace it.
+  }, [open, mounted, measure, content]);
+
+  // Listener registration is kept in its own effect, deliberately NOT keyed on
+  // `content` — a trigger-mode caller passing inline JSX hands us a fresh
+  // reference every render, and folding that into this effect would tear down
+  // and re-add the window listeners on each one.
+  useLayoutEffect(() => {
+    if (!open || !mounted) return;
     let rafId: number | null = null;
     const handle = () => {
       if (rafId !== null) return;
@@ -307,57 +363,63 @@ export function Tooltip({
   }, [open, mounted, measure]);
 
   const child = children;
-  const mergedTriggerRef = useMergedRef<HTMLElement>(triggerRef, child.props.ref);
+  const mergedTriggerRef = useMergedRef<HTMLElement>(triggerRef, child?.props.ref);
 
-  const childDescribedBy = child.props["aria-describedby"];
-  const describedBy = open
-    ? childDescribedBy
-      ? `${childDescribedBy} ${panelId}`
-      : panelId
-    : childDescribedBy;
+  // Anchor mode renders no trigger at all — the caller owns that element, and
+  // with it the `aria-describedby` wiring (Tooltip only guarantees the panel
+  // carries `panelId`).
+  let triggerElement: ReactElement | null = null;
+  if (child) {
+    const childDescribedBy = child.props["aria-describedby"];
+    const describedBy = open
+      ? childDescribedBy
+        ? `${childDescribedBy} ${panelId}`
+        : panelId
+      : childDescribedBy;
 
-  const triggerElement = cloneElement<TooltipTriggerProps>(child, {
-    ref: mergedTriggerRef,
-    "aria-describedby": describedBy,
-    onMouseEnter: (event) => {
-      child.props.onMouseEnter?.(event);
-      hoverRef.current = true;
-      openNow(true);
-    },
-    onMouseLeave: (event) => {
-      child.props.onMouseLeave?.(event);
-      hoverRef.current = false;
-      // Fully left both channels → dismiss suppression AND close.
-      if (!focusRef.current) {
-        suppressedRef.current = false;
-        closeNow();
-      }
-    },
-    onFocus: (event) => {
-      child.props.onFocus?.(event);
-      focusRef.current = true;
-      openNow(false);
-    },
-    onBlur: (event) => {
-      child.props.onBlur?.(event);
-      focusRef.current = false;
-      if (!hoverRef.current) {
-        suppressedRef.current = false;
-        closeNow();
-      }
-    },
-    onKeyDown: (event) => {
-      child.props.onKeyDown?.(event);
-      if (event.key !== "Escape") return;
-      // Suppress + close for BOTH open panels and pending (delayed) opens.
-      // Guarding on `open` alone would ignore Escape during the hover-delay
-      // window, letting the timer fire after the user's explicit dismiss.
-      if (open || openTimerRef.current !== null) {
-        suppressedRef.current = true;
-        closeNow();
-      }
-    },
-  });
+    triggerElement = cloneElement<TooltipTriggerProps>(child, {
+      ref: mergedTriggerRef,
+      "aria-describedby": describedBy,
+      onMouseEnter: (event) => {
+        child.props.onMouseEnter?.(event);
+        hoverRef.current = true;
+        openNow(true);
+      },
+      onMouseLeave: (event) => {
+        child.props.onMouseLeave?.(event);
+        hoverRef.current = false;
+        // Fully left both channels → dismiss suppression AND close.
+        if (!focusRef.current) {
+          suppressedRef.current = false;
+          closeNow();
+        }
+      },
+      onFocus: (event) => {
+        child.props.onFocus?.(event);
+        focusRef.current = true;
+        openNow(false);
+      },
+      onBlur: (event) => {
+        child.props.onBlur?.(event);
+        focusRef.current = false;
+        if (!hoverRef.current) {
+          suppressedRef.current = false;
+          closeNow();
+        }
+      },
+      onKeyDown: (event) => {
+        child.props.onKeyDown?.(event);
+        if (event.key !== "Escape") return;
+        // Suppress + close for BOTH open panels and pending (delayed) opens.
+        // Guarding on `open` alone would ignore Escape during the hover-delay
+        // window, letting the timer fire after the user's explicit dismiss.
+        if (open || openTimerRef.current !== null) {
+          suppressedRef.current = true;
+          closeNow();
+        }
+      },
+    });
+  }
 
   const resolvedPlacement = layout?.placement ?? placement;
 

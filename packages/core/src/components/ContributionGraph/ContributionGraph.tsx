@@ -1,8 +1,18 @@
 "use client";
 
-import { useLayoutEffect, type ComponentProps } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type FocusEvent,
+  type MouseEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { cx } from "../../utils/cx";
-import { useScrollableFocus } from "../../utils/useScrollableFocus";
+import { Tooltip } from "../Tooltip/Tooltip";
 
 // Intensity buckets driving the cell color. Internal — callers supply raw
 // counts and the component quartile-buckets them; nothing in the public API
@@ -35,7 +45,7 @@ export type ContributionGraphProps = ComponentProps<"div"> & {
   showWeekdayLabels?: boolean;
   /** Render a Less/More legend under the grid. */
   showLegend?: boolean;
-  /** Tooltip text for a cell. Defaults to "N contributions on Month Nth." — "No contributions" when count is zero, singular when count is one. */
+  /** Text for a cell — used both as the cell's accessible name and as its hover/focus tooltip. Defaults to "N contributions on Month Nth." — "No contributions" when count is zero, singular when count is one. */
   labelForDay?: (day: ContributionDay) => string;
 };
 
@@ -88,6 +98,10 @@ const LABELED_WEEKDAY_ROWS = [1, 3, 5] as const;
 
 const LEVELS: readonly ContributionLevel[] = [0, 1, 2, 3, 4];
 
+// Rows in the grid — one per weekday, mirroring the visual layout (and the
+// row axis GitHub's own graph exposes to assistive tech).
+const ROW_COUNT = 7;
+
 // Local-time date parsing — `new Date("YYYY-MM-DD")` would resolve as UTC and
 // shift day-of-week in negative-UTC-offset zones. Callers keyed the grid on
 // local-calendar days, so we mirror that.
@@ -113,7 +127,7 @@ function daysBetween(a: Date, b: Date): number {
 }
 
 // English ordinal suffix — 1st / 2nd / 3rd / 4th, with the 11th/12th/13th
-// exception band. Used by the default tooltip formatter.
+// exception band. Used by the default label formatter.
 function ordinal(n: number): string {
   const mod100 = n % 100;
   if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
@@ -143,7 +157,9 @@ function defaultLabelForDay(day: ContributionDay): string {
 
 // Shared <rect> renderer for both the grid cells and the legend swatches so
 // future changes (stroke, path switch, size-var adoption) can't drift
-// between the two. Grid cells carry a date + title; legend swatches don't.
+// between the two. Grid cells carry the grid semantics (role, accessible
+// name, column position, roving tab stop); legend swatches are decorative
+// and sit inside an aria-hidden container, so they take none of it.
 type CellProps = {
   x: number;
   y: number;
@@ -151,10 +167,28 @@ type CellProps = {
   radius: number;
   level: ContributionLevel;
   date?: string;
-  title?: string;
+  label?: string;
+  colIndex?: number;
+  tabIndex?: number;
+  onFocus?: (event: FocusEvent<SVGRectElement>) => void;
+  onBlur?: (event: FocusEvent<SVGRectElement>) => void;
+  onKeyDown?: (event: ReactKeyboardEvent<SVGRectElement>) => void;
 };
 
-function Cell({ x, y, size, radius, level, date, title }: CellProps) {
+function Cell({
+  x,
+  y,
+  size,
+  radius,
+  level,
+  date,
+  label,
+  colIndex,
+  tabIndex,
+  onFocus,
+  onBlur,
+  onKeyDown,
+}: CellProps) {
   return (
     <rect
       x={x}
@@ -166,9 +200,14 @@ function Cell({ x, y, size, radius, level, date, title }: CellProps) {
       className="ps1ui-contribution-graph__cell"
       data-level={level}
       data-date={date}
-    >
-      {title !== undefined ? <title>{title}</title> : null}
-    </rect>
+      role={date === undefined ? undefined : "gridcell"}
+      aria-label={label}
+      aria-colindex={colIndex}
+      tabIndex={tabIndex}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+    />
   );
 }
 
@@ -183,12 +222,13 @@ export function ContributionGraph({
   showLegend = true,
   labelForDay = defaultLabelForDay,
   className,
+  "aria-label": ariaLabel = "Contribution graph",
   ...rest
 }: ContributionGraphProps) {
   const step = cellSize + cellGap;
   const padTop = showMonthLabels ? MONTH_LABEL_HEIGHT : 0;
   const padLeft = showWeekdayLabels ? WEEKDAY_LABEL_WIDTH : 0;
-  const gridHeight = 7 * step - cellGap;
+  const gridHeight = ROW_COUNT * step - cellGap;
 
   // Grid layout — each day's slot is (startDow + daysSinceFirst), so a cell
   // always lands at its actual weekday even when data has gaps. numWeeks is
@@ -207,6 +247,11 @@ export function ContributionGraph({
   // Precomputed slot index per data entry so the render pass and the month-
   // label pass share one source of truth for positioning.
   let daySlots: number[] = [];
+  // Reverse lookups used by keyboard navigation: slot → data index resolves
+  // "the cell one column right / one row down", and date → data index turns
+  // an event target back into the day it represents.
+  const indexBySlot = new Map<number, number>();
+  const indexByDate = new Map<string, number>();
   if (data.length > 0) {
     const first = parseISODate(data[0]!.date);
     const last = parseISODate(data[data.length - 1]!.date);
@@ -218,7 +263,10 @@ export function ContributionGraph({
     daySlots = Array.from<number>({ length: data.length });
     for (let i = 0; i < data.length; i++) {
       const day = data[i]!;
-      daySlots[i] = startDow + daysBetween(first, parseISODate(day.date));
+      const slot = startDow + daysBetween(first, parseISODate(day.date));
+      daySlots[i] = slot;
+      indexBySlot.set(slot, i);
+      indexByDate.set(day.date, i);
       if (day.count > maxCount) maxCount = day.count;
     }
   }
@@ -241,7 +289,7 @@ export function ContributionGraph({
   let lastMonth = -1;
   for (let i = 0; i < data.length; i++) {
     const slot = daySlots[i]!;
-    const col = Math.floor(slot / 7);
+    const col = Math.floor(slot / ROW_COUNT);
     if (col === currentCol) continue;
     currentCol = col;
     const month = parseISODate(data[i]!.date).getMonth();
@@ -261,43 +309,244 @@ export function ContributionGraph({
 
   const legendSwatchesWidth = LEVELS.length * step - cellGap;
 
-  // Wrap the SVG in a horizontal-scroll container so a full year fits inside
-  // narrow viewports (mobile) instead of pushing its parent wider. Same
-  // contract as CodeBlock: `useScrollableFocus` makes the scroller keyboard-
-  // reachable ONLY while its content actually overflows, and keeps it in the
-  // tab order while it holds focus (see the hook's header). The scroller is
-  // an internal implementation detail — the caller's ref/id/style spread onto
-  // the outer wrapper via {...rest}, matching `ComponentProps<"div">`.
+  // Cells bucketed by weekday row. `data` ascends, so each bucket comes out
+  // ordered left-to-right by column already — which is exactly the DOM order
+  // a `role="row"` needs.
+  const rows: number[][] = Array.from({ length: ROW_COUNT }, () => []);
+  for (let i = 0; i < data.length; i++) {
+    rows[daySlots[i]! % ROW_COUNT]!.push(i);
+  }
+
+  // ---------------------------------------------------------------------
+  // Active-day tracking
   //
-  // The hook's `contentRef` is constrained to HTMLElement (Table uses it for
-  // its <table>); our content is an SVGSVGElement, so we mirror CodeBlock's
-  // pattern instead: manual re-measure keyed on the content's intrinsic
-  // width, which is a pure function of the layout inputs below.
-  const { scrollerRef, tabIndex, measure } = useScrollableFocus<HTMLDivElement>();
-  useLayoutEffect(() => measure(), [measure, svgWidth]);
+  // The tooltip is driven by two independent channels — pointer hover and
+  // keyboard focus — kept in separate state so releasing one doesn't cancel
+  // the other (moving the mouse away while a cell is focused must leave the
+  // focused cell's tooltip up). Hover wins when both are live: the pointer is
+  // the more recent expression of intent.
+  //
+  // `dismissedDate` implements Escape (WCAG 1.4.13 "Dismissible"): it pins
+  // the one day whose tooltip the user explicitly closed, and releases only
+  // when a DIFFERENT day becomes active — so returning to that cell later
+  // shows the tooltip again rather than leaving a permanently-silent cell
+  // behind. "A different day", specifically: releasing on any change at all
+  // would include the pointer slipping onto the month-label band or an empty
+  // slot, and a few pixels of jitter would then resurrect the very tooltip
+  // the user just dismissed.
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [focusedDate, setFocusedDate] = useState<string | null>(null);
+  const [dismissedDate, setDismissedDate] = useState<string | null>(null);
+  const activeDate = hoveredDate ?? focusedDate;
+
+  const releaseDismissalOnNewDay = useCallback((date: string | null) => {
+    if (date === null) return;
+    setDismissedDate((prev) => (prev !== null && prev !== date ? null : prev));
+  }, []);
+
+  // Roving tabindex (APG "Grid"): the grid holds exactly ONE tab stop, and
+  // arrow keys move focus between cells. `tabbableDate` is the remembered
+  // stop; it falls back to the first day whenever it points at a date the
+  // current `data` no longer contains, so a data swap can never strand the
+  // graph without a tab stop.
+  const [tabbableDate, setTabbableDate] = useState<string | null>(null);
+  const rovingDate =
+    tabbableDate !== null && indexByDate.has(tabbableDate) ? tabbableDate : (data[0]?.date ?? null);
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // `svgRef.current!` follows useScrollableFocus's precedent: React populates
+  // refs during commit, and every call site here runs from a layout effect or
+  // a DOM event on the mounted tree, so it always holds a live element. The
+  // querySelector CAN still come back null — a caller that swaps `data` while
+  // a cell is active leaves the previous day's date pointing at nothing.
+  const cellElementFor = useCallback(
+    (date: string): SVGRectElement | null =>
+      svgRef.current!.querySelector<SVGRectElement>(`[data-date="${CSS.escape(date)}"]`),
+    [],
+  );
+
+  // The Tooltip anchors to a live DOM node rather than a date string, so it
+  // is resolved here (post-commit, when the cell is guaranteed mounted) and
+  // held in state. Re-resolving on every `data` change is what keeps a
+  // detached node — whose getBoundingClientRect() is an all-zero box at the
+  // viewport origin — from ever reaching Tooltip.
+  const [anchor, setAnchor] = useState<Element | null>(null);
+  useLayoutEffect(() => {
+    setAnchor(activeDate === null ? null : cellElementFor(activeDate));
+  }, [activeDate, data, cellElementFor]);
+
+  const open = anchor !== null && activeDate !== null && activeDate !== dismissedDate;
+
+  // Escape is bound on the document, not on the grid, because the tooltip can
+  // be open from hover alone — and a hovering user has focus somewhere else
+  // entirely, so a keydown handler on the cells would never see the key.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDismissedDate(activeDate);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, activeDate]);
+
+  // Hover is hit-tested by POINTER COORDINATE, not by event target, and is
+  // bound on the SVG rather than per cell.
+  //
+  // Each day owns a whole `step × step` block — its rect plus the gap that
+  // follows it — so the grid has no dead pixels. Target-based hit testing
+  // reported "background" for the `cellGap` between two cells, and since
+  // mousemove samples every ~10ms a normal sweep lands in that gap most
+  // crossings: the tooltip would blink off and back on between every pair of
+  // days. It also widens the effective hover target from `cellSize` to `step`,
+  // which matters at the 11px default.
+  //
+  // Focus and keyboard are bound per cell instead — those events can only ever
+  // originate from a cell, so delegation would buy nothing and cost a "was
+  // that really a cell?" guard on every call.
+  const dayAtPointer = (event: MouseEvent<SVGSVGElement>): string | null => {
+    const box = svgRef.current!.getBoundingClientRect();
+    // The viewBox is 1:1 with the SVG's intrinsic size, but a consumer
+    // stylesheet may scale the element — normalising through the rendered box
+    // keeps the mapping honest either way.
+    const x = ((event.clientX - box.left) * svgWidth) / box.width - padLeft;
+    const y = ((event.clientY - box.top) * svgHeight) / box.height - padTop;
+    // The month-label band (negative y) has to be rejected outright: row -1 of
+    // column 1 is slot 6, a real cell, so it would wrap into the previous
+    // column's bottom row. The weekday-label band (negative x) needs no such
+    // guard — its slots come out negative and simply miss the map.
+    if (y < 0) return null;
+    const index = indexBySlot.get(Math.floor(x / step) * ROW_COUNT + Math.floor(y / step));
+    return index === undefined ? null : data[index]!.date;
+  };
+
+  const handleMouseMove = (event: MouseEvent<SVGSVGElement>) => {
+    const date = dayAtPointer(event);
+    if (date === hoveredDate) return;
+    setHoveredDate(date);
+    releaseDismissalOnNewDay(date);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredDate(null);
+  };
+
+  const handleCellFocus = (date: string) => {
+    setFocusedDate(date);
+    setTabbableDate(date);
+    releaseDismissalOnNewDay(date);
+  };
+
+  const handleCellBlur = (event: FocusEvent<SVGRectElement>) => {
+    // Arrowing between cells fires blur-then-focus as two separate tasks;
+    // clearing unconditionally would tear the tooltip down and rebuild it on
+    // every step. Focus landing on another cell of THIS grid is handled by
+    // that cell's own focus event instead — scoped by containment, because a
+    // bare `data-date` check would also match a second ContributionGraph on
+    // the page and leave this one's tooltip stuck open forever.
+    const next = event.relatedTarget;
+    if (next instanceof Element && svgRef.current!.contains(next)) return;
+    setFocusedDate(null);
+  };
+
+  // Walks one step at a time in (column, row) space until it finds a day or
+  // runs off the grid, so a gap in the data is stepped over rather than
+  // stopping navigation dead. Vertical moves stay inside their column and
+  // horizontal moves inside their row — wrapping would silently jump the
+  // user a week forward or back.
+  const seek = (col: number, row: number, dCol: number, dRow: number): number | undefined => {
+    let c = col + dCol;
+    let r = row + dRow;
+    while (c >= 0 && c < numWeeks && r >= 0 && r < ROW_COUNT) {
+      const found = indexBySlot.get(c * ROW_COUNT + r);
+      if (found !== undefined) return found;
+      c += dCol;
+      r += dRow;
+    }
+    return undefined;
+  };
+
+  const handleCellKeyDown = (event: ReactKeyboardEvent<SVGRectElement>, index: number) => {
+    const slot = daySlots[index]!;
+    const col = Math.floor(slot / ROW_COUNT);
+    const row = slot % ROW_COUNT;
+    const rowCells = rows[row]!;
+
+    let next: number | undefined;
+    switch (event.key) {
+      case "ArrowRight":
+        next = seek(col, row, 1, 0);
+        break;
+      case "ArrowLeft":
+        next = seek(col, row, -1, 0);
+        break;
+      case "ArrowDown":
+        next = seek(col, row, 0, 1);
+        break;
+      case "ArrowUp":
+        next = seek(col, row, 0, -1);
+        break;
+      // APG: Home/End jump within the row, Ctrl+Home/End to the whole grid's
+      // first/last cell.
+      case "Home":
+        next = event.ctrlKey ? 0 : rowCells[0];
+        break;
+      case "End":
+        next = event.ctrlKey ? data.length - 1 : rowCells[rowCells.length - 1];
+        break;
+      default:
+        return;
+    }
+    // preventDefault unconditionally for the keys we claim: letting ArrowDown
+    // scroll the page (or Home jump to the document top) after the grid has
+    // decided the move is a no-op would read as the graph losing the key.
+    event.preventDefault();
+    if (next === undefined) return;
+    const nextDate = data[next]!.date;
+    setTabbableDate(nextDate);
+    cellElementFor(nextDate)?.focus();
+  };
+
+  const isEmpty = data.length === 0;
+
+  // Same formatter, same string, for both channels — the tooltip a sighted
+  // user reads and the accessible name a screen-reader user hears can never
+  // drift apart.
+  const activeIndex = activeDate === null ? undefined : indexByDate.get(activeDate);
+  const activeLabel = activeIndex === undefined ? "" : labelForDay(data[activeIndex]!);
 
   return (
-    <div
-      aria-label="Contribution graph"
-      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- role="img" is the ARIA idiom for SVG data-viz wrappers; the native <img> tag only accepts a `src` URL and cannot contain the SVG grid + HTML legend this component composes.
-      role="img"
-      {...rest}
-      className={cx("ps1ui-contribution-graph", className)}
-    >
-      <div
-        className="ps1ui-contribution-graph__scroller"
-        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- axe scrollable-region-focusable requires the scroller be keyboard-reachable when its SVG overflows; useScrollableFocus gates this on measured overflow so narrow graphs stay out of the tab order.
-        tabIndex={tabIndex}
-        ref={scrollerRef}
-        onBlur={measure}
-      >
+    <div {...rest} className={cx("ps1ui-contribution-graph", className)}>
+      {/* The scroller keeps a full year inside narrow viewports (mobile)
+          instead of pushing its parent wider — same contract as Table and
+          CodeBlock. Unlike those two it needs no tabIndex of its own: the
+          grid's roving tab stop means the scrollable region always contains
+          a focusable cell, which is what axe's scrollable-region-focusable
+          actually asks for, and arrowing between cells scrolls them into
+          view natively. */}
+      <div className="ps1ui-contribution-graph__scroller">
+        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- the SVG does carry an interactive role (`grid`, or `img` only when there is nothing to navigate); the rule cannot see through the conditional expression on `role` below. */}
         <svg
+          ref={svgRef}
           width={svgWidth}
           height={svgHeight}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="ps1ui-contribution-graph__svg"
-          aria-hidden="true"
+          // An empty graph is not a grid — `role="grid"` with no rows is
+          // malformed, and there is nothing to navigate. It degrades to the
+          // labelled image the whole component used to be.
+          role={isEmpty ? "img" : "grid"}
+          aria-label={ariaLabel}
+          aria-rowcount={isEmpty ? undefined : ROW_COUNT}
+          aria-colcount={isEmpty ? undefined : numWeeks}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
+          {/* Month and weekday labels are aria-hidden: every cell's accessible
+              name already spells out its full date, so exposing them again as
+              headers would make screen readers announce the month twice. They
+              also must stay out of the accessibility tree for `role="grid"`,
+              which only permits rows as children. */}
           {showMonthLabels &&
             monthLabels.map((label) => (
               <text
@@ -305,6 +554,7 @@ export function ContributionGraph({
                 x={label.x}
                 y={MONTH_LABEL_HEIGHT - 5}
                 className="ps1ui-contribution-graph__month"
+                aria-hidden="true"
               >
                 {label.text}
               </text>
@@ -317,27 +567,46 @@ export function ContributionGraph({
                 y={padTop + row * step + cellSize - 1}
                 textAnchor="end"
                 className="ps1ui-contribution-graph__weekday"
+                aria-hidden="true"
               >
                 {weekdayNames[row]!}
               </text>
             ))}
-          {data.map((day, i) => {
-            const slot = daySlots[i]!;
-            const col = Math.floor(slot / 7);
-            const row = slot % 7;
-            return (
-              <Cell
-                key={day.date}
-                x={padLeft + col * step}
-                y={padTop + row * step}
-                size={cellSize}
-                radius={cellRadius}
-                level={levelFor(day.count, maxCount)}
-                date={day.date}
-                title={labelForDay(day)}
-              />
-            );
-          })}
+          {rows.map((cells, row) =>
+            // A weekday with no days in range contributes no row at all —
+            // `aria-rowindex` on the rows that do exist carries the position,
+            // which is exactly the case aria-rowindex exists for.
+            cells.length === 0 ? null : (
+              <g
+                key={row}
+                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- `<tr>` is HTML; inside an <svg> the only grouping element is <g>, so the ARIA role is the sole way to express a grid row here.
+                role="row"
+                aria-rowindex={row + 1}
+              >
+                {cells.map((i) => {
+                  const day = data[i]!;
+                  const col = Math.floor(daySlots[i]! / ROW_COUNT);
+                  return (
+                    <Cell
+                      key={day.date}
+                      x={padLeft + col * step}
+                      y={padTop + row * step}
+                      size={cellSize}
+                      radius={cellRadius}
+                      level={levelFor(day.count, maxCount)}
+                      date={day.date}
+                      label={labelForDay(day)}
+                      colIndex={col + 1}
+                      tabIndex={day.date === rovingDate ? 0 : -1}
+                      onFocus={() => handleCellFocus(day.date)}
+                      onBlur={handleCellBlur}
+                      onKeyDown={(event) => handleCellKeyDown(event, i)}
+                    />
+                  );
+                })}
+              </g>
+            ),
+          )}
         </svg>
       </div>
       {showLegend && (
@@ -363,6 +632,12 @@ export function ContributionGraph({
           <span className="ps1ui-contribution-graph__legend-label">More</span>
         </div>
       )}
+      {/* Anchor mode: the "trigger" is whichever of N cells is active, which
+          is not a single element Tooltip could clone. The panel is
+          aria-hidden because its text is verbatim the active cell's own
+          accessible name — wiring it up as a description instead would make
+          a screen reader read every day twice. */}
+      <Tooltip anchor={anchor} open={open} content={activeLabel} aria-hidden="true" />
     </div>
   );
 }

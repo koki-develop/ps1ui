@@ -13,10 +13,13 @@
      lets the scroller shrink below the SVG's intrinsic width inside a flex
      column (flex items default to `min-width: auto` = min-content, which
      equals the SVG's intrinsic size and would defeat the scroll).
-   - Focus ring on the scroller reuses the shared box-shadow token so
-     forced-colors substitution (see the grouped rule in
-     src/styles/components.css) can restore a real outline in high-contrast
-     mode. */
+   - Focus lands on a CELL, never on the scroller: the grid runs a roving
+     tabindex, so the scrollable region always holds a focusable descendant
+     and needs no tab stop of its own. That also rules out the shared
+     box-shadow focus token — box-shadow does not paint on SVG shapes — so
+     the ring is drawn with the cell's own `stroke` instead, and this
+     component is deliberately absent from the grouped forced-colors rule in
+     src/styles/components.css. */
 
 .ps1ui-contribution-graph {
   display: flex;
@@ -39,11 +42,18 @@
 .ps1ui-contribution-graph__scroller {
   overflow-x: auto;
   min-width: 0;
-}
-
-.ps1ui-contribution-graph__scroller:focus-visible {
-  outline: none;
-  box-shadow: var(--ps1ui-shadow-focus-ring);
+  /* Room for the focus ring's outer half. `overflow-x: auto` forces the
+     computed `overflow-y` to `auto` as well (CSS Overflow: a `visible` axis
+     paired with a non-visible one computes to `auto`), which makes this a
+     scroll container on BOTH axes — and a scroll container clips at its
+     PADDING edge, discarding anything past its start edges with no way to
+     scroll to it. The cell focus stroke straddles the rect's edge, so with the
+     labels switched off (padLeft / padTop are then 0) the leftmost column's
+     and top row's rings would be shaved. Padding reserves that pixel inside
+     the clip region. A negative margin to cancel the 2px of growth is NOT the
+     answer — it would push the scroller's edges 1px outside the wrapper it is
+     supposed to stay within (see "wrapper hugs its content" in the tests). */
+  padding: 1px;
 }
 
 .ps1ui-contribution-graph__svg {
@@ -81,6 +91,35 @@
 }
 .ps1ui-contribution-graph__cell[data-level="4"] {
   fill: var(--ps1ui-contribution-l4);
+}
+
+/* Focus ring. `stroke` rather than `outline`/`box-shadow`: neither paints
+   reliably on SVG shapes across engines, while `stroke` is the shape's own
+   native ink. `overflow: visible` on the SVG (above) plus the scroller's
+   1px padding are what keep the stroke's outer half from being clipped.
+
+   Deliberately `:focus`, not `:focus-visible`. A cell is click-focusable, and
+   the tooltip opens from the focus channel — so a mouse user who clicks a cell
+   and then moves the pointer away would otherwise be left looking at a tooltip
+   floating over a cell with no indication of why. Showing the ring for pointer
+   focus too keeps the tooltip attributable, and matches how a grid widget is
+   expected to mark its current cell (the roving tabindex lives there now). */
+.ps1ui-contribution-graph__cell:focus {
+  outline: none;
+  stroke: var(--ps1ui-color-fg);
+  stroke-width: 2px;
+}
+
+/* Forced colors substitutes `fill` and `stroke` from the same system palette,
+   which would repaint the focused cell and its ring in one identical colour
+   and erase the indicator. `Highlight` is the system's own "this is the
+   focused thing" ink, so it is guaranteed to stand apart from the forced
+   cell fill. Geometry (not colour) is what src/styles/forced-colors.test.tsx
+   asserts, per that file's convention. */
+@media (forced-colors: active) {
+  .ps1ui-contribution-graph__cell:focus {
+    stroke: Highlight;
+  }
 }
 
 .ps1ui-contribution-graph__legend {

@@ -26,6 +26,7 @@ import { server } from "vitest/browser";
 import { Button } from "../components/Button/Button";
 import { Checkbox } from "../components/Checkbox/Checkbox";
 import { CodeBlock } from "../components/CodeBlock/CodeBlock";
+import { ContributionGraph } from "../components/ContributionGraph/ContributionGraph";
 import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
 import { Radio } from "../components/Radio/Radio";
@@ -77,6 +78,42 @@ describe("forced-colors adjustments", () => {
     expect(s.borderTopStyle).toBe("solid");
     expect(s.width).toBe("8px");
     expect(s.height).toBe("8px");
+  });
+
+  test("ContributionGraph focus ring survives as a stroke distinct from the cell fill", async () => {
+    // The grid's focus ring can't join the grouped outline rule: neither
+    // `outline` nor `box-shadow` paints on an SVG shape, so the indicator is
+    // the rect's own `stroke`. Forced colors substitutes `fill` and `stroke`
+    // from the SAME system palette, which would repaint cell and ring in one
+    // identical ink and erase the indicator — hence the `Highlight` override
+    // in ContributionGraph.css.
+    //
+    // Keyed on `:focus`, not `:focus-visible` (see the CSS comment: a cell is
+    // click-focusable and the tooltip opens from focus, so the ring has to show
+    // for pointer focus too). That also means no Tab is involved and no WebKit
+    // skip is needed here, unlike every case in FOCUS_CASES below.
+    //
+    // A single day, no labels, no legend: exactly one cell in the document.
+    await render(
+      <ContributionGraph
+        data={[{ date: "2025-01-05", count: 3 }]}
+        showMonthLabels={false}
+        showWeekdayLabels={false}
+        showLegend={false}
+      />,
+    );
+    const target = ".ps1ui-contribution-graph__cell";
+    await withPseudoState(target, ["focus"], async () => {
+      const matches = document.querySelectorAll<HTMLElement>(target);
+      expect(matches.length).toBe(1);
+      const s = getComputedStyle(matches[0]!);
+      expect(s.strokeWidth).toBe("2px");
+      // The one place this file compares colours — and it compares them to
+      // each other, never to a literal. "The ring is not the same ink as the
+      // thing it rings" is the whole invariant, and it holds on any system
+      // palette; asserting `Highlight`'s resolved value would not.
+      expect(s.stroke).not.toBe(s.fill);
+    });
   });
 
   // One case per component the grouped focus rule in styles/components.css
