@@ -1,0 +1,57 @@
+/* Divider — thin rule separating adjacent content. Renders as a native <hr>
+   so the implicit ARIA role (`separator`) is exposed without a manual
+   `role=` attribute; the vertical variant adds `aria-orientation="vertical"`
+   from Divider.tsx (the separator role's default is horizontal).
+
+   Base zeroes the border on all four sides so orientation-specific rules
+   can opt one side back in — expressed as the `border: 0 solid <color>`
+   shorthand to match Card / Code / Input / Tab / TabList's border
+   declarations. `border-style: solid` is set once by that shorthand and
+   only re-declared by the `--dashed` / `--dotted` variant classes;
+   `--solid` is the base default and therefore has no dedicated rule (the
+   class is still emitted from Divider.tsx as a symmetric state marker so
+   consumers can target it via CSS if they want).
+
+   Border-color is taken from `--ps1ui-color-border`, the same token used
+   by Card / Input / Tab underlines, so a divider reads as one system with
+   the surrounding chrome. `color: inherit` and `background: transparent`
+   are defensive — some UAs paint <hr> with a coloured background or a
+   distinct `color` value that would show through the border style.
+
+   The horizontal rule fills its container's inline size (100 %) with a
+   zero height, matching the classic <hr> shape.
+
+   The vertical rule sits in the cross-axis of a flex row via
+   `align-self: stretch`, taking its height from the parent's cross-axis
+   size. `width: 0` keeps the flex item content-less; the visible width
+   comes from the 1 px left border. Outside a flex/grid parent with a
+   resolved cross-axis size the rule collapses to zero height — that's the
+   documented behaviour, consistent with every mainstream vertical-divider
+   implementation. Consumers who need a fixed height in a block context set
+   `style={{ height: N }}` themselves. */
+.ps1ui-divider {
+  border: 0 solid var(--ps1ui-color-border);
+  color: inherit;
+  background: transparent;
+  margin: 0;
+}
+
+.ps1ui-divider--horizontal {
+  width: 100%;
+  height: 0;
+  border-top-width: 1px;
+}
+
+.ps1ui-divider--vertical {
+  align-self: stretch;
+  width: 0;
+  height: auto;
+  border-left-width: 1px;
+}
+
+.ps1ui-divider--dashed {
+  border-style: dashed;
+}
+.ps1ui-divider--dotted {
+  border-style: dotted;
+}
