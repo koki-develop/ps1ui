@@ -44,6 +44,20 @@ const BREAKPOINTS_NON_BASE = ["sm", "md", "lg", "xl"] as const satisfies readonl
   "base"
 >[];
 
+// Expected computed color per variant: the --ps1ui-color-* foreground
+// tokens of tokens.css resolved to rgb(). Kept as a table for the same
+// reason as FONT_SIZE_PX below — it pins the variant → token mapping in
+// Text.css, so pointing a variant at the wrong token fails here and not
+// only in VRT.
+const VARIANT_COLOR = {
+  body: "rgb(199, 213, 223)", // --ps1ui-color-fg        #c7d5df
+  muted: "rgb(139, 152, 165)", // --ps1ui-color-fg-muted  #8b98a5
+  subtle: "rgb(122, 133, 147)", // --ps1ui-color-fg-subtle #7a8593
+  primary: "rgb(126, 231, 135)", // --ps1ui-color-primary   #7ee787
+  accent: "rgb(255, 166, 87)", // --ps1ui-color-accent    #ffa657
+  danger: "rgb(255, 125, 141)", // --ps1ui-color-danger    #ff7d8d
+} as const satisfies Record<TextVariant, string>;
+
 // Expected computed font-size per token: the rem values of
 // --ps1ui-font-size-* in tokens.css resolved at the test browser's default
 // 16px root. Kept as a table so any font-size token drift trips these
@@ -298,6 +312,83 @@ describe("Text", () => {
       const el = screen.getByTestId("t").element() as HTMLElement;
       expect(el.style.letterSpacing).toBe("0.05em");
       expect(el.style.getPropertyValue("--_text-size-base")).toBe(SIZE_VAR.lg);
+    });
+  });
+
+  // The `RED` wrapper in the cases below is load-bearing wherever the
+  // expectation is the body token: this file imports styles.css, whose
+  // base.css sets `html { color: var(--ps1ui-color-fg) }`, so an element
+  // that resolved its color purely by inheritance would land on the body
+  // token anyway and the assertion would pass vacuously. Contrasting the
+  // ancestor forces the component's own rules to do the work.
+  describe("computed styles: variant colors", () => {
+    const RED = "rgb(255, 0, 0)";
+
+    test.for(VARIANTS.map((variant) => ({ variant, expected: VARIANT_COLOR[variant] })))(
+      "variant=$variant → color resolves to $expected",
+      async ({ variant, expected }) => {
+        const screen = await render(
+          <div style={{ color: RED }}>
+            <Text variant={variant} data-testid="t">
+              x
+            </Text>
+          </div>,
+        );
+        const el = screen.getByTestId("t").element() as HTMLElement;
+        expect(getComputedStyle(el).color).toBe(expected);
+      },
+    );
+
+    test("the base class alone carries the body color (defensive floor)", async () => {
+      // `.ps1ui-text` is reachable without a variant class two ways: a
+      // consumer applying it to their own markup, and an untyped caller
+      // passing a `variant` string matching no modifier. Both land on the
+      // base rule, which keeps its own `color` — see Text.css. Raw markup
+      // here on purpose: the component can't produce this state, which is
+      // exactly the point.
+      const screen = await render(
+        <div style={{ color: RED }}>
+          <p className="ps1ui-text" data-testid="raw">
+            x
+          </p>
+          <p className="ps1ui-text ps1ui-text--nonsense" data-testid="unknown-variant">
+            x
+          </p>
+        </div>,
+      );
+      for (const testId of ["raw", "unknown-variant"]) {
+        const el = screen.getByTestId(testId).element() as HTMLElement;
+        expect(getComputedStyle(el).color).toBe(VARIANT_COLOR.body);
+      }
+    });
+
+    test("a variant modifier still wins over the base color", async () => {
+      // The base `color` and the modifiers share specificity — the modifiers
+      // only win because they are declared after the base rule. A reorder of
+      // Text.css would silently pin every Text to the body token.
+      const screen = await render(
+        <Text variant="danger" data-testid="t">
+          x
+        </Text>,
+      );
+      const el = screen.getByTestId("t").element() as HTMLElement;
+      expect(getComputedStyle(el).color).toBe(VARIANT_COLOR.danger);
+    });
+
+    test("a nested Text does not inherit the outer Text's variant color", async () => {
+      // `color` is an inherited property, so a nested Text inside a
+      // `variant="danger"` Text would pick the danger token up for free.
+      // Every Text emitting its own variant class is what prevents that.
+      // (`as="span"` keeps the nesting valid HTML — no React warning.)
+      const screen = await render(
+        <Text variant="danger" data-testid="outer">
+          <Text as="span" data-testid="inner">
+            x
+          </Text>
+        </Text>,
+      );
+      const inner = screen.getByTestId("inner").element() as HTMLElement;
+      expect(getComputedStyle(inner).color).toBe(VARIANT_COLOR.body);
     });
   });
 
