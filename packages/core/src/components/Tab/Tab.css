@@ -1,0 +1,74 @@
+.ps1ui-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ps1ui-color-fg-muted);
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  padding: var(--ps1ui-space-sm) var(--ps1ui-space-md);
+  /* Transparent border on every edge so the indicator swap on activation
+     doesn't shift the tab by 1px on the perpendicular axis. Only the axis
+     facing the tablist's own border is repainted; the other three stay
+     transparent. */
+  border: 1px solid transparent;
+  transition:
+    color var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+}
+
+.ps1ui-tab:hover:not(:disabled) {
+  color: var(--ps1ui-color-fg);
+}
+
+/* Box-shadow focus ring — .ps1ui-tab:focus-visible is registered in
+   styles/components.css's grouped forced-colors selector so the ring falls
+   back to a real outline in high-contrast mode. */
+.ps1ui-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-tab[aria-selected="true"] {
+  color: var(--ps1ui-color-primary);
+}
+
+/* Selected + hover stays on the primary hue — the base `:hover` rule above
+   would otherwise repaint the label back to fg because its `:not(:disabled)`
+   pseudo edges out the attribute selector on specificity, briefly reading as
+   "the active tab lost its accent". Matches the Radio pattern where
+   `:checked:hover` shifts to primary-hover rather than falling back to fg. */
+.ps1ui-tab[aria-selected="true"]:hover:not(:disabled) {
+  color: var(--ps1ui-color-primary-hover);
+}
+
+/* Selected-state indicator. Horizontal tabs get a bottom border that overlaps
+   the tablist's own 1px bottom line — `margin-bottom: -1px` pulls the tab
+   down by exactly that stroke so the indicator sits ON the tablist border
+   rather than one row below it. Vertical tabs do the same on the right edge. */
+.ps1ui-tab-list--horizontal .ps1ui-tab {
+  margin-bottom: -1px;
+}
+.ps1ui-tab-list--horizontal .ps1ui-tab[aria-selected="true"] {
+  border-bottom-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-tab-list--vertical .ps1ui-tab {
+  margin-right: -1px;
+  justify-content: flex-start;
+}
+.ps1ui-tab-list--vertical .ps1ui-tab[aria-selected="true"] {
+  border-right-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-tab:disabled {
+  cursor: not-allowed;
+  color: var(--ps1ui-color-fg-subtle);
+}

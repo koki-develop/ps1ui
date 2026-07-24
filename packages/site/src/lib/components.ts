@@ -153,6 +153,13 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Semantic <table> with box-drawing-style grid borders and horizontal scrolling.",
         childComponents: ["Thead", "Tbody", "Tr", "Th", "Td"],
       },
+      {
+        slug: "tabs",
+        name: "Tabs",
+        description:
+          "Composable tabs with roving keyboard focus, automatic activation, and horizontal or vertical layout.",
+        childComponents: ["TabList", "Tab", "TabPanel"],
+      },
     ],
   },
 ];

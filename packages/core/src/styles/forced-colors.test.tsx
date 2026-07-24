@@ -29,6 +29,10 @@ import { CodeBlock } from "../components/CodeBlock/CodeBlock";
 import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
 import { Radio } from "../components/Radio/Radio";
+import { Tab } from "../components/Tab/Tab";
+import { TabList } from "../components/TabList/TabList";
+import { TabPanel } from "../components/TabPanel/TabPanel";
+import { Tabs } from "../components/Tabs/Tabs";
 import { Table } from "../components/Table/Table";
 import { Tbody } from "../components/Tbody/Tbody";
 import { Td } from "../components/Td/Td";
@@ -157,6 +161,40 @@ describe("forced-colors adjustments", () => {
             </Tbody>
           </Table>
         </div>
+      ),
+    },
+    {
+      name: "Tab",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      // Focus lands on the selected tab (the roving-tabindex Tab-stop). Only
+      // one Tab is rendered so the single-match selector guard passes.
+      selector: ".ps1ui-tab",
+      ui: (
+        <Tabs defaultValue="a">
+          <TabList aria-label="fixture">
+            <Tab value="a" data-testid="fc-target">
+              Tab
+            </Tab>
+          </TabList>
+        </Tabs>
+      ),
+    },
+    {
+      name: "TabPanel",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      // TabPanel is non-focusable by default but auto-adds tabindex=0 when it
+      // has no focusable descendants — plain text content triggers that path,
+      // so the panel becomes reachable via Tab and :focus-visible fires.
+      // Rendered standalone (no <Tabs>/Tab) so no upstream Tab-stop competes;
+      // the pseudo-state helper's "first tabbable is the target" invariant
+      // needs the panel to be the very first tab stop in the document.
+      selector: ".ps1ui-tab-panel",
+      ui: (
+        <TabPanel value="a" aria-label="fixture panel" data-testid="fc-target">
+          plain content
+        </TabPanel>
       ),
     },
   ] as const satisfies ReadonlyArray<{

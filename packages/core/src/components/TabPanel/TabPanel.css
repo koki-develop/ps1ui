@@ -1,0 +1,21 @@
+.ps1ui-tab-panel {
+  padding: var(--ps1ui-space-md) 0;
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.6;
+}
+
+/* Vertical-orientation modifier applied by TabPanel itself (from Tabs
+   context) instead of a `.ps1ui-tab-list--vertical ~ .ps1ui-tab-panel`
+   sibling rule — the sibling form silently fell back to horizontal padding
+   whenever a consumer wrapped TabPanel in an intermediate element (router,
+   animation host, etc.). Class-on-the-element travels through any wrapper. */
+.ps1ui-tab-panel--vertical {
+  padding: 0 var(--ps1ui-space-md);
+}
+
+.ps1ui-tab-panel:focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
