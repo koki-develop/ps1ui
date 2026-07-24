@@ -48,7 +48,11 @@ export const NoLabels: Story = {
   },
 };
 
-export const CustomTooltip: Story = {
+// `labelForDay` is one string used twice: the hover/focus tooltip a sighted
+// reader sees, and the accessible name each grid cell exposes. Overriding it
+// moves both together, which is why the story is named for the label rather
+// than for the tooltip.
+export const CustomDayLabel: Story = {
   args: {
     data: QUARTER,
     labelForDay: (day) =>

@@ -1,6 +1,8 @@
 import "../../styles/styles.css";
 
-import { describe, expect, test } from "vitest";
+import { useState } from "react";
+import { describe, expect, test, vi } from "vitest";
+import { page, userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import {
@@ -41,6 +43,58 @@ const STARTS_WEDNESDAY: ContributionDay[] = [
   { date: "2025-01-11", count: 4 }, // Sat
 ];
 
+// SAMPLE is 21 contiguous days starting on a Sunday, so its slot arithmetic is
+// trivial: data index i sits at col=floor(i/7), row=i%7. The keyboard tests
+// below lean on that — e.g. Jan 5 (i=0) is col 0/row 0, Jan 12 (i=7) is the
+// cell directly to its right, Jan 6 (i=1) the one directly below.
+const JAN_05 = "2025-01-05"; // col 0, row 0 — first day
+const JAN_06 = "2025-01-06"; // col 0, row 1 — one below JAN_05
+const JAN_12 = "2025-01-12"; // col 1, row 0 — one right of JAN_05
+const JAN_19 = "2025-01-19"; // col 2, row 0 — last day of row 0
+const JAN_25 = "2025-01-25"; // col 2, row 6 — last day overall
+
+// The <svg> carries the grid role and its accessible name; the wrapper <div>
+// is plain layout chrome.
+function grid(wrapper: Element): Element {
+  return wrapper.querySelector("svg.ps1ui-contribution-graph__svg")!;
+}
+
+function cellFor(wrapper: Element, date: string): SVGRectElement {
+  return wrapper.querySelector<SVGRectElement>(`[data-date="${date}"]`)!;
+}
+
+// The panel is portaled to <body>, so it is never inside the render container.
+function tooltipPanel(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('[role="tooltip"]');
+}
+
+function focusedDate(): string | null {
+  return document.activeElement?.getAttribute("data-date") ?? null;
+}
+
+// Hover is hit-tested purely from clientX/clientY, so a dispatched mousemove at
+// an exact coordinate is both sufficient and far more precise than aiming at an
+// element's centre — which is the only thing `userEvent.hover` can do, and
+// which WebKit won't do at all for an SVG <text>. Tests that care about a
+// specific POINT (the inter-cell gap, the label band) use this; tests that just
+// need "the pointer is on this cell" use the real `userEvent.hover`.
+function movePointerTo(wrapper: Element, clientX: number, clientY: number): void {
+  grid(wrapper).dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX, clientY }));
+}
+
+function centerOf(el: Element): [number, number] {
+  const box = el.getBoundingClientRect();
+  return [box.left + box.width / 2, box.top + box.height / 2];
+}
+
+// A point inside the month-label band — above the grid origin, so it must
+// resolve to "no day". padLeft is 28 and padTop 16 at default sizes (the same
+// constants the layout-math tests above pin).
+function monthLabelPoint(wrapper: Element): [number, number] {
+  const box = grid(wrapper).getBoundingClientRect();
+  return [box.left + 28 + 5, box.top + 5];
+}
+
 describe("ContributionGraph", () => {
   describe("rendering", () => {
     test("renders a <div> wrapper containing a scroller with an <svg> grid", async () => {
@@ -67,9 +121,11 @@ describe("ContributionGraph", () => {
       const screen = await render(
         <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
       );
-      const cells = Array.from(
-        screen.getByTestId("g").element().querySelectorAll(".ps1ui-contribution-graph__cell"),
-      );
+      const wrapper = screen.getByTestId("g").element();
+      // Cells are grouped into weekday rows, so DOM order is row-major (every
+      // Sunday, then every Monday, …) rather than data order — each day is
+      // looked up by its own date instead of by array position.
+      //
       // Data has counts 0..20 → maxCount=20. Quartile bucketing:
       //   count=0                    → level 0
       //   ceil((count/20)*4) in 1..4 → level for count>0
@@ -78,9 +134,22 @@ describe("ContributionGraph", () => {
       // count=11 → 3, count=15 → 3, count=16 → 4, count=20 → 4.
       const expected = [0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4] as const;
       for (let i = 0; i < SAMPLE.length; i++) {
-        expect(cells[i]!.getAttribute("data-date")).toBe(SAMPLE[i]!.date);
-        expect(cells[i]!.getAttribute("data-level")).toBe(String(expected[i]));
+        expect(cellFor(wrapper, SAMPLE[i]!.date).getAttribute("data-level")).toBe(
+          String(expected[i]),
+        );
       }
+    });
+
+    test("groups cells into weekday rows (DOM order is row-major, not data order)", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const dates = Array.from(
+        screen.getByTestId("g").element().querySelectorAll("[data-date]"),
+      ).map((c) => c.getAttribute("data-date"));
+      // First three are the three Sundays, not Jan 5 / 6 / 7.
+      expect(dates.slice(0, 3)).toEqual([JAN_05, JAN_12, JAN_19]);
+      expect(dates.length).toBe(SAMPLE.length);
     });
 
     test("all-zero data renders every cell at level 0", async () => {
@@ -94,7 +163,7 @@ describe("ContributionGraph", () => {
       expect(new Set(levels)).toEqual(new Set(["0"]));
     });
 
-    test("default tooltip: plural, singular, and no-activity phrasings", async () => {
+    test("default label: plural, singular, and no-activity phrasings", async () => {
       const days: ContributionDay[] = [
         { date: "2025-11-10", count: 10 }, // plural
         { date: "2025-11-11", count: 1 }, // singular
@@ -104,13 +173,13 @@ describe("ContributionGraph", () => {
         <ContributionGraph data={days} data-testid="g" showLegend={false} />,
       );
       const wrapper = screen.getByTestId("g").element();
-      expect(wrapper.querySelector('[data-date="2025-11-10"] title')?.textContent).toBe(
+      expect(wrapper.querySelector('[data-date="2025-11-10"]')?.getAttribute("aria-label")).toBe(
         "10 contributions on November 10th.",
       );
-      expect(wrapper.querySelector('[data-date="2025-11-11"] title')?.textContent).toBe(
+      expect(wrapper.querySelector('[data-date="2025-11-11"]')?.getAttribute("aria-label")).toBe(
         "1 contribution on November 11th.",
       );
-      expect(wrapper.querySelector('[data-date="2025-11-12"] title')?.textContent).toBe(
+      expect(wrapper.querySelector('[data-date="2025-11-12"]')?.getAttribute("aria-label")).toBe(
         "No contributions on November 12th.",
       );
     });
@@ -133,11 +202,11 @@ describe("ContributionGraph", () => {
       const screen = await render(
         <ContributionGraph data={[{ date, count: 1 }]} data-testid="g" showLegend={false} />,
       );
-      const cell = screen.getByTestId("g").element().querySelector(`[data-date="${date}"] title`);
-      expect(cell?.textContent).toBe(expected);
+      const cell = screen.getByTestId("g").element().querySelector(`[data-date="${date}"]`);
+      expect(cell?.getAttribute("aria-label")).toBe(expected);
     });
 
-    test("labelForDay overrides the default tooltip", async () => {
+    test("labelForDay overrides the default label", async () => {
       const screen = await render(
         <ContributionGraph
           data={[{ date: "2025-01-05", count: 3 }]}
@@ -150,7 +219,7 @@ describe("ContributionGraph", () => {
         .getByTestId("g")
         .element()
         .querySelector(".ps1ui-contribution-graph__cell");
-      expect(cell?.querySelector("title")?.textContent).toBe("2025-01-05::3");
+      expect(cell?.getAttribute("aria-label")).toBe("2025-01-05::3");
     });
 
     test("renders legend swatches for every level 0–4", async () => {
@@ -518,10 +587,14 @@ describe("ContributionGraph", () => {
       expect(wrapper.getBoundingClientRect().width).toBe(200);
     });
 
-    test("scroller gains tabindex=0 when its SVG overflows the container", async () => {
-      // 12-month year of days is ~53 columns × 14px = 742px wide, comfortably
-      // wider than the 200px parent below, so useScrollableFocus's initial
-      // measurement resolves to tabIndex=0.
+    test("overflowing scroller stays out of the tab order — its cells are the tab stop", async () => {
+      // Regression cover for dropping useScrollableFocus. axe's
+      // scrollable-region-focusable is satisfied by a scrollable region that
+      // CONTAINS focusable content, and the grid's roving tabindex guarantees
+      // exactly that. Giving the scroller its own tabIndex on top would add a
+      // second, redundant tab stop that swallows the arrow keys the grid
+      // needs. 365 days ≈ 742px wide inside a 200px parent, so the region is
+      // genuinely scrollable here.
       const start = new Date(2025, 0, 1);
       const days: ContributionDay[] = [];
       for (let i = 0; i < 365; i++) {
@@ -535,11 +608,13 @@ describe("ContributionGraph", () => {
           <ContributionGraph data={days} data-testid="g" />
         </div>,
       );
-      const scroller = screen
-        .getByTestId("g")
-        .element()
-        .querySelector<HTMLDivElement>(".ps1ui-contribution-graph__scroller")!;
-      expect(scroller.tabIndex).toBe(0);
+      const wrapper = screen.getByTestId("g").element();
+      const scroller = wrapper.querySelector<HTMLDivElement>(
+        ".ps1ui-contribution-graph__scroller",
+      )!;
+      expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+      expect(scroller.hasAttribute("tabindex")).toBe(false);
+      expect(scroller.querySelectorAll('[tabindex="0"]').length).toBe(1);
     });
   });
 
@@ -569,20 +644,464 @@ describe("ContributionGraph", () => {
       expect(el.style.opacity).toBe("0.75");
     });
 
-    test("caller aria-label overrides the default", async () => {
+    test("caller aria-label names the grid, not the wrapper", async () => {
+      // The name has to sit on the element carrying the role. It used to live
+      // on the wrapper alongside role="img"; now that the SVG is the grid,
+      // `aria-label` is intercepted from the passthrough and forwarded there.
       const screen = await render(
         <ContributionGraph data={SAMPLE} aria-label="Commits in 2025" data-testid="g" />,
       );
-      await expect
-        .element(screen.getByTestId("g"))
-        .toHaveAttribute("aria-label", "Commits in 2025");
+      const wrapper = screen.getByTestId("g").element();
+      expect(wrapper.hasAttribute("aria-label")).toBe(false);
+      expect(grid(wrapper).getAttribute("aria-label")).toBe("Commits in 2025");
     });
 
-    test("defaults role=img and aria-label when none is supplied", async () => {
+    test("defaults the grid's aria-label when none is supplied", async () => {
       const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
-      const el = screen.getByTestId("g");
-      await expect.element(el).toHaveAttribute("role", "img");
-      await expect.element(el).toHaveAttribute("aria-label", "Contribution graph");
+      expect(grid(screen.getByTestId("g").element()).getAttribute("aria-label")).toBe(
+        "Contribution graph",
+      );
+    });
+  });
+
+  describe("grid semantics", () => {
+    test("the SVG is the grid, sized by aria-rowcount / aria-colcount", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const g = grid(screen.getByTestId("g").element());
+      expect(g.getAttribute("role")).toBe("grid");
+      // 7 weekday rows always; SAMPLE spans exactly 3 week columns.
+      expect(g.getAttribute("aria-rowcount")).toBe("7");
+      expect(g.getAttribute("aria-colcount")).toBe("3");
+    });
+
+    test("emits one role=row per weekday, carrying its 1-based aria-rowindex", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const rows = Array.from(
+        grid(screen.getByTestId("g").element()).querySelectorAll('[role="row"]'),
+      );
+      expect(rows.length).toBe(7);
+      expect(rows.map((r) => r.getAttribute("aria-rowindex"))).toEqual([
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+      ]);
+    });
+
+    test("cells are gridcells inside their weekday row, indexed by column", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      // Row 0 (Sundays) holds one cell per week column, in column order.
+      const row0 = grid(wrapper).querySelector('[role="row"][aria-rowindex="1"]')!;
+      const cells = Array.from(row0.querySelectorAll('[role="gridcell"]'));
+      expect(cells.map((c) => c.getAttribute("data-date"))).toEqual([JAN_05, JAN_12, JAN_19]);
+      expect(cells.map((c) => c.getAttribute("aria-colindex"))).toEqual(["1", "2", "3"]);
+    });
+
+    test("a weekday with no days in range contributes no row", async () => {
+      // Wed→Sat only: rows 0 (Sun), 1 (Mon), 2 (Tue) are empty and omitted, so
+      // the surviving rows start at aria-rowindex 4 (Wed).
+      const screen = await render(
+        <ContributionGraph data={STARTS_WEDNESDAY} data-testid="g" showLegend={false} />,
+      );
+      const rows = Array.from(
+        grid(screen.getByTestId("g").element()).querySelectorAll('[role="row"]'),
+      );
+      expect(rows.map((r) => r.getAttribute("aria-rowindex"))).toEqual(["4", "5", "6", "7"]);
+    });
+
+    test("month and weekday labels stay out of the accessibility tree", async () => {
+      // `role="grid"` only permits rows as children, and each cell's name
+      // already spells out its full date — exposing the labels would both
+      // break the grid's required-children contract and double-announce.
+      const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
+      const wrapper = screen.getByTestId("g").element();
+      const labels = wrapper.querySelectorAll(
+        ".ps1ui-contribution-graph__month, .ps1ui-contribution-graph__weekday",
+      );
+      expect(labels.length).toBeGreaterThan(0);
+      for (const label of labels) expect(label.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    test("empty data degrades to a labelled image (a grid with no rows is malformed)", async () => {
+      const screen = await render(<ContributionGraph data={[]} data-testid="g" />);
+      const g = grid(screen.getByTestId("g").element());
+      expect(g.getAttribute("role")).toBe("img");
+      expect(g.getAttribute("aria-label")).toBe("Contribution graph");
+      expect(g.hasAttribute("aria-rowcount")).toBe(false);
+      expect(g.hasAttribute("aria-colcount")).toBe(false);
+    });
+
+    test("legend swatches take none of the grid semantics", async () => {
+      const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
+      const legend = screen
+        .getByTestId("g")
+        .element()
+        .querySelector(".ps1ui-contribution-graph__legend")!;
+      for (const swatch of legend.querySelectorAll(".ps1ui-contribution-graph__cell")) {
+        expect(swatch.hasAttribute("role")).toBe(false);
+        expect(swatch.hasAttribute("tabindex")).toBe(false);
+        expect(swatch.hasAttribute("data-date")).toBe(false);
+      }
+    });
+  });
+
+  describe("interaction (tooltip)", () => {
+    test("hovering a cell opens a tooltip carrying that day's label", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      expect(tooltipPanel()!.textContent).toBe("No contributions on January 5th.");
+    });
+
+    test("sweeping to another cell swaps the text in the SAME panel", async () => {
+      // The single-Tooltip design is the point: a per-cell Tooltip would tear
+      // the panel down and rebuild it (and restart any open delay) on every
+      // cell boundary crossed.
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} cellSize={20} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      const first = tooltipPanel()!;
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_06)));
+      await vi.waitFor(() =>
+        expect(tooltipPanel()?.textContent).toBe("1 contribution on January 6th."),
+      );
+      expect(tooltipPanel()).toBe(first);
+    });
+
+    test("leaving the graph closes the tooltip", async () => {
+      const screen = await render(
+        <div>
+          <span data-testid="outside">elsewhere</span>
+          <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />
+        </div>,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      await userEvent.hover(screen.getByTestId("outside"));
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("focusing a cell opens the tooltip, blurring closes it", { retry: 3 }, async () => {
+      const screen = await render(
+        <div>
+          <button type="button" data-testid="after">
+            after
+          </button>
+          <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />
+        </div>,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_12).focus();
+      await vi.waitFor(() =>
+        expect(tooltipPanel()?.textContent).toBe("7 contributions on January 12th."),
+      );
+      (screen.getByTestId("after").element() as HTMLElement).focus();
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("blurring to nothing at all closes the tooltip", { retry: 3 }, async () => {
+      // The other blur path: focus leaves for no element (programmatic blur, a
+      // click on non-focusable page background) so `relatedTarget` is null
+      // rather than a sibling cell.
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      const cell = cellFor(wrapper, JAN_12);
+      cell.focus();
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      cell.blur();
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("Escape dismisses the tooltip while the pointer stays on the cell", async () => {
+      // WCAG 1.4.13 "Dismissible". The key is bound on the document, not the
+      // cells, because a hovering user's focus is somewhere else entirely.
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      await userEvent.keyboard("{Escape}");
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("moving to a different day after Escape shows the tooltip again", async () => {
+      // Dismissal is pinned to the one day it was aimed at, so Escape can
+      // never leave a permanently-silent cell behind.
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} cellSize={20} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      await userEvent.keyboard("{Escape}");
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_06)));
+      await vi.waitFor(() =>
+        expect(tooltipPanel()?.textContent).toBe("1 contribution on January 6th."),
+      );
+    });
+
+    test("a stray move off the grid does not resurrect a dismissed tooltip", async () => {
+      // Regression: the dismissal used to release on ANY change of active day,
+      // null included. Nudging the pointer onto the month-label band and back
+      // therefore wiped it, and the tooltip the user had just dismissed with
+      // Escape reappeared — defeating WCAG 1.4.13 "Dismissible" with a few
+      // pixels of jitter.
+      const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
+      const wrapper = screen.getByTestId("g").element();
+      const onJan05 = centerOf(cellFor(wrapper, JAN_05));
+      movePointerTo(wrapper, ...onJan05);
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      await userEvent.keyboard("{Escape}");
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+
+      movePointerTo(wrapper, ...monthLabelPoint(wrapper));
+      movePointerTo(wrapper, ...onJan05);
+      // Still dismissed: the pointer never reached a different DAY.
+      expect(tooltipPanel()).toBeNull();
+    });
+
+    test(
+      "a second graph on the page does not keep this one's tooltip open",
+      { retry: 3 },
+      async () => {
+        // Regression: blur used to hand off to "any element with data-date",
+        // which a sibling ContributionGraph's roving cell also satisfies. Graph
+        // A then skipped its own close and left its panel up for good — and the
+        // docs site stacks five graphs on one page.
+        const screen = await render(
+          <>
+            <ContributionGraph data={SAMPLE} data-testid="a" showLegend={false} />
+            <ContributionGraph data={SAMPLE} data-testid="b" showLegend={false} />
+          </>,
+        );
+        const a = screen.getByTestId("a").element();
+        const b = screen.getByTestId("b").element();
+        cellFor(a, JAN_05).focus();
+        await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+        cellFor(b, JAN_12).focus();
+        await vi.waitFor(() =>
+          expect(tooltipPanel()?.textContent).toBe("7 contributions on January 12th."),
+        );
+        // Exactly one panel — graph A closed its own rather than stranding it.
+        expect(document.querySelectorAll('[role="tooltip"]').length).toBe(1);
+      },
+    );
+
+    test("labelForDay drives the tooltip and the accessible name from one string", async () => {
+      const screen = await render(
+        <ContributionGraph
+          data={SAMPLE}
+          data-testid="g"
+          showLegend={false}
+          labelForDay={(day) => `${day.date}::${day.count}`}
+        />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      const cell = cellFor(wrapper, JAN_05);
+      await userEvent.hover(page.elementLocator(cell));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      expect(tooltipPanel()!.textContent).toBe("2025-01-05::0");
+      expect(cell.getAttribute("aria-label")).toBe("2025-01-05::0");
+    });
+
+    test("the panel is aria-hidden — its text duplicates the cell's own name", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      await userEvent.hover(page.elementLocator(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      expect(tooltipPanel()!.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    test("moving onto the month-label band closes the tooltip", async () => {
+      // The label band sits at negative y relative to the grid origin. Without
+      // an explicit reject it would wrap into the previous column's bottom row
+      // (row -1 of column 1 is slot 6, a real cell) and report the wrong day.
+      const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
+      const wrapper = screen.getByTestId("g").element();
+      movePointerTo(wrapper, ...centerOf(cellFor(wrapper, JAN_05)));
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      movePointerTo(wrapper, ...monthLabelPoint(wrapper));
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("moving onto a slot with no day closes the tooltip", async () => {
+      // STARTS_WEDNESDAY leaves rows 0–2 (Sun/Mon/Tue) of its only column
+      // empty. A slot is a legitimate hover target geometrically but has no
+      // day behind it, so it must not leave the previous cell's tooltip up.
+      const screen = await render(
+        <ContributionGraph data={STARTS_WEDNESDAY} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      movePointerTo(wrapper, ...centerOf(cellFor(wrapper, "2025-01-08"))); // Wed, row 3
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      // Column 0, row 0 — Sunday, which this data set has no entry for.
+      const box = grid(wrapper).getBoundingClientRect();
+      movePointerTo(wrapper, box.left + 28 + 5, box.top + 16 + 5);
+      await vi.waitFor(() => expect(tooltipPanel()).toBeNull());
+    });
+
+    test("the gap between two cells belongs to a day, not to the background", async () => {
+      // Regression cover for the sweep flicker: hit-testing by event target
+      // reported "background" for the `cellGap` between cells, so a pointer
+      // crossing it blinked the tooltip off. Each day owns a full step × step
+      // block, so a point inside the gap still resolves to its owning day.
+      const screen = await render(
+        <ContributionGraph
+          data={SAMPLE}
+          data-testid="g"
+          showLegend={false}
+          showMonthLabels={false}
+          showWeekdayLabels={false}
+        />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      const box = cellFor(wrapper, JAN_05).getBoundingClientRect();
+      // 1px past the cell's right edge — inside the 3px gap before the next
+      // column, which the block model assigns to JAN_05 itself.
+      movePointerTo(wrapper, box.right + 1, box.top + box.height / 2);
+      await vi.waitFor(() =>
+        expect(tooltipPanel()?.textContent).toBe("No contributions on January 5th."),
+      );
+    });
+  });
+
+  describe("keyboard navigation", () => {
+    test("exactly one cell holds the tab stop, and it starts at the first day", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      const tabbable = wrapper.querySelectorAll('[data-date][tabindex="0"]');
+      expect(tabbable.length).toBe(1);
+      expect(tabbable[0]!.getAttribute("data-date")).toBe(JAN_05);
+      // Every other cell is programmatically focusable only.
+      expect(wrapper.querySelectorAll('[data-date][tabindex="-1"]').length).toBe(SAMPLE.length - 1);
+    });
+
+    test.for<{ key: string; from: string; expected: string }>([
+      { key: "{ArrowRight}", from: JAN_05, expected: JAN_12 },
+      { key: "{ArrowLeft}", from: JAN_12, expected: JAN_05 },
+      { key: "{ArrowDown}", from: JAN_05, expected: JAN_06 },
+      { key: "{ArrowUp}", from: JAN_06, expected: JAN_05 },
+      // Home/End work along the row (weekday), Ctrl variants across the grid.
+      { key: "{Home}", from: JAN_19, expected: JAN_05 },
+      { key: "{End}", from: JAN_05, expected: JAN_19 },
+      { key: "{Control>}{Home}{/Control}", from: JAN_12, expected: JAN_05 },
+      { key: "{Control>}{End}{/Control}", from: JAN_12, expected: JAN_25 },
+    ])(
+      "$key from $from moves focus to $expected",
+      { retry: 3 },
+      async ({ key, from, expected }) => {
+        const screen = await render(
+          <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+        );
+        const wrapper = screen.getByTestId("g").element();
+        cellFor(wrapper, from).focus();
+        await userEvent.keyboard(key);
+        expect(focusedDate()).toBe(expected);
+      },
+    );
+
+    test("arrow keys step over gaps rather than stopping dead", async () => {
+      // Two Sundays a fortnight apart: col 1 of row 0 has no day at all, so
+      // ArrowRight has to keep walking to col 2.
+      const sparse: ContributionDay[] = [
+        { date: JAN_05, count: 1 }, // col 0, row 0
+        { date: JAN_19, count: 2 }, // col 2, row 0
+      ];
+      const screen = await render(
+        <ContributionGraph data={sparse} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await userEvent.keyboard("{ArrowRight}");
+      expect(focusedDate()).toBe(JAN_19);
+    });
+
+    test("vertical moves stay inside their column instead of wrapping a week", async () => {
+      // One column only. ArrowRight from the bottom-most cell must be a no-op
+      // — wrapping to the next row would silently jump the user a week.
+      const oneColumn: ContributionDay[] = [
+        { date: JAN_05, count: 1 }, // col 0, row 0
+        { date: JAN_06, count: 2 }, // col 0, row 1
+      ];
+      const screen = await render(
+        <ContributionGraph data={oneColumn} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await userEvent.keyboard("{ArrowRight}");
+      expect(focusedDate()).toBe(JAN_05);
+      await userEvent.keyboard("{ArrowUp}");
+      expect(focusedDate()).toBe(JAN_05);
+    });
+
+    test("an unclaimed key is left alone", async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await userEvent.keyboard("{PageDown}");
+      expect(focusedDate()).toBe(JAN_05);
+    });
+
+    test("the tab stop follows the focused cell", { retry: 3 }, async () => {
+      const screen = await render(
+        <ContributionGraph data={SAMPLE} data-testid="g" showLegend={false} />,
+      );
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await userEvent.keyboard("{ArrowRight}");
+      await vi.waitFor(() => expect(cellFor(wrapper, JAN_12).tabIndex).toBe(0));
+      expect(cellFor(wrapper, JAN_05).tabIndex).toBe(-1);
+    });
+
+    test("a data swap that drops the remembered stop falls back to the first day", async () => {
+      // Without the fallback the graph would be left with no tab stop at all
+      // — unreachable by keyboard until the caller happened to re-render.
+      function Swappable() {
+        const [days, setDays] = useState(SAMPLE);
+        return (
+          <>
+            <button type="button" data-testid="swap" onClick={() => setDays(SAMPLE.slice(14))}>
+              swap
+            </button>
+            <ContributionGraph data={days} data-testid="g" showLegend={false} />
+          </>
+        );
+      }
+      const screen = await render(<Swappable />);
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await vi.waitFor(() => expect(cellFor(wrapper, JAN_05).tabIndex).toBe(0));
+      await screen.getByTestId("swap").click();
+      // JAN_05 is gone; the stop lands on the new first day (JAN_19).
+      await vi.waitFor(() => expect(cellFor(wrapper, JAN_19).tabIndex).toBe(0));
+      expect(wrapper.querySelectorAll('[data-date][tabindex="0"]').length).toBe(1);
     });
   });
 
@@ -607,6 +1126,27 @@ describe("ContributionGraph", () => {
     test("no axe violations with empty data", async () => {
       const screen = await render(<ContributionGraph data={[]} />);
       await expectNoAxeViolations(screen.container);
+    });
+
+    test("no axe violations with a focused cell and its tooltip open", { retry: 3 }, async () => {
+      // The interactive state is the one a static story can't reach, and it is
+      // where the grid contract actually gets exercised: focusable cells rule
+      // out aria-hidden on any ancestor, and the portaled panel has to stay
+      // clear of the accessibility tree.
+      const screen = await render(<ContributionGraph data={SAMPLE} data-testid="g" />);
+      const wrapper = screen.getByTestId("g").element();
+      cellFor(wrapper, JAN_05).focus();
+      await vi.waitFor(() => expect(tooltipPanel()).not.toBeNull());
+      await expectNoAxeViolations(screen.container);
+      await expectNoAxeViolations(tooltipPanel()!);
+    });
+
+    test("no axe violations on a sparse graph (ragged rows)", async () => {
+      // Skipped rows and non-contiguous aria-colindex values are exactly the
+      // shape `aria-rowindex` / `aria-colindex` exist to describe — this pins
+      // that the grid stays well-formed when data has holes.
+      await render(<ContributionGraph data={STARTS_WEDNESDAY} data-testid="sparse" />);
+      await expectNoAxeViolations(document.querySelector('[data-testid="sparse"]')!);
     });
   });
 });

@@ -153,7 +153,7 @@ describe("Tooltip", () => {
   });
 
   describe("passthrough", () => {
-    test("forwards native <div> attributes (id override is disallowed on purpose — internal id wins)", async () => {
+    test("forwards native <div> attributes onto the panel", async () => {
       await render(
         <Tooltip content="tip" open data-custom="v" aria-label="tag">
           <button type="button">open</button>
@@ -162,6 +162,24 @@ describe("Tooltip", () => {
       const panel = document.querySelector<HTMLElement>('[role="tooltip"]');
       expect(panel?.getAttribute("data-custom")).toBe("v");
       expect(panel?.getAttribute("aria-label")).toBe("tag");
+    });
+
+    test("a caller-supplied id names the panel, and aria-describedby follows it", async () => {
+      // The two can never disagree: whatever id the panel ends up with is the
+      // id the trigger points at. Anchor mode depends on this — with no cloned
+      // trigger, supplying an id is the only way a caller can wire up its own
+      // `aria-describedby`.
+      const screen = await render(
+        <Tooltip content="tip" open id="my-tip">
+          <button type="button" data-testid="trigger">
+            open
+          </button>
+        </Tooltip>,
+      );
+      expect(document.querySelector<HTMLElement>('[role="tooltip"]')?.id).toBe("my-tip");
+      await expect
+        .element(screen.getByTestId("trigger"))
+        .toHaveAttribute("aria-describedby", "my-tip");
     });
 
     test("caller style merges under the internal positioning vars (internal wins)", async () => {
@@ -179,6 +197,117 @@ describe("Tooltip", () => {
       expect(panel?.style.background).toBe("rgb(1, 2, 3)");
       // internal positioning wins over same-name caller keys.
       expect(panel?.style.position).toBe("fixed");
+    });
+  });
+
+  describe("anchor mode", () => {
+    // A fixed-position box stands in for the caller-owned "trigger" — a grid
+    // cell, a canvas hit region, a virtualized row: anything that is not a
+    // single React element Tooltip could clone.
+    function Anchored({ left, open = true, id }: { left: number; open?: boolean; id?: string }) {
+      const [el, setEl] = useState<HTMLElement | null>(null);
+      return (
+        <>
+          <div
+            ref={setEl}
+            data-testid="anchor"
+            style={{ position: "fixed", top: 200, left, width: 40, height: 40 }}
+          />
+          <Tooltip content="tip" anchor={el} open={open} placement="bottom" id={id} />
+        </>
+      );
+    }
+
+    test("renders the panel with no trigger of its own", async () => {
+      const screen = await render(<Anchored left={100} />);
+      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+      // Nothing was cloned, so the only element in the container is the
+      // caller's own anchor.
+      expect(screen.container.querySelectorAll("*").length).toBe(1);
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toBe("tip");
+    });
+
+    test("positions the panel against the anchor element", async () => {
+      await render(<Anchored left={100} />);
+      const panel = await vi.waitUntil(() =>
+        document.querySelector<HTMLElement>('[role="tooltip"]'),
+      );
+      await vi.waitFor(() => expect(panel.style.visibility).toBe("visible"));
+      // placement="bottom" → the panel's top edge sits OFFSET(8) below the
+      // anchor's bottom (200 + 40), and it centres on the anchor's midpoint.
+      const anchorRect = document.querySelector('[data-testid="anchor"]')!.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      expect(panelRect.top).toBeCloseTo(anchorRect.bottom + 8, 0);
+      expect(panelRect.left + panelRect.width / 2).toBeCloseTo(
+        anchorRect.left + anchorRect.width / 2,
+        0,
+      );
+    });
+
+    test("swapping the anchor repositions the SAME panel", async () => {
+      // The whole reason anchor mode exists: N interchangeable triggers share
+      // one panel instead of mounting one Tooltip each.
+      function Movable() {
+        const [first, setFirst] = useState<HTMLElement | null>(null);
+        const [second, setSecond] = useState<HTMLElement | null>(null);
+        const [active, setActive] = useState<"first" | "second">("first");
+        return (
+          <>
+            <button type="button" data-testid="move" onClick={() => setActive("second")}>
+              move
+            </button>
+            <div
+              ref={setFirst}
+              style={{ position: "fixed", top: 200, left: 100, width: 40, height: 40 }}
+            />
+            <div
+              ref={setSecond}
+              style={{ position: "fixed", top: 200, left: 400, width: 40, height: 40 }}
+            />
+            <Tooltip
+              content="tip"
+              anchor={active === "first" ? first : second}
+              open
+              placement="bottom"
+            />
+          </>
+        );
+      }
+      const screen = await render(<Movable />);
+      const panel = await vi.waitUntil(() =>
+        document.querySelector<HTMLElement>('[role="tooltip"]'),
+      );
+      await vi.waitFor(() => expect(panel.style.visibility).toBe("visible"));
+      const before = panel.getBoundingClientRect().left;
+      await screen.getByTestId("move").click();
+      await vi.waitFor(() =>
+        expect(panel.getBoundingClientRect().left).toBeGreaterThan(before + 200),
+      );
+      // Same node throughout — never torn down and rebuilt.
+      expect(document.querySelector('[role="tooltip"]')).toBe(panel);
+    });
+
+    test("open with a null anchor keeps the panel hidden instead of flashing at the origin", async () => {
+      await render(<Tooltip content="tip" anchor={null} open />);
+      const panel = await vi.waitUntil(() =>
+        document.querySelector<HTMLElement>('[role="tooltip"]'),
+      );
+      // Nothing to measure against, so the pre-measure guard holds — the panel
+      // never paints at (0, 0).
+      expect(panel.style.visibility).toBe("hidden");
+    });
+
+    test("open=false renders nothing at all", async () => {
+      await render(<Anchored left={100} open={false} />);
+      expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    });
+
+    test("a caller-supplied id is what the caller can point aria-describedby at", async () => {
+      await render(<Anchored left={100} id="cell-tip" />);
+      const panel = await vi.waitUntil(() =>
+        document.querySelector<HTMLElement>('[role="tooltip"]'),
+      );
+      expect(panel.id).toBe("cell-tip");
     });
   });
 
@@ -407,74 +536,96 @@ describe("Tooltip", () => {
       await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     });
 
-    test("mouseleave while still focused keeps the panel open (focus channel wins)", async () => {
-      const screen = await render(
-        <>
-          <div data-testid="cursor-sink" style={{ padding: 8, marginBottom: 200 }}>
-            park cursor
-          </div>
+    // Both "channel wins" cases drive the focus channel with a bare `.focus()`
+    // alongside a real hover, the same shape as the already-retried focus /
+    // blur cases above — and they hit the same Firefox-under-full-suite-load
+    // flake (CLAUDE.md's "Known Firefox flake"): green in isolation, and green
+    // on this branch's base too, but intermittently dropping the focus half
+    // when all 250-odd files run together.
+    test(
+      "mouseleave while still focused keeps the panel open (focus channel wins)",
+      { retry: 3 },
+      async () => {
+        const screen = await render(
+          <>
+            <div data-testid="cursor-sink" style={{ padding: 8, marginBottom: 200 }}>
+              park cursor
+            </div>
+            <Tooltip content="tip" delay={0}>
+              <button type="button" data-testid="trigger">
+                open
+              </button>
+            </Tooltip>
+          </>,
+        );
+        await userEvent.hover(screen.getByTestId("cursor-sink"));
+        const trigger = screen.getByTestId("trigger");
+        const el = trigger.element() as HTMLButtonElement;
+        el.focus();
+        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+        await userEvent.hover(trigger);
+        await userEvent.unhover(trigger);
+        // Panel must still be open — focus is still active.
+        expect(document.activeElement).toBe(el);
+        expect(document.querySelector('[role="tooltip"]')).not.toBeNull();
+      },
+    );
+
+    test(
+      "blur while still hovered keeps the panel open (hover channel wins)",
+      { retry: 3 },
+      async () => {
+        const screen = await render(
           <Tooltip content="tip" delay={0}>
             <button type="button" data-testid="trigger">
               open
             </button>
-          </Tooltip>
-        </>,
-      );
-      await userEvent.hover(screen.getByTestId("cursor-sink"));
-      const trigger = screen.getByTestId("trigger");
-      const el = trigger.element() as HTMLButtonElement;
-      el.focus();
-      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
-      await userEvent.hover(trigger);
-      await userEvent.unhover(trigger);
-      // Panel must still be open — focus is still active.
-      expect(document.activeElement).toBe(el);
-      expect(document.querySelector('[role="tooltip"]')).not.toBeNull();
-    });
+          </Tooltip>,
+        );
+        const trigger = screen.getByTestId("trigger");
+        await userEvent.hover(trigger);
+        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+        const el = trigger.element() as HTMLButtonElement;
+        el.focus();
+        el.blur();
+        // Panel must still be open — pointer is still over the trigger.
+        expect(document.querySelector('[role="tooltip"]')).not.toBeNull();
+      },
+    );
 
-    test("blur while still hovered keeps the panel open (hover channel wins)", async () => {
-      const screen = await render(
-        <Tooltip content="tip" delay={0}>
-          <button type="button" data-testid="trigger">
-            open
-          </button>
-        </Tooltip>,
-      );
-      const trigger = screen.getByTestId("trigger");
-      await userEvent.hover(trigger);
-      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
-      const el = trigger.element() as HTMLButtonElement;
-      el.focus();
-      el.blur();
-      // Panel must still be open — pointer is still over the trigger.
-      expect(document.querySelector('[role="tooltip"]')).not.toBeNull();
-    });
-
-    test("hover after Escape is suppressed until the pointer fully leaves the trigger", async () => {
-      const screen = await render(
-        <Tooltip content="tip" delay={0}>
-          <button type="button" data-testid="trigger">
-            open
-          </button>
-        </Tooltip>,
-      );
-      const trigger = screen.getByTestId("trigger");
-      const el = trigger.element() as HTMLButtonElement;
-      el.focus();
-      await userEvent.hover(trigger);
-      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
-      // Escape while both hovered and focused — sets suppression that lives
-      // beyond an immediate mouseleave (focus still holds).
-      await userEvent.keyboard("{Escape}");
-      await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
-      // Leave the pointer while focus is still active — suppression persists.
-      await userEvent.unhover(trigger);
-      // Re-enter with the pointer — mouseenter's openNow must find suppression
-      // still set and return without opening.
-      await userEvent.hover(trigger);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(document.querySelector('[role="tooltip"]')).toBeNull();
-    });
+    // `retry: 3` for the same Firefox-under-full-suite-load flake the rest of
+    // this file's focus-driven cases carry (see CLAUDE.md's "Known Firefox
+    // flake"): passes in isolation every time, drops the focus half of the
+    // hover+focus suppression check when the whole suite runs.
+    test(
+      "hover after Escape is suppressed until the pointer fully leaves the trigger",
+      { retry: 3 },
+      async () => {
+        const screen = await render(
+          <Tooltip content="tip" delay={0}>
+            <button type="button" data-testid="trigger">
+              open
+            </button>
+          </Tooltip>,
+        );
+        const trigger = screen.getByTestId("trigger");
+        const el = trigger.element() as HTMLButtonElement;
+        el.focus();
+        await userEvent.hover(trigger);
+        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+        // Escape while both hovered and focused — sets suppression that lives
+        // beyond an immediate mouseleave (focus still holds).
+        await userEvent.keyboard("{Escape}");
+        await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+        // Leave the pointer while focus is still active — suppression persists.
+        await userEvent.unhover(trigger);
+        // Re-enter with the pointer — mouseenter's openNow must find suppression
+        // still set and return without opening.
+        await userEvent.hover(trigger);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(document.querySelector('[role="tooltip"]')).toBeNull();
+      },
+    );
 
     test("Escape while closed AND no timer pending is a no-op (short-circuit false branch)", async () => {
       // Covers the `open || openTimerRef.current !== null` FALSE branch:
