@@ -1,0 +1,46 @@
+---
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+import {
+  TooltipBasicDemo,
+  TooltipDelayDemo,
+  TooltipPlacementDemo,
+} from "../../demos/TooltipDemos";
+
+// Tooltip is a client-only surface: the panel is portaled to document.body,
+// positioned by measuring the trigger's DOMRect in a post-mount effect, and
+// only mounts once useEffect has run. Each demo is a self-contained React
+// component (see src/demos/TooltipDemos.tsx) rendered with `client:load`
+// so the tooltip actually opens on hover / keyboard focus. This is the
+// "proven needed" exception to packages/site/CLAUDE.md § "No `client:*`
+// unless proven needed"; a static Tooltip would be inert.
+---
+
+<ComponentPage slug="tooltip">
+  <Demo
+    title="Basic"
+    code={`<Tooltip content="Delete this row">
+  <Button>Delete</Button>
+</Tooltip>`}
+  >
+    <TooltipBasicDemo client:load />
+  </Demo>
+
+  <Demo
+    title="Placement"
+    code={`<Tooltip content="tip" placement="bottom">
+  <Button>bottom</Button>
+</Tooltip>`}
+  >
+    <TooltipPlacementDemo client:load />
+  </Demo>
+
+  <Demo
+    title="Custom hover delay"
+    code={`<Tooltip content="Fires after a second of dwell" delay={1000}>
+  <Button>slow</Button>
+</Tooltip>`}
+  >
+    <TooltipDelayDemo client:load />
+  </Demo>
+</ComponentPage>

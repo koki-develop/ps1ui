@@ -1,0 +1,31 @@
+/* Tooltip panel. Position, top, left, and visibility are set inline by the
+   component (JS measurement of the trigger's DOMRect) — this stylesheet owns
+   only the visual chrome (surface, border, radius, typography, padding).
+
+   The panel is portaled to <body> to escape the responsive-container
+   containment context (see components.css header re: overlays). No
+   z-index token is defined — the panel sits at the end of <body>, which
+   already stacks above ambient page content; hosts that need to layer
+   above their own overlays can raise it via the caller-supplied `style`. */
+
+.ps1ui-tooltip {
+  background: var(--ps1ui-color-surface);
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-md);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-xs);
+  line-height: 1.5;
+  padding: var(--ps1ui-space-xs) var(--ps1ui-space-sm);
+  max-width: 20rem;
+  /* The panel is measured post-mount for positioning; any padding/border
+     change ripples through the measured size. `box-sizing: border-box`
+     keeps the max-width above inclusive of the border/padding so long
+     content wraps at a predictable content-box width. */
+  box-sizing: border-box;
+  /* Pointer-events off so the panel never intercepts hover intent aimed at
+     underlying content — tooltips are informational, not interactive.
+     Consumers who need interactive tooltips (buttons inside) should reach
+     for a Popover primitive, not this one. */
+  pointer-events: none;
+}
