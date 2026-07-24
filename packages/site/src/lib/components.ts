@@ -45,6 +45,12 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Equal-column CSS grid with responsive column counts.",
         childComponents: ["GridItem"],
       },
+      {
+        slug: "divider",
+        name: "Divider",
+        description:
+          "Horizontal or vertical rule for separating adjacent content, rendered as a semantic <hr>.",
+      },
     ],
   },
   {

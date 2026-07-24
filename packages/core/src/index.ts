@@ -42,6 +42,13 @@ export type { CardProps } from "./components/Card/Card";
 export { Details } from "./components/Details/Details";
 export type { DetailsProps } from "./components/Details/Details";
 
+export { Divider } from "./components/Divider/Divider";
+export type {
+  DividerOrientation,
+  DividerProps,
+  DividerVariant,
+} from "./components/Divider/Divider";
+
 export type { SpaceScale } from "./utils/spacing";
 
 export { Container } from "./components/Container/Container";

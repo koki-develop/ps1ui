@@ -1,0 +1,87 @@
+---
+import { Divider, Stack, Text } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const basic = `<Text>Section one.</Text>
+<Divider />
+<Text>Section two.</Text>`;
+
+const variants = `<Divider variant="solid" />
+<Divider variant="dashed" />
+<Divider variant="dotted" />`;
+
+const vertical = `<Stack direction="row" gap="md" align="center">
+  <Text>File</Text>
+  <Divider orientation="vertical" />
+  <Text>Edit</Text>
+  <Divider orientation="vertical" />
+  <Text>View</Text>
+</Stack>`;
+
+const verticalVariants = `<Stack direction="row" gap="md" align="center" style={{ height: 60 }}>
+  <Text variant="muted">solid</Text>
+  <Divider orientation="vertical" variant="solid" />
+  <Text variant="muted">dashed</Text>
+  <Divider orientation="vertical" variant="dashed" />
+  <Text variant="muted">dotted</Text>
+  <Divider orientation="vertical" variant="dotted" />
+</Stack>`;
+---
+
+<ComponentPage slug="divider">
+  <Demo title="Basic" code={basic}>
+    <Stack gap="md">
+      <Text>Section one.</Text>
+      <Divider />
+      <Text>Section two.</Text>
+    </Stack>
+  </Demo>
+
+  <Demo title="Variants" code={variants}>
+    <Stack gap="lg">
+      <Stack gap="xs">
+        <Text variant="muted">solid</Text>
+        <Divider variant="solid" />
+      </Stack>
+      <Stack gap="xs">
+        <Text variant="muted">dashed</Text>
+        <Divider variant="dashed" />
+      </Stack>
+      <Stack gap="xs">
+        <Text variant="muted">dotted</Text>
+        <Divider variant="dotted" />
+      </Stack>
+    </Stack>
+  </Demo>
+
+  <Demo title="Vertical (toolbar)" code={vertical}>
+    <Stack direction="row" gap="md" align="center">
+      <Text>File</Text>
+      <Divider orientation="vertical" />
+      <Text>Edit</Text>
+      <Divider orientation="vertical" />
+      <Text>View</Text>
+    </Stack>
+  </Demo>
+
+  <Demo title="Vertical variants" code={verticalVariants}>
+    <Stack direction="row" gap="md" align="center" style={{ height: 60 }}>
+      <Text variant="muted">solid</Text>
+      <Divider orientation="vertical" variant="solid" />
+      <Text variant="muted">dashed</Text>
+      <Divider orientation="vertical" variant="dashed" />
+      <Text variant="muted">dotted</Text>
+      <Divider orientation="vertical" variant="dotted" />
+    </Stack>
+  </Demo>
+
+  <Text variant="muted">
+    Divider renders a semantic <code>&lt;hr&gt;</code> so the implicit
+    <code>separator</code> role is exposed to assistive tech without a manual
+    <code>role</code> attribute. The vertical variant adds
+    <code>aria-orientation="vertical"</code> and takes its height from the
+    parent's cross-axis via <code>align-self: stretch</code> — use it inside a
+    flex or grid row.
+  </Text>
+</ComponentPage>
