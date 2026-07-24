@@ -105,6 +105,18 @@ export type {
 export { Textarea } from "./components/Textarea/Textarea";
 export type { TextareaProps } from "./components/Textarea/Textarea";
 
+export { Tabs } from "./components/Tabs/Tabs";
+export type { TabsOrientation, TabsProps } from "./components/Tabs/Tabs";
+
+export { TabList } from "./components/TabList/TabList";
+export type { TabListProps } from "./components/TabList/TabList";
+
+export { Tab } from "./components/Tab/Tab";
+export type { TabProps } from "./components/Tab/Tab";
+
+export { TabPanel } from "./components/TabPanel/TabPanel";
+export type { TabPanelProps } from "./components/TabPanel/TabPanel";
+
 export { Heading } from "./components/Heading/Heading";
 export type {
   HeadingElement,

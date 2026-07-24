@@ -1,0 +1,14 @@
+.ps1ui-tabs {
+  display: flex;
+  font-family: var(--ps1ui-font-mono);
+  color: var(--ps1ui-color-fg);
+}
+
+.ps1ui-tabs--horizontal {
+  flex-direction: column;
+}
+
+.ps1ui-tabs--vertical {
+  flex-direction: row;
+  align-items: stretch;
+}

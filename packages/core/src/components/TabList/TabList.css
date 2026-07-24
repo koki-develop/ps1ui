@@ -1,0 +1,18 @@
+.ps1ui-tab-list {
+  display: flex;
+  /* Butt tabs together so the selected underline reads as one continuous
+     baseline with the tablist's own bottom border. Consumers can override
+     via className. */
+  gap: 0;
+}
+
+.ps1ui-tab-list--horizontal {
+  flex-direction: row;
+  border-bottom: 1px solid var(--ps1ui-color-border);
+}
+
+.ps1ui-tab-list--vertical {
+  flex-direction: column;
+  align-items: stretch;
+  border-right: 1px solid var(--ps1ui-color-border);
+}

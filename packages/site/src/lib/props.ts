@@ -458,7 +458,13 @@ function destructuredProps(
     if (element.dotDotDotToken) continue;
     const keyNode = element.propertyName ?? element.name;
     if (!keyNode) fail(component, "binding element without a name in the props destructuring");
-    result.set(keyNode.getText(), element.initializer?.getText());
+    // Quoted destructuring — `"aria-controls": ariaControlsProp` — is the
+    // only way to bind a hyphenated key like an aria-* / data-* attribute.
+    // `getText()` returns the quoted source form; strip the quotes so the
+    // key matches native passthrough entries (whose symbol names are
+    // unquoted). Non-string-literal keys keep their source-text form.
+    const key = isStringLiteral(keyNode) ? keyNode.text : keyNode.getText();
+    result.set(key, element.initializer?.getText());
   }
   return result;
 }

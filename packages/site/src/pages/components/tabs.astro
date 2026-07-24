@@ -1,0 +1,132 @@
+---
+import { Tab, TabList, TabPanel, Tabs } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+// Astro renders every framework component in a .astro file as its own island,
+// so the React Context that <Tabs> would use to wire the group's selected
+// value into its <Tab> / <TabPanel> children never crosses the island
+// boundary. The emitted HTML would be a bare tab-list with no aria-selected
+// and every panel visible at once. In a real React app (Next.js, Vite, Remix,
+// or Astro with `client:load` on the group), the composition works via
+// context; here in a static docs page we pin `selected` on each <Tab> and
+// `hidden` on non-active <TabPanel>s so the rendered snapshot matches the
+// snippets below (same pragmatism as radio-group.astro's per-<Radio>
+// name / defaultChecked pinning). Ids are given manually so aria-controls /
+// aria-labelledby still link tabs to their panels.
+---
+
+<ComponentPage slug="tabs">
+  <Demo
+    title="Basic"
+    code={`<Tabs defaultValue="overview">
+  <TabList aria-label="doc sections">
+    <Tab value="overview">Overview</Tab>
+    <Tab value="install">Install</Tab>
+    <Tab value="api">API</Tab>
+  </TabList>
+  <TabPanel value="overview">
+    A monospace UI toolkit for building terminal-inspired dashboards.
+  </TabPanel>
+  <TabPanel value="install">Install with pnpm add @ps1ui/core.</TabPanel>
+  <TabPanel value="api">See the Props table on each component's page.</TabPanel>
+</Tabs>`}
+  >
+    <Tabs>
+      <TabList aria-label="doc sections">
+        <Tab value="overview" selected id="basic-tab-overview" aria-controls="basic-panel-overview">
+          Overview
+        </Tab>
+        <Tab value="install" id="basic-tab-install" aria-controls="basic-panel-install">
+          Install
+        </Tab>
+        <Tab value="api" id="basic-tab-api" aria-controls="basic-panel-api">
+          API
+        </Tab>
+      </TabList>
+      <TabPanel value="overview" id="basic-panel-overview" aria-labelledby="basic-tab-overview">
+        A monospace UI toolkit for building terminal-inspired dashboards.
+      </TabPanel>
+      <TabPanel value="install" id="basic-panel-install" aria-labelledby="basic-tab-install" hidden>
+        Install with pnpm add @ps1ui/core.
+      </TabPanel>
+      <TabPanel value="api" id="basic-panel-api" aria-labelledby="basic-tab-api" hidden>
+        See the Props table on each component&apos;s page.
+      </TabPanel>
+    </Tabs>
+  </Demo>
+
+  <Demo
+    title="With a disabled tab"
+    code={`<Tabs defaultValue="overview">
+  <TabList aria-label="doc sections">
+    <Tab value="overview">Overview</Tab>
+    <Tab value="install" disabled>Install</Tab>
+    <Tab value="api">API</Tab>
+  </TabList>
+  <TabPanel value="overview">Overview content.</TabPanel>
+  <TabPanel value="install">Install content.</TabPanel>
+  <TabPanel value="api">API content.</TabPanel>
+</Tabs>`}
+  >
+    <Tabs>
+      <TabList aria-label="doc sections">
+        <Tab value="overview" selected id="dis-tab-overview" aria-controls="dis-panel-overview">
+          Overview
+        </Tab>
+        <Tab value="install" disabled id="dis-tab-install" aria-controls="dis-panel-install">
+          Install
+        </Tab>
+        <Tab value="api" id="dis-tab-api" aria-controls="dis-panel-api">
+          API
+        </Tab>
+      </TabList>
+      <TabPanel value="overview" id="dis-panel-overview" aria-labelledby="dis-tab-overview">
+        Overview content.
+      </TabPanel>
+      <TabPanel value="install" id="dis-panel-install" aria-labelledby="dis-tab-install" hidden>
+        Install content.
+      </TabPanel>
+      <TabPanel value="api" id="dis-panel-api" aria-labelledby="dis-tab-api" hidden>
+        API content.
+      </TabPanel>
+    </Tabs>
+  </Demo>
+
+  <Demo
+    title="Vertical orientation"
+    code={`<Tabs defaultValue="overview" orientation="vertical">
+  <TabList aria-label="doc sections">
+    <Tab value="overview">Overview</Tab>
+    <Tab value="install">Install</Tab>
+    <Tab value="api">API</Tab>
+  </TabList>
+  <TabPanel value="overview">Overview content.</TabPanel>
+  <TabPanel value="install">Install content.</TabPanel>
+  <TabPanel value="api">API content.</TabPanel>
+</Tabs>`}
+  >
+    <Tabs orientation="vertical">
+      <TabList aria-label="doc sections">
+        <Tab value="overview" selected id="v-tab-overview" aria-controls="v-panel-overview">
+          Overview
+        </Tab>
+        <Tab value="install" id="v-tab-install" aria-controls="v-panel-install">
+          Install
+        </Tab>
+        <Tab value="api" id="v-tab-api" aria-controls="v-panel-api">
+          API
+        </Tab>
+      </TabList>
+      <TabPanel value="overview" id="v-panel-overview" aria-labelledby="v-tab-overview">
+        Overview content.
+      </TabPanel>
+      <TabPanel value="install" id="v-panel-install" aria-labelledby="v-tab-install" hidden>
+        Install content.
+      </TabPanel>
+      <TabPanel value="api" id="v-panel-api" aria-labelledby="v-tab-api" hidden>
+        API content.
+      </TabPanel>
+    </Tabs>
+  </Demo>
+</ComponentPage>
