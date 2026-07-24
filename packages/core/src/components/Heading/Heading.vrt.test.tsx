@@ -1,7 +1,7 @@
 // Visual regression baseline for Heading. Independent per-axis coverage —
-// the full level×size×weight product would be 6×6×4 = 144 combinations
-// with mostly-redundant colour output. Each per-axis case pins one axis
-// and lets the other two ride on the level-default mapping.
+// the full level×variant×size×weight product would be 6×6×6×4 = 864
+// combinations with mostly-redundant output. Each per-axis case pins one
+// axis and lets the others ride on the level-default mapping.
 //
 // The level cases carry double duty: they verify (a) the h1..h6 tag choice
 // and (b) that Heading's LEVEL_DEFAULTS table still maps each level to its
@@ -15,9 +15,23 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { VrtFrame } from "../../testing/vrt";
 import { PS1Root } from "../PS1Root/PS1Root";
-import { Heading, type HeadingLevel, type HeadingSize, type HeadingWeight } from "./Heading";
+import {
+  Heading,
+  type HeadingLevel,
+  type HeadingSize,
+  type HeadingVariant,
+  type HeadingWeight,
+} from "./Heading";
 
 const LEVELS = [1, 2, 3, 4, 5, 6] as const satisfies readonly HeadingLevel[];
+const VARIANTS = [
+  "body",
+  "muted",
+  "subtle",
+  "primary",
+  "accent",
+  "danger",
+] as const satisfies readonly HeadingVariant[];
 const SIZES = ["sm", "md", "lg", "xl", "2xl", "3xl"] as const satisfies readonly HeadingSize[];
 const WEIGHTS = [
   "regular",
@@ -53,8 +67,17 @@ const CASES: readonly Case[] = [
     stageWidth: FRAME_WIDTH,
     node: () => <Heading level={level}>{LABEL}</Heading>,
   })),
-  // Size / weight cases pin level=1 (default 3xl bold) and override one
-  // axis, so a size or weight class regression isolates cleanly.
+  // Variant / size / weight cases pin level=1 (default 3xl bold) and
+  // override one axis, so a regression on that axis isolates cleanly.
+  ...VARIANTS.map((variant) => ({
+    name: `variant-${variant}`,
+    stageWidth: FRAME_WIDTH,
+    node: () => (
+      <Heading level={1} variant={variant}>
+        {LABEL}
+      </Heading>
+    ),
+  })),
   ...SIZES.map((size) => ({
     name: `size-${size}`,
     stageWidth: FRAME_WIDTH,

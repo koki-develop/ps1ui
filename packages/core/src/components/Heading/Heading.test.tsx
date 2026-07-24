@@ -10,11 +10,20 @@ import {
   type HeadingElement,
   type HeadingLevel,
   type HeadingSize,
+  type HeadingVariant,
   type HeadingWeight,
 } from "./Heading";
 
 const LEVELS = [1, 2, 3, 4, 5, 6] as const satisfies readonly HeadingLevel[];
 const AS_VALUES = ["h1", "h2", "h3", "h4", "h5", "h6"] as const satisfies readonly HeadingElement[];
+const VARIANTS = [
+  "body",
+  "muted",
+  "subtle",
+  "primary",
+  "accent",
+  "danger",
+] as const satisfies readonly HeadingVariant[];
 const SIZES = ["sm", "md", "lg", "xl", "2xl", "3xl"] as const satisfies readonly HeadingSize[];
 const WEIGHTS = [
   "regular",
@@ -56,6 +65,19 @@ const WEIGHT_VALUE = {
   semibold: "600",
   bold: "700",
 } as const satisfies Record<HeadingWeight, string>;
+
+// Expected computed color per variant: the --ps1ui-color-* foreground tokens
+// of tokens.css resolved to rgb(). Kept as a table for the same reason as
+// FONT_SIZE_PX below — it pins the variant → token mapping in Heading.css, so
+// pointing a variant at the wrong token fails here and not only in VRT.
+const VARIANT_COLOR = {
+  body: "rgb(199, 213, 223)", // --ps1ui-color-fg        #c7d5df
+  muted: "rgb(139, 152, 165)", // --ps1ui-color-fg-muted  #8b98a5
+  subtle: "rgb(122, 133, 147)", // --ps1ui-color-fg-subtle #7a8593
+  primary: "rgb(126, 231, 135)", // --ps1ui-color-primary   #7ee787
+  accent: "rgb(255, 166, 87)", // --ps1ui-color-accent    #ffa657
+  danger: "rgb(255, 125, 141)", // --ps1ui-color-danger    #ff7d8d
+} as const satisfies Record<HeadingVariant, string>;
 
 // Expected computed font-size: the rem values of --ps1ui-font-size-* tokens
 // resolved at the test browser's default 16px root.
@@ -122,13 +144,40 @@ describe("Heading", () => {
   });
 
   describe("class composition", () => {
-    test("applies the ps1ui-heading base class", async () => {
+    test("applies default classes: ps1ui-heading, variant=body", async () => {
       const screen = await render(
         <Heading level={1} data-testid="h">
           x
         </Heading>,
       );
-      await expect.element(screen.getByTestId("h")).toHaveClass("ps1ui-heading");
+      const el = screen.getByTestId("h").element();
+      expect(el.classList.contains("ps1ui-heading")).toBe(true);
+      expect(el.classList.contains("ps1ui-heading--body")).toBe(true);
+    });
+
+    test.for(VARIANTS.map((variant) => ({ variant })))(
+      "variant=$variant → ps1ui-heading--$variant",
+      async ({ variant }) => {
+        const screen = await render(
+          <Heading level={1} variant={variant} data-testid="h">
+            {variant}
+          </Heading>,
+        );
+        await expect.element(screen.getByTestId("h")).toHaveClass(`ps1ui-heading--${variant}`);
+      },
+    );
+
+    test("variant is independent of level — the variant class does not track level", async () => {
+      // level drives size/weight only; colour stays entirely on the variant
+      // axis, so a non-default level must still land on its variant's class.
+      const screen = await render(
+        <Heading level={4} variant="danger" data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element();
+      expect(el.classList.contains("ps1ui-heading--danger")).toBe(true);
+      expect(el.classList.contains("ps1ui-heading--body")).toBe(false);
     });
 
     test("does not emit legacy size/weight BEM classes (handled via CSS variables now)", async () => {
@@ -257,6 +306,100 @@ describe("Heading", () => {
       const el = screen.getByTestId("h").element() as HTMLElement;
       expect(el.style.letterSpacing).toBe("0.1em");
       expect(el.style.getPropertyValue("--_heading-size-base")).toBe(SIZE_VAR.xl);
+    });
+  });
+
+  // The `RED` wrapper in the cases below is load-bearing wherever the
+  // expectation is the body token: this file imports styles.css, whose
+  // base.css sets `html { color: var(--ps1ui-color-fg) }`, so an element
+  // that resolved its color purely by inheritance would land on the body
+  // token anyway and the assertion would pass vacuously. Contrasting the
+  // ancestor forces the component's own rules to do the work.
+  describe("computed styles: variant colors", () => {
+    const RED = "rgb(255, 0, 0)";
+
+    test.for(VARIANTS.map((variant) => ({ variant, expected: VARIANT_COLOR[variant] })))(
+      "variant=$variant → color resolves to $expected",
+      async ({ variant, expected }) => {
+        const screen = await render(
+          <div style={{ color: RED }}>
+            <Heading level={1} variant={variant} data-testid="h">
+              x
+            </Heading>
+          </div>,
+        );
+        const el = screen.getByTestId("h").element() as HTMLElement;
+        expect(getComputedStyle(el).color).toBe(expected);
+      },
+    );
+
+    test("no variant prop → resolves to the body token, not an inherited color", async () => {
+      const screen = await render(
+        <div style={{ color: RED }}>
+          <Heading level={1} data-testid="h">
+            x
+          </Heading>
+        </div>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).color).toBe(VARIANT_COLOR.body);
+    });
+
+    test("the base class alone carries the body color (defensive floor)", async () => {
+      // `.ps1ui-heading` is public API: a consumer can apply it to their own
+      // markup, and an untyped caller can pass a `variant` string matching no
+      // modifier. Both reach the base rule with no `--<variant>` class, so it
+      // keeps its own `color` — see Heading.css. Raw markup here on purpose:
+      // the component can't produce this state, which is exactly the point.
+      const screen = await render(
+        <div style={{ color: "rgb(255, 0, 0)" }}>
+          <h2 className="ps1ui-heading" data-testid="raw">
+            x
+          </h2>
+          <h2 className="ps1ui-heading ps1ui-heading--nonsense" data-testid="unknown-variant">
+            x
+          </h2>
+        </div>,
+      );
+      for (const testId of ["raw", "unknown-variant"]) {
+        const el = screen.getByTestId(testId).element() as HTMLElement;
+        expect(getComputedStyle(el).color).toBe(VARIANT_COLOR.body);
+      }
+    });
+
+    test("a variant modifier still wins over the base color", async () => {
+      // The base `color` and the modifiers share specificity — the modifiers
+      // only win because they are declared after the base rule. A reorder of
+      // Heading.css would silently pin every heading to the body token.
+      const screen = await render(
+        <Heading level={1} variant="danger" data-testid="h">
+          x
+        </Heading>,
+      );
+      const el = screen.getByTestId("h").element() as HTMLElement;
+      expect(getComputedStyle(el).color).toBe(VARIANT_COLOR.danger);
+    });
+
+    test("a nested Heading does not inherit the outer heading's variant color", async () => {
+      // `color` is an inherited property, so a nested heading inside a
+      // `variant="danger"` heading would pick the danger token up for free.
+      // Every Heading emitting its own variant class is what prevents that.
+      // (The h1 > h2 nesting is invalid HTML but renders — same technique as
+      // the per-breakpoint leak matrix below.)
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const screen = await render(
+          <Heading level={1} variant="danger" data-testid="outer">
+            <Heading level={2} data-testid="inner">
+              x
+            </Heading>
+          </Heading>,
+        );
+        const inner = screen.getByTestId("inner").element() as HTMLElement;
+        expect(getComputedStyle(inner).color).toBe(VARIANT_COLOR.body);
+      } finally {
+        consoleError.mockRestore();
+      }
     });
   });
 
@@ -507,6 +650,17 @@ describe("Heading", () => {
       ),
     );
 
+    const variantCases: A11yCase[] = VARIANTS.map(
+      (variant): A11yCase => ({
+        name: `variant=${variant} on level 1`,
+        node: () => (
+          <Heading level={1} variant={variant}>
+            {`heading variant=${variant}`}
+          </Heading>
+        ),
+      }),
+    );
+
     const structuralCases: A11yCase[] = [
       {
         name: "heading-order: h1 → h6 in sequence passes axe",
@@ -563,7 +717,7 @@ describe("Heading", () => {
       },
     ];
 
-    test.for([...matrixCases, ...structuralCases])(
+    test.for([...matrixCases, ...variantCases, ...structuralCases])(
       "$name → no axe violations",
       async ({ node }) => {
         const screen = await render(node());

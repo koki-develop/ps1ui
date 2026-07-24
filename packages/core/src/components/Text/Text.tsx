@@ -2,15 +2,21 @@ import { createElement } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import { cx } from "../../utils/cx";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
-import { fontSizeToVar, weightToValue, type FontWeight } from "../../utils/typography";
+import {
+  fontSizeToVar,
+  weightToValue,
+  type FontWeight,
+  type TypographyVariant,
+} from "../../utils/typography";
 
 export type TextElement = "p" | "span" | "div" | "label" | "strong" | "em" | "small";
 
-export type TextVariant = "body" | "muted" | "subtle" | "primary" | "accent" | "danger";
+// TextVariant / TextWeight are re-exports of the shared TypographyVariant /
+// FontWeight scales. Keeping component-local aliases preserves the public
+// type names (backwards compat) while the underlying scales stay
+// single-sourced in utils/typography.ts.
+export type TextVariant = TypographyVariant;
 export type TextSize = "xs" | "sm" | "md" | "lg" | "xl";
-// TextWeight is a re-export of the shared FontWeight scale. Keeping a
-// component-local alias preserves the public type name (backwards compat)
-// while the underlying scale stays single-sourced in utils/typography.ts.
 export type TextWeight = FontWeight;
 
 type TextOwnProps<E extends TextElement> = {

@@ -14,6 +14,15 @@ const levels = `<Heading level={1}>Heading 1</Heading>
 <Heading level={5}>Heading 5</Heading>
 <Heading level={6}>Heading 6</Heading>`;
 
+// Every heading in the variants demo stays at level 3 so the page's heading
+// outline gains no skipped step — the demo varies colour only.
+const variants = `<Heading level={3} variant="body">body — default foreground</Heading>
+<Heading level={3} variant="muted">muted — secondary information</Heading>
+<Heading level={3} variant="subtle">subtle — tertiary information</Heading>
+<Heading level={3} variant="primary">primary — brand green</Heading>
+<Heading level={3} variant="accent">accent — warm highlight</Heading>
+<Heading level={3} variant="danger">danger — destructive or error</Heading>`;
+
 const sizeOverride = `<Heading level={2} size="3xl">
   Looks like an h1, stays an h2
 </Heading>`;
@@ -32,6 +41,17 @@ const responsive = `<Heading level={2} size={{ base: "xl", md: "3xl" }}>
       <Heading level={4}>Heading 4</Heading>
       <Heading level={5}>Heading 5</Heading>
       <Heading level={6}>Heading 6</Heading>
+    </Stack>
+  </Demo>
+
+  <Demo title="Variants" code={variants}>
+    <Stack direction="column" gap="md">
+      <Heading level={3} variant="body">body — default foreground</Heading>
+      <Heading level={3} variant="muted">muted — secondary information</Heading>
+      <Heading level={3} variant="subtle">subtle — tertiary information</Heading>
+      <Heading level={3} variant="primary">primary — brand green</Heading>
+      <Heading level={3} variant="accent">accent — warm highlight</Heading>
+      <Heading level={3} variant="danger">danger — destructive or error</Heading>
     </Stack>
   </Demo>
 
