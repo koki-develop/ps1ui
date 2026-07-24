@@ -17,7 +17,34 @@
   --ps1ui-color-primary-hover: #56d364;
   --ps1ui-color-primary-active: #3fb950;
   --ps1ui-color-primary-fg: #0b0f14;
+  /* accent — the third semantic hue after primary and danger. Publishes the
+     same {base, hover, active, fg} quartet so any component that supports
+     colour variants can treat accent as first-class. Hover / active darken
+     the orange while keeping ≥ 4.5:1 contrast against --ps1ui-color-accent-fg;
+     verified by Badge.contrast.test.tsx. */
   --ps1ui-color-accent: #ffa657;
+  --ps1ui-color-accent-hover: #f09045;
+  --ps1ui-color-accent-active: #db7a2f;
+  /* Foreground used on solid accent fills. Same dark-canvas hex as
+     --ps1ui-color-primary-fg / --ps1ui-color-danger-fg so any solid variant
+     across primary/accent/danger reads as one system. */
+  --ps1ui-color-accent-fg: #0b0f14;
+  /* muted — neutral semantic colour for chips/tags without semantic
+     meaning (draft, archived, unassigned). Published as a full quartet
+     parallel to primary/accent/danger so components can treat "no
+     particular colour" as a first-class choice instead of overloading a
+     text-foreground token (--ps1ui-color-fg-muted). --ps1ui-color-muted
+     shares its hex with --ps1ui-color-fg-muted today but is a distinct
+     semantic slot — a future tuning of one does NOT drag the other along.
+     --ps1ui-color-muted must maintain ≥ 4.5:1 vs --ps1ui-color-muted-fg
+     for the solid variant, and ≥ 4.5:1 as a text colour on both
+     --ps1ui-color-bg and --ps1ui-color-surface for outline / subtle
+     variants; hover/active preserve those thresholds. Verified by
+     Badge.contrast.test.tsx. */
+  --ps1ui-color-muted: #8b98a5;
+  --ps1ui-color-muted-hover: #7d8a97;
+  --ps1ui-color-muted-active: #74808c;
+  --ps1ui-color-muted-fg: #0b0f14;
   /* Destructive / error signalling. Hue sits in the rose-coral band the code
      palette already inhabits (--ps1ui-code-keyword / -tag / -deleted) so the
      surface reads as one system; luminance is tuned so the base color hits

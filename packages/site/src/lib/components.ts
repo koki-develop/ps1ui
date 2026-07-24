@@ -107,6 +107,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
     title: "Content",
     items: [
       {
+        slug: "badge",
+        name: "Badge",
+        description: "Compact chip for tags, statuses, and count markers.",
+      },
+      {
         slug: "card",
         name: "Card",
         description: "Bordered surface for grouping related content.",

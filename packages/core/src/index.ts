@@ -6,6 +6,9 @@ export type { Breakpoint, Responsive } from "./utils/responsive";
 export { Anchor } from "./components/Anchor/Anchor";
 export type { AnchorProps, AnchorVariant } from "./components/Anchor/Anchor";
 
+export { Badge } from "./components/Badge/Badge";
+export type { BadgeColor, BadgeProps, BadgeVariant } from "./components/Badge/Badge";
+
 export { Button } from "./components/Button/Button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button/Button";
 

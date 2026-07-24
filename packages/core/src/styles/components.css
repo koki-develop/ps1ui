@@ -23,6 +23,7 @@
 @import "./tokens.css";
 @import "../components/PS1Root/PS1Root.css";
 @import "../components/Anchor/Anchor.css";
+@import "../components/Badge/Badge.css";
 @import "../components/Button/Button.css";
 @import "../components/Checkbox/Checkbox.css";
 @import "../components/Container/Container.css";
@@ -88,6 +89,7 @@
    adjustments (e.g. Checkbox's indeterminate bar) stay in their own CSS.
    Tested in src/styles/forced-colors.test.tsx. */
 @media (forced-colors: active) {
+  .ps1ui-badge:focus-visible,
   .ps1ui-button:focus-visible,
   .ps1ui-checkbox:focus-visible,
   .ps1ui-codeblock:focus-visible,
