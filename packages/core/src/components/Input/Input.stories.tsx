@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Label } from "../Label/Label";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Input } from "./Input";
 
@@ -47,16 +48,16 @@ export const Password: Story = {
 
 export const WithLabel: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <Stack gap="sm">
       <Label htmlFor="email-with-label">email address</Label>
       <Input id="email-with-label" placeholder="you@example.com" />
-    </div>
+    </Stack>
   ),
 };
 
 export const Invalid: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <Stack gap="sm">
       <Label htmlFor="invalid-email">email address</Label>
       <Input
         id="invalid-email"
@@ -67,6 +68,6 @@ export const Invalid: Story = {
       <Text as="span" id="invalid-hint" variant="accent" size="xs">
         please enter a valid email address
       </Text>
-    </div>
+    </Stack>
   ),
 };

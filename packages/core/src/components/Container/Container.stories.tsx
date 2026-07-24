@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Container } from "./Container";
 
@@ -54,7 +55,7 @@ export const Default: Story = {
 
 export const Sizes: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <Stack>
       {(["sm", "md", "lg", "xl", "full"] as const).map((size) => (
         <Container key={size} size={size} style={outlineStyle}>
           <Card style={markerPadding}>
@@ -62,13 +63,13 @@ export const Sizes: Story = {
           </Card>
         </Container>
       ))}
-    </div>
+    </Stack>
   ),
 };
 
 export const HorizontalPadding: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <Stack>
       {(["none", "xs", "sm", "md", "lg", "xl", "2xl"] as const).map((px) => (
         <Container key={px} px={px} style={outlineStyle}>
           <Card style={markerPadding}>
@@ -76,7 +77,7 @@ export const HorizontalPadding: Story = {
           </Card>
         </Container>
       ))}
-    </div>
+    </Stack>
   ),
 };
 

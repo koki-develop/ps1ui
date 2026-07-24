@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 
+import { Stack } from "../Stack/Stack";
 import { Button } from "./Button";
 
 const meta = {
@@ -96,11 +97,11 @@ export const Large: Story = {
 // — the individual size stories above cover each size in isolation.
 export const Sizes: Story = {
   render: () => (
-    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+    <Stack direction="row" gap="md" align="center">
       <Button size="sm">Small</Button>
       <Button size="md">Medium</Button>
       <Button size="lg">Large</Button>
-    </div>
+    </Stack>
   ),
 };
 

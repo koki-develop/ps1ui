@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Input } from "../Input/Input";
+import { Stack } from "../Stack/Stack";
 import { Label } from "./Label";
 
 const meta = {
@@ -21,10 +22,10 @@ export const Default: Story = {
 
 export const WithInput: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <Stack gap="sm">
       <Label htmlFor="email-with-input">email address</Label>
       <Input id="email-with-input" placeholder="you@example.com" />
-    </div>
+    </Stack>
   ),
 };
 

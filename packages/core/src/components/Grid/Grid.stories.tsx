@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Grid } from "./Grid";
 
@@ -48,7 +49,7 @@ export const Default: Story = {
 
 export const Columns: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Stack gap="lg">
       {[1, 2, 3, 4, 6, 12].map((n) => (
         <div key={n}>
           <Text as="div" variant="muted" size="xs" style={{ marginBottom: 4 }}>
@@ -59,13 +60,13 @@ export const Columns: Story = {
           </Grid>
         </div>
       ))}
-    </div>
+    </Stack>
   ),
 };
 
 export const Gaps: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Stack gap="lg">
       {(["none", "xs", "sm", "md", "lg", "xl", "2xl"] as const).map((g) => (
         <div key={g}>
           <Text as="div" variant="muted" size="xs" style={{ marginBottom: 4 }}>
@@ -76,7 +77,7 @@ export const Gaps: Story = {
           </Grid>
         </div>
       ))}
-    </div>
+    </Stack>
   ),
 };
 

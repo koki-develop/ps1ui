@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useId } from "react";
 
 import { Button } from "../Button/Button";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Card } from "./Card";
 
@@ -25,10 +26,10 @@ export const Default: Story = {
         <Text as="p" variant="muted" style={{ marginBottom: 18 }}>
           A dev-focused React UI kit. Monospace type, dark ground, single-stroke lines.
         </Text>
-        <div style={{ display: "flex", gap: 8 }}>
+        <Stack direction="row" gap="sm">
           <Button variant="primary">try it</Button>
           <Button variant="secondary">docs</Button>
-        </div>
+        </Stack>
       </>
     ),
   },

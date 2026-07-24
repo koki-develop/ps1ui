@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Card } from "../Card/Card";
 import { Input } from "../Input/Input";
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Stack } from "../Stack/Stack";
 import { Text } from "./Text";
 
 const meta = {
@@ -37,43 +38,43 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Text variant="body">body — default foreground</Text>
       <Text variant="muted">muted — secondary foreground</Text>
       <Text variant="subtle">subtle — least emphasis</Text>
       <Text variant="primary">primary — accent green</Text>
       <Text variant="accent">accent — accent orange</Text>
       <Text variant="danger">danger — destructive / error</Text>
-    </div>
+    </Stack>
   ),
 };
 
 export const Sizes: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Text size="xs">xs — 12px</Text>
       <Text size="sm">sm — 14px</Text>
       <Text size="md">md — 16px</Text>
       <Text size="lg">lg — 18px</Text>
       <Text size="xl">xl — 22px</Text>
-    </div>
+    </Stack>
   ),
 };
 
 export const Weights: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Text weight="regular">regular</Text>
       <Text weight="medium">medium</Text>
       <Text weight="semibold">semibold</Text>
       <Text weight="bold">bold</Text>
-    </div>
+    </Stack>
   ),
 };
 
 export const AsElement: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Text as="label" htmlFor="email" weight="medium">
         email address
       </Text>
@@ -81,7 +82,7 @@ export const AsElement: Story = {
       <Text as="span" variant="muted" size="xs">
         inline span, e.g. for helper copy next to a field
       </Text>
-    </div>
+    </Stack>
   ),
 };
 
@@ -109,14 +110,14 @@ export const ResponsiveSize: Story = {
 export const OnSurface: Story = {
   render: () => (
     <Card style={{ maxWidth: 360 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Stack gap="sm">
         <Text variant="body">body — default foreground on surface</Text>
         <Text variant="muted">muted — secondary foreground on surface</Text>
         <Text variant="subtle">subtle — least emphasis on surface</Text>
         <Text variant="primary">primary — accent green on surface</Text>
         <Text variant="accent">accent — accent orange on surface</Text>
         <Text variant="danger">danger — destructive / error on surface</Text>
-      </div>
+      </Stack>
     </Card>
   ),
 };

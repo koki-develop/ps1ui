@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Fragment } from "react";
 
+import { Stack } from "../Stack/Stack";
 import { Badge } from "./Badge";
 
 const meta = {
@@ -87,7 +88,7 @@ export const Matrix: Story = {
           >
             {variant}
           </span>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Stack direction="row" gap="sm" wrap>
             <Badge variant={variant} color="primary">
               primary
             </Badge>
@@ -100,7 +101,7 @@ export const Matrix: Story = {
             <Badge variant={variant} color="muted">
               muted
             </Badge>
-          </div>
+          </Stack>
         </Fragment>
       ))}
     </div>

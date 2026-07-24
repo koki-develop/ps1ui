@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Card } from "../Card/Card";
 import { Grid } from "../Grid/Grid";
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { GridItem } from "./GridItem";
 
@@ -47,7 +48,7 @@ export const Default: Story = {
 // One row per span count so the effect on a 6-column Grid is unambiguous.
 export const Spans: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Stack gap="lg">
       {[1, 2, 3, 4, 6].map((n) => (
         <div key={n}>
           <Text as="div" variant="muted" size="xs" style={{ marginBottom: 4 }}>
@@ -61,7 +62,7 @@ export const Spans: Story = {
           </Grid>
         </div>
       ))}
-    </div>
+    </Stack>
   ),
 };
 

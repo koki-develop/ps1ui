@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 
 import { Card } from "../Card/Card";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Anchor } from "./Anchor";
 
@@ -44,14 +45,14 @@ export const Subtle: Story = {
 export const Variants: Story = {
   args: { href: "#" },
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Anchor href="#" variant="primary">
         primary — accent green, always underlined
       </Anchor>
       <Anchor href="#" variant="subtle">
         subtle — inherits color, underline in fg-subtle
       </Anchor>
-    </div>
+    </Stack>
   ),
 };
 
@@ -107,7 +108,7 @@ export const OnSurface: Story = {
   args: { href: "#" },
   render: () => (
     <Card style={{ maxWidth: 360 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Stack gap="sm">
         <Anchor href="#" variant="primary">
           primary on surface
         </Anchor>
@@ -118,7 +119,7 @@ export const OnSurface: Story = {
           </Anchor>{" "}
           embedded in the middle.
         </Text>
-      </div>
+      </Stack>
     </Card>
   ),
 };

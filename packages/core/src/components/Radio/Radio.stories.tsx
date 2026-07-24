@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Label } from "../Label/Label";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Radio } from "./Radio";
 
@@ -51,10 +52,10 @@ export const DisabledChecked: Story = {
 
 export const WithLabel: Story = {
   render: () => (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <Stack direction="row" gap="sm" align="center">
       <Radio id="r-a" name="pick" value="a" />
       <Label htmlFor="r-a">option a</Label>
-    </div>
+    </Stack>
   ),
 };
 
@@ -69,8 +70,8 @@ export const NestedInLabel: Story = {
 
 export const Invalid: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <Stack gap="xs">
+      <Stack direction="row" gap="sm" align="center">
         <Radio
           id="r-invalid"
           name="pick"
@@ -79,10 +80,10 @@ export const Invalid: Story = {
           aria-describedby="r-invalid-hint"
         />
         <Label htmlFor="r-invalid">option a</Label>
-      </div>
+      </Stack>
       <Text as="span" id="r-invalid-hint" variant="accent" size="xs">
         please pick one option
       </Text>
-    </div>
+    </Stack>
   ),
 };

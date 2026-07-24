@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Heading } from "./Heading";
 
@@ -42,13 +43,15 @@ export const Default: Story = {
 export const Levels: Story = {
   args: { level: 1 },
   render: () => (
-    <article style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Heading level={1}>Level 1 — page title</Heading>
-      <Heading level={2}>Level 2 — section</Heading>
-      <Heading level={3}>Level 3 — subsection</Heading>
-      <Heading level={4}>Level 4 — sub-subsection</Heading>
-      <Heading level={5}>Level 5 — minor</Heading>
-      <Heading level={6}>Level 6 — smallest</Heading>
+    <article>
+      <Stack gap="md">
+        <Heading level={1}>Level 1 — page title</Heading>
+        <Heading level={2}>Level 2 — section</Heading>
+        <Heading level={3}>Level 3 — subsection</Heading>
+        <Heading level={4}>Level 4 — sub-subsection</Heading>
+        <Heading level={5}>Level 5 — minor</Heading>
+        <Heading level={6}>Level 6 — smallest</Heading>
+      </Stack>
     </article>
   ),
 };
@@ -56,14 +59,16 @@ export const Levels: Story = {
 export const SizeOverrides: Story = {
   args: { level: 1 },
   render: () => (
-    <article style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Heading level={1}>Level 1 default (3xl)</Heading>
-      <Heading level={2} size="sm">
-        Level 2 with size=sm — small headline
-      </Heading>
-      <Heading level={3} size="3xl">
-        Level 3 with size=3xl — visually promoted
-      </Heading>
+    <article>
+      <Stack gap="md">
+        <Heading level={1}>Level 1 default (3xl)</Heading>
+        <Heading level={2} size="sm">
+          Level 2 with size=sm — small headline
+        </Heading>
+        <Heading level={3} size="3xl">
+          Level 3 with size=3xl — visually promoted
+        </Heading>
+      </Stack>
     </article>
   ),
 };
@@ -71,14 +76,16 @@ export const SizeOverrides: Story = {
 export const WeightOverrides: Story = {
   args: { level: 1 },
   render: () => (
-    <article style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Heading level={1}>Level 1 default (bold)</Heading>
-      <Heading level={2} weight="regular">
-        Level 2 with weight=regular
-      </Heading>
-      <Heading level={3} weight="bold">
-        Level 3 with weight=bold
-      </Heading>
+    <article>
+      <Stack gap="md">
+        <Heading level={1}>Level 1 default (bold)</Heading>
+        <Heading level={2} weight="regular">
+          Level 2 with weight=regular
+        </Heading>
+        <Heading level={3} weight="bold">
+          Level 3 with weight=bold
+        </Heading>
+      </Stack>
     </article>
   ),
 };
@@ -88,14 +95,16 @@ export const WeightOverrides: Story = {
 export const AsOverride: Story = {
   args: { level: 1 },
   render: () => (
-    <article style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Heading level={1}>Doc title (level 1)</Heading>
-      <Heading level={2} as="h2" size="lg">
-        Level 2 rendered smaller (as=h2, size=lg)
-      </Heading>
-      <Heading level={3} as="h3" size="xl">
-        Level 3 rendered larger (as=h3, size=xl)
-      </Heading>
+    <article>
+      <Stack gap="md">
+        <Heading level={1}>Doc title (level 1)</Heading>
+        <Heading level={2} as="h2" size="lg">
+          Level 2 rendered smaller (as=h2, size=lg)
+        </Heading>
+        <Heading level={3} as="h3" size="xl">
+          Level 3 rendered larger (as=h3, size=xl)
+        </Heading>
+      </Stack>
     </article>
   ),
 };
@@ -118,28 +127,30 @@ export const ResponsiveSize: Story = {
 export const WithBodyText: Story = {
   args: { level: 1 },
   render: () => (
-    <article style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 520 }}>
-      <Heading level={1}>Getting started</Heading>
-      <Text>
-        ps1ui ships a monospace design system built on JetBrains Mono. Every component is a thin
-        wrapper around a native element, styled with CSS custom properties.
-      </Text>
+    <article style={{ maxWidth: 520 }}>
+      <Stack gap="sm">
+        <Heading level={1}>Getting started</Heading>
+        <Text>
+          ps1ui ships a monospace design system built on JetBrains Mono. Every component is a thin
+          wrapper around a native element, styled with CSS custom properties.
+        </Text>
 
-      <Heading level={2} style={{ marginTop: 16 }}>
-        Installation
-      </Heading>
-      <Text>
-        Add{" "}
-        <Text as="strong" weight="bold">
-          @ps1ui/core
-        </Text>{" "}
-        to your project and import the compiled stylesheet once at your entry point.
-      </Text>
+        <Heading level={2} style={{ marginTop: 16 }}>
+          Installation
+        </Heading>
+        <Text>
+          Add{" "}
+          <Text as="strong" weight="bold">
+            @ps1ui/core
+          </Text>{" "}
+          to your project and import the compiled stylesheet once at your entry point.
+        </Text>
 
-      <Heading level={3} style={{ marginTop: 12 }}>
-        Requirements
-      </Heading>
-      <Text>React 19+. Tokens rely on CSS variables and JetBrains Mono Variable.</Text>
+        <Heading level={3} style={{ marginTop: 12 }}>
+          Requirements
+        </Heading>
+        <Text>React 19+. Tokens rely on CSS variables and JetBrains Mono Variable.</Text>
+      </Stack>
     </article>
   ),
 };

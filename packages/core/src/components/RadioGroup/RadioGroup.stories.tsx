@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Label } from "../Label/Label";
 import { Radio } from "../Radio/Radio";
+import { Stack } from "../Stack/Stack";
 import { RadioGroup } from "./RadioGroup";
 
 const meta = {
@@ -48,7 +49,7 @@ export const Disabled: Story = {
 
 export const WithLabelledBy: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Stack gap="sm">
       <Label id="grp-label">favourite fruit</Label>
       <RadioGroup aria-labelledby="grp-label" defaultValue="apple">
         <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -60,6 +61,6 @@ export const WithLabelledBy: Story = {
           banana
         </Label>
       </RadioGroup>
-    </div>
+    </Stack>
   ),
 };

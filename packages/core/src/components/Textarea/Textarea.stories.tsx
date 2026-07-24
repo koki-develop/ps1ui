@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Label } from "../Label/Label";
+import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
 import { Textarea } from "./Textarea";
 
@@ -49,16 +50,16 @@ export const Rows: Story = {
 
 export const WithLabel: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <Stack gap="sm">
       <Label htmlFor="notes-with-label">Notes</Label>
       <Textarea id="notes-with-label" placeholder="write your thoughts…" />
-    </div>
+    </Stack>
   ),
 };
 
 export const Invalid: Story = {
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <Stack gap="sm">
       <Label htmlFor="invalid-notes">Notes</Label>
       <Textarea
         id="invalid-notes"
@@ -69,6 +70,6 @@ export const Invalid: Story = {
       <Text as="span" id="invalid-notes-hint" variant="accent" size="xs">
         notes cannot be empty
       </Text>
-    </div>
+    </Stack>
   ),
 };
