@@ -117,6 +117,13 @@ export type { TabProps } from "./components/Tab/Tab";
 export { TabPanel } from "./components/TabPanel/TabPanel";
 export type { TabPanelProps } from "./components/TabPanel/TabPanel";
 
+export { Tooltip } from "./components/Tooltip/Tooltip";
+export type {
+  TooltipPlacement,
+  TooltipProps,
+  TooltipTriggerProps,
+} from "./components/Tooltip/Tooltip";
+
 export { Heading } from "./components/Heading/Heading";
 export type {
   HeadingElement,

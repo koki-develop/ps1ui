@@ -160,6 +160,12 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
           "Composable tabs with roving keyboard focus, automatic activation, and horizontal or vertical layout.",
         childComponents: ["TabList", "Tab", "TabPanel"],
       },
+      {
+        slug: "tooltip",
+        name: "Tooltip",
+        description:
+          "Anchored hint that reveals descriptive text on hover or keyboard focus of a trigger.",
+      },
     ],
   },
 ];
