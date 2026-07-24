@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0](https://github.com/koki-develop/ps1ui/compare/core-v0.3.0...core-v0.4.0) (2026-07-24)
+
+
+### Features
+
+* Add `variant` prop to Heading ([2ed493d](https://github.com/koki-develop/ps1ui/commit/2ed493dc5a04816a3432d82ec9c7cee4e606e4ed))
+* Add Divider component ([#70](https://github.com/koki-develop/ps1ui/issues/70)) ([7ccf735](https://github.com/koki-develop/ps1ui/commit/7ccf735a3ad5c106f7c13cafda7a829bc214c6c5))
+* Add Tooltip component ([#72](https://github.com/koki-develop/ps1ui/issues/72)) ([99f329d](https://github.com/koki-develop/ps1ui/commit/99f329df4bdc9a76ee91f47056e97369647017e9))
+* Apply Tooltip to ContributionGraph with keyboard-navigable cells ([053e3c7](https://github.com/koki-develop/ps1ui/commit/053e3c781b47d48ca3afb83f577a672f1d5a43a5))
+
 ## [0.3.0](https://github.com/koki-develop/ps1ui/compare/core-v0.2.0...core-v0.3.0) (2026-07-24)
 
 
