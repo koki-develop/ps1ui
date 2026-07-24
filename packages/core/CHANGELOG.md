@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/koki-develop/ps1ui/compare/core-v0.2.0...core-v0.3.0) (2026-07-24)
+
+
+### Features
+
+* Add Badge component ([#66](https://github.com/koki-develop/ps1ui/issues/66)) ([7d33e39](https://github.com/koki-develop/ps1ui/commit/7d33e39a76b83d634828295671e45352e8fd0dc1))
+* Add Image component ([20452ce](https://github.com/koki-develop/ps1ui/commit/20452ce7877f46e48cf81159dce7975c3b39bf08))
+* Add Radio and RadioGroup components ([#59](https://github.com/koki-develop/ps1ui/issues/59)) ([1ab5688](https://github.com/koki-develop/ps1ui/commit/1ab568817df54d3a0a4a695ca4e46361648d8973))
+* Add size prop to Button ([#56](https://github.com/koki-develop/ps1ui/issues/56)) ([44e2e1b](https://github.com/koki-develop/ps1ui/commit/44e2e1b53c956a14ff4d5faef9e03a34519fbfbf))
+* Add Tabs component ([#69](https://github.com/koki-develop/ps1ui/issues/69)) ([bd56873](https://github.com/koki-develop/ps1ui/commit/bd56873d7f10f4c049a587f89f8db48ecbff6a64))
+
 ## [0.2.0](https://github.com/koki-develop/ps1ui/compare/core-v0.1.0...core-v0.2.0) (2026-07-21)
 
 
