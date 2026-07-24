@@ -49,6 +49,31 @@
   --ps1ui-code-inserted: #7ee787;
   --ps1ui-code-deleted: #ff8896;
 
+  /* ContributionGraph intensity ramp. Fixed to the primary hue so a graph
+     reads as one system with the rest of the palette; the "no activity"
+     bucket reuses --ps1ui-color-border rather than surface so an empty
+     cell stays distinguishable from the canvas around it. Mixed against
+     --ps1ui-color-surface (not bg) so the ramp holds up when the graph
+     sits inside a Card. Consumers can retint the whole ramp by
+     redefining these five variables. */
+  --ps1ui-contribution-l0: var(--ps1ui-color-border);
+  --ps1ui-contribution-l1: color-mix(
+    in srgb,
+    var(--ps1ui-color-primary) 22%,
+    var(--ps1ui-color-surface)
+  );
+  --ps1ui-contribution-l2: color-mix(
+    in srgb,
+    var(--ps1ui-color-primary) 46%,
+    var(--ps1ui-color-surface)
+  );
+  --ps1ui-contribution-l3: color-mix(
+    in srgb,
+    var(--ps1ui-color-primary) 70%,
+    var(--ps1ui-color-surface)
+  );
+  --ps1ui-contribution-l4: var(--ps1ui-color-primary);
+
   --ps1ui-radius-md: 3px;
   --ps1ui-radius-lg: 4px;
 

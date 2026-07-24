@@ -122,6 +122,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Syntax-highlighted code powered by Prism grammars.",
       },
       {
+        slug: "contribution-graph",
+        name: "ContributionGraph",
+        description: "GitHub-style activity heatmap — a year of days as a 7×N grid of intensity cells.",
+      },
+      {
         slug: "details",
         name: "Details",
         description: "Collapsible section built on the native <details>/<summary> element.",

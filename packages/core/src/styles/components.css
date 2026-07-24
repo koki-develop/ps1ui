@@ -26,6 +26,7 @@
 @import "../components/Button/Button.css";
 @import "../components/Checkbox/Checkbox.css";
 @import "../components/Container/Container.css";
+@import "../components/ContributionGraph/ContributionGraph.css";
 @import "../components/Grid/Grid.css";
 @import "../components/GridItem/GridItem.css";
 @import "../components/Image/Image.css";
@@ -90,6 +91,7 @@
   .ps1ui-button:focus-visible,
   .ps1ui-checkbox:focus-visible,
   .ps1ui-codeblock:focus-visible,
+  .ps1ui-contribution-graph__scroller:focus-visible,
   .ps1ui-details__summary:focus-visible,
   .ps1ui-input:focus,
   .ps1ui-radio:focus-visible,

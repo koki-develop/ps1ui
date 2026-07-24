@@ -44,6 +44,13 @@ export type { SpaceScale } from "./utils/spacing";
 export { Container } from "./components/Container/Container";
 export type { ContainerProps, ContainerSize } from "./components/Container/Container";
 
+export { ContributionGraph } from "./components/ContributionGraph/ContributionGraph";
+export type {
+  ContributionDay,
+  ContributionGraphProps,
+  ContributionGraphWeekStart,
+} from "./components/ContributionGraph/ContributionGraph";
+
 export { Grid } from "./components/Grid/Grid";
 export type { GridGap, GridProps } from "./components/Grid/Grid";
 

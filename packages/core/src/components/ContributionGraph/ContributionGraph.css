@@ -1,0 +1,98 @@
+/* ContributionGraph — GitHub-style activity heatmap.
+   The grid, month labels, and weekday labels all render inside a single
+   <svg> so the geometry stays authoritative (viewBox pixels), while the
+   legend below sits in plain HTML so caller CSS can flow it alongside
+   other page chrome without needing SVG-specific selectors.
+
+   Layering:
+   - Root is a flex column so the scroller and the legend stack vertically
+     and the legend can right-align via `align-self: flex-end`.
+   - The SVG sits inside a `__scroller` div (`overflow-x: auto`) so a full
+     year fits inside a narrow viewport by scrolling instead of forcing its
+     parent wider — same pattern Table uses for wide tables. `min-width: 0`
+     lets the scroller shrink below the SVG's intrinsic width inside a flex
+     column (flex items default to `min-width: auto` = min-content, which
+     equals the SVG's intrinsic size and would defeat the scroll).
+   - Focus ring on the scroller reuses the shared box-shadow token so
+     forced-colors substitution (see the grouped rule in
+     src/styles/components.css) can restore a real outline in high-contrast
+     mode. */
+
+.ps1ui-contribution-graph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ps1ui-space-sm);
+  color: var(--ps1ui-color-fg);
+  font-family: var(--ps1ui-font-mono);
+  /* Hug whichever child is widest — the SVG's intrinsic width or the legend
+     row — so the `align-self: flex-end` legend below sits at the graph's
+     right edge on wide screens instead of the container's far edge. When
+     the SVG is narrower than the legend (short data ranges), `fit-content`
+     lets the wrapper expand to fit the legend so it doesn't overflow the
+     wrapper's left edge either. `max-width: 100%` still caps at the parent
+     so a full year inside a narrow viewport stays constrained and the
+     internal scroller absorbs the overflow. */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.ps1ui-contribution-graph__scroller {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.ps1ui-contribution-graph__scroller:focus-visible {
+  outline: none;
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-contribution-graph__svg {
+  /* Reset overrides the html <svg> block-display; we want the SVG to keep
+     its intrinsic (viewBox) size so the scroller can measure overflow
+     against a stable content width. */
+  display: block;
+  overflow: visible;
+}
+
+.ps1ui-contribution-graph__month,
+.ps1ui-contribution-graph__weekday {
+  fill: var(--ps1ui-color-fg-muted);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-xs);
+}
+
+/* Cell fill is token-driven via [data-level]. Colors are declared once here
+   and reused by the legend swatches (same class), so the graph and legend
+   can't drift out of sync. */
+.ps1ui-contribution-graph__cell {
+  transition: fill var(--ps1ui-transition-fast);
+}
+.ps1ui-contribution-graph__cell[data-level="0"] {
+  fill: var(--ps1ui-contribution-l0);
+}
+.ps1ui-contribution-graph__cell[data-level="1"] {
+  fill: var(--ps1ui-contribution-l1);
+}
+.ps1ui-contribution-graph__cell[data-level="2"] {
+  fill: var(--ps1ui-contribution-l2);
+}
+.ps1ui-contribution-graph__cell[data-level="3"] {
+  fill: var(--ps1ui-contribution-l3);
+}
+.ps1ui-contribution-graph__cell[data-level="4"] {
+  fill: var(--ps1ui-contribution-l4);
+}
+
+.ps1ui-contribution-graph__legend {
+  display: flex;
+  align-items: center;
+  gap: var(--ps1ui-space-xs);
+  align-self: flex-end;
+  color: var(--ps1ui-color-fg-muted);
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-xs);
+}
+
+.ps1ui-contribution-graph__legend-swatches {
+  display: block;
+}
