@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { Card } from "../Card/Card";
 import { PS1Root } from "../PS1Root/PS1Root";
 import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
@@ -16,6 +17,10 @@ const meta = {
     as: {
       control: { type: "select" },
       options: ["h1", "h2", "h3", "h4", "h5", "h6"],
+    },
+    variant: {
+      control: { type: "select" },
+      options: ["body", "muted", "subtle", "primary", "accent", "danger"],
     },
     size: {
       control: { type: "select" },
@@ -51,6 +56,36 @@ export const Levels: Story = {
         <Heading level={4}>Level 4 — sub-subsection</Heading>
         <Heading level={5}>Level 5 — minor</Heading>
         <Heading level={6}>Level 6 — smallest</Heading>
+      </Stack>
+    </article>
+  ),
+};
+
+// Every heading here sits at the same level, so axe's heading-order rule
+// sees no skipped step — the story varies colour only.
+export const Variants: Story = {
+  args: { level: 2 },
+  render: () => (
+    <article>
+      <Stack gap="md">
+        <Heading level={2} variant="body">
+          body — default foreground
+        </Heading>
+        <Heading level={2} variant="muted">
+          muted — secondary foreground
+        </Heading>
+        <Heading level={2} variant="subtle">
+          subtle — least emphasis
+        </Heading>
+        <Heading level={2} variant="primary">
+          primary — accent green
+        </Heading>
+        <Heading level={2} variant="accent">
+          accent — accent orange
+        </Heading>
+        <Heading level={2} variant="danger">
+          danger — destructive / error
+        </Heading>
       </Stack>
     </article>
   ),
@@ -121,6 +156,39 @@ export const ResponsiveSize: Story = {
         Responsive heading
       </Heading>
     </PS1Root>
+  ),
+};
+
+// Level 6 (the smallest heading) on the surface token — the tightest
+// contrast case for every variant, since axe's large-text threshold never
+// kicks in at this size.
+export const OnSurface: Story = {
+  args: { level: 6 },
+  render: () => (
+    <Card style={{ maxWidth: 360 }}>
+      <article>
+        <Stack gap="sm">
+          <Heading level={6} variant="body">
+            body — on surface
+          </Heading>
+          <Heading level={6} variant="muted">
+            muted — on surface
+          </Heading>
+          <Heading level={6} variant="subtle">
+            subtle — on surface
+          </Heading>
+          <Heading level={6} variant="primary">
+            primary — on surface
+          </Heading>
+          <Heading level={6} variant="accent">
+            accent — on surface
+          </Heading>
+          <Heading level={6} variant="danger">
+            danger — on surface
+          </Heading>
+        </Stack>
+      </article>
+    </Card>
   ),
 };
 

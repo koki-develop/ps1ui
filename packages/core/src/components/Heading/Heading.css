@@ -65,7 +65,20 @@
    in normal rendering. If Heading.tsx ever changes to NOT normalize the
    base breakpoint, these floors keep the component in a legible default
    (font-size sm, font-weight normal). Text.css uses a live fallback path
-   because Text.tsx does not normalize its size/weight props. */
+   because Text.tsx does not normalize its size/weight props.
+
+   The base `color` below is a defensive floor of the same kind as the
+   `--_size-base` fallbacks: Heading.tsx always emits a `--<variant>` class
+   (`variant` defaults to `body`), and those modifiers — declared after this
+   rule at equal specificity, so source order hands them the win — set the
+   real colour. The floor covers the two paths that reach the base class
+   alone: a consumer applying `ps1ui-heading` to their own markup, and an
+   untyped caller passing a `variant` string that matches no modifier. It is
+   a no-op whenever base.css is loaded (`html { color: var(--ps1ui-color-fg)
+   }` already supplies the same value by inheritance) — it earns its place
+   for consumers importing components.css ALONE to embed ps1ui into a
+   foreign design system, where the ambient colour is the host's, not
+   ours. */
 .ps1ui-heading {
   margin: 0;
   font-family: var(--ps1ui-font-mono);
@@ -117,4 +130,28 @@
     --_size: var(--_size-xl);
     --_weight: var(--_weight-xl);
   }
+}
+
+/* Colour variants — same scale and token mapping as Text (both prop types
+   alias `TypographyVariant` in utils/typography.ts). The declarations are
+   restated here rather than shared with a grouped selector so each
+   component's stylesheet stays self-contained, matching every other
+   component in this package. */
+.ps1ui-heading--body {
+  color: var(--ps1ui-color-fg);
+}
+.ps1ui-heading--muted {
+  color: var(--ps1ui-color-fg-muted);
+}
+.ps1ui-heading--subtle {
+  color: var(--ps1ui-color-fg-subtle);
+}
+.ps1ui-heading--primary {
+  color: var(--ps1ui-color-primary);
+}
+.ps1ui-heading--accent {
+  color: var(--ps1ui-color-accent);
+}
+.ps1ui-heading--danger {
+  color: var(--ps1ui-color-danger);
 }

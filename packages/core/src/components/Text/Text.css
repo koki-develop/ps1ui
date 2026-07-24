@@ -63,10 +63,23 @@
    as normal weight (Text is the source of truth for its own typography,
    NOT the UA `<strong>` style). Users who need the UA-strong appearance
    should pair `as="strong"` with `weight="bold"` for consistency across
-   engines. */
+   engines.
+
+   The base `color` is a defensive floor, mirroring Heading.css. Text.tsx
+   always emits a `--<variant>` class (`variant` defaults to `body`), and
+   those modifiers — declared after this rule at equal specificity, so
+   source order hands them the win — set the real colour. The floor covers
+   the two paths that reach the base class alone: a consumer applying
+   `ps1ui-text` to their own markup, and an untyped caller passing a
+   `variant` string that matches no modifier. It is a no-op whenever
+   base.css is loaded (`html { color: var(--ps1ui-color-fg) }` already
+   supplies the same value by inheritance) — it earns its place for
+   consumers importing components.css ALONE to embed ps1ui into a foreign
+   design system, where the ambient colour is the host's, not ours. */
 .ps1ui-text {
   margin: 0;
   font-family: var(--ps1ui-font-mono);
+  color: var(--ps1ui-color-fg);
   line-height: 1.6;
 
   --_size-base: var(--_text-size-base, var(--ps1ui-font-size-sm));

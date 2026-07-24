@@ -137,5 +137,6 @@ export type {
   HeadingLevel,
   HeadingProps,
   HeadingSize,
+  HeadingVariant,
   HeadingWeight,
 } from "./components/Heading/Heading";

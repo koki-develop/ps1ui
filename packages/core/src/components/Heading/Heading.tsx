@@ -2,15 +2,22 @@ import { createElement } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import { cx } from "../../utils/cx";
 import { resolveResponsive, withResponsiveBase, type Responsive } from "../../utils/responsive";
-import { fontSizeToVar, weightToValue, type FontWeight } from "../../utils/typography";
+import {
+  fontSizeToVar,
+  weightToValue,
+  type FontWeight,
+  type TypographyVariant,
+} from "../../utils/typography";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 export type HeadingElement = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
+// HeadingVariant / HeadingWeight are re-exports of the shared
+// TypographyVariant / FontWeight scales. Keeping component-local aliases
+// preserves the public type names (backwards compat) while the underlying
+// scales stay single-sourced in utils/typography.ts.
+export type HeadingVariant = TypographyVariant;
 export type HeadingSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
-// HeadingWeight is a re-export of the shared FontWeight scale. Keeping a
-// component-local alias preserves the public type name (backwards compat)
-// while the underlying scale stays single-sourced in utils/typography.ts.
 export type HeadingWeight = FontWeight;
 
 type HeadingOwnProps<E extends HeadingElement> = {
@@ -18,6 +25,8 @@ type HeadingOwnProps<E extends HeadingElement> = {
   level: HeadingLevel;
   /** Heading tag to render when it should differ from level — visual defaults stay driven by level. */
   as?: E;
+  /** Color variant. */
+  variant?: HeadingVariant;
   /** Font size. Defaults to the level's size. */
   size?: Responsive<HeadingSize>;
   /** Font weight. Defaults to the level's weight. */
@@ -44,6 +53,7 @@ const LEVEL_DEFAULTS: Record<HeadingLevel, { size: HeadingSize; weight: HeadingW
 export function Heading<E extends HeadingElement = HeadingElement>({
   level,
   as,
+  variant = "body",
   size: sizeProp,
   weight: weightProp,
   className,
@@ -74,7 +84,7 @@ export function Heading<E extends HeadingElement = HeadingElement>({
 
   return createElement(tag, {
     ...rest,
-    className: cx("ps1ui-heading", className),
+    className: cx("ps1ui-heading", `ps1ui-heading--${variant}`, className),
     style: mergedStyle,
   });
 }
