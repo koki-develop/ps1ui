@@ -18,6 +18,9 @@ export type { RadioProps } from "./components/Radio/Radio";
 export { RadioGroup } from "./components/RadioGroup/RadioGroup";
 export type { RadioGroupProps } from "./components/RadioGroup/RadioGroup";
 
+export { Image } from "./components/Image/Image";
+export type { ImageProps, ImageVariant } from "./components/Image/Image";
+
 export { Input } from "./components/Input/Input";
 export type { InputProps } from "./components/Input/Input";
 

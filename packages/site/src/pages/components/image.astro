@@ -1,0 +1,38 @@
+---
+import { Image } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const sampleSrc = "https://koki-develop.github.io/ps1ui/og.png";
+
+const basic = `<Image
+  src="https://koki-develop.github.io/ps1ui/og.png"
+  alt="ps1ui OG banner"
+  width={320}
+  height={168}
+/>`;
+
+const bordered = `<Image
+  src="https://koki-develop.github.io/ps1ui/og.png"
+  alt="ps1ui OG banner"
+  variant="bordered"
+  width={320}
+  height={168}
+/>`;
+---
+
+<ComponentPage slug="image">
+  <Demo title="Basic" code={basic}>
+    <Image src={sampleSrc} alt="ps1ui OG banner" width={320} height={168} />
+  </Demo>
+
+  <Demo title="Bordered" code={bordered}>
+    <Image
+      src={sampleSrc}
+      alt="ps1ui OG banner"
+      variant="bordered"
+      width={320}
+      height={168}
+    />
+  </Demo>
+</ComponentPage>

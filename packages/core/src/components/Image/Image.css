@@ -1,0 +1,13 @@
+/* Baseline mirrors the <img> reset in base.css so the class stands on its own
+   when consumers import components.css (which deliberately omits the reset). */
+.ps1ui-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.ps1ui-image--bordered {
+  border: 1px solid var(--ps1ui-color-border);
+  border-radius: var(--ps1ui-radius-md);
+}

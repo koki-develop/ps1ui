@@ -127,6 +127,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Collapsible section built on the native <details>/<summary> element.",
       },
       {
+        slug: "image",
+        name: "Image",
+        description: "Themed <img> wrapper with plain and bordered variants.",
+      },
+      {
         slug: "list",
         name: "List",
         description: "Ordered or unordered <ul>/<ol> with plain-text markers.",
