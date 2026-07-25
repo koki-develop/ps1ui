@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/koki-develop/ps1ui/compare/core-v0.5.0...core-v0.6.0) (2026-07-25)
+
+
+### Features
+
+* Add `leading` / `trailing` props to Text and Anchor ([#85](https://github.com/koki-develop/ps1ui/issues/85)) ([8728131](https://github.com/koki-develop/ps1ui/commit/8728131a3df7fba283eb346bc2575b8800c1e338))
+
 ## [0.5.0](https://github.com/koki-develop/ps1ui/compare/core-v0.4.0...core-v0.5.0) (2026-07-25)
 
 
