@@ -117,6 +117,41 @@ export const InText: Story = {
   ),
 };
 
+// `leading` / `trailing` build the "live ↗" / "source ↗" shape without the
+// consumer hand-rolling an inline-flex wrapper. Note where the underline
+// lands: on the label only, never under the icon or the gap between them.
+export const Adornments: Story = {
+  args: { href: "#" },
+  render: () => (
+    <Stack gap="sm" align="start">
+      <Anchor href="#" trailing={<span aria-hidden="true">↗</span>}>
+        live
+      </Anchor>
+      <Anchor href="#" variant="subtle" trailing={<span aria-hidden="true">↗</span>}>
+        source
+      </Anchor>
+      <Anchor href="#" leading={<span aria-hidden="true">←</span>}>
+        back to all posts
+      </Anchor>
+    </Stack>
+  ),
+};
+
+// An adorned link stays inline-level, so it still sits inside a sentence —
+// but it never breaks between the word and its icon.
+export const AdornedInText: Story = {
+  args: { href: "#" },
+  render: () => (
+    <Text style={{ maxWidth: 320 }}>
+      The demo is deployed at{" "}
+      <Anchor href="#" trailing={<span aria-hidden="true">↗</span>}>
+        example.com
+      </Anchor>{" "}
+      and the code is on GitHub.
+    </Text>
+  ),
+};
+
 // External links: the caller supplies rel — the component does not inject one.
 export const External: Story = {
   args: {

@@ -86,6 +86,43 @@ export const AsElement: Story = {
   ),
 };
 
+// `leading` / `trailing` are the non-interactive "icon + label on one line"
+// primitive: Badge would bring a chip's border and fill, Button a press
+// affordance, and neither is wanted for a star count or a branch name. The
+// icons are decorative here, so they carry aria-hidden and the accessible
+// name stays the label text alone.
+export const Adornments: Story = {
+  render: () => (
+    <Stack gap="sm" align="start">
+      <Text leading={<span aria-hidden="true">★</span>}>1,204</Text>
+      <Text variant="muted" leading={<span aria-hidden="true">⎇</span>}>
+        main
+      </Text>
+      <Text variant="primary" trailing={<span aria-hidden="true">↗</span>}>
+        opens in a new tab
+      </Text>
+      <Text
+        variant="accent"
+        leading={<span aria-hidden="true">▲</span>}
+        trailing={<span aria-hidden="true">%</span>}
+      >
+        24
+      </Text>
+    </Stack>
+  ),
+};
+
+// An adorned row composes with `truncate`: the icons hold their size and the
+// label alone takes the ellipsis. This is the shape a file row or a repo card
+// needs — icon pinned, name elided.
+export const AdornedTruncate: Story = {
+  render: () => (
+    <Text as="span" truncate leading={<span aria-hidden="true">▤</span>} style={{ maxWidth: 220 }}>
+      a-very-long-file-name-that-will-not-fit.tsx
+    </Text>
+  ),
+};
+
 export const Truncate: Story = {
   args: {
     truncate: true,

@@ -1,7 +1,8 @@
 import { createElement } from "react";
-import type { ComponentProps, CSSProperties, ElementType } from "react";
+import type { ComponentProps, CSSProperties, ElementType, ReactNode } from "react";
 import { cx } from "../../utils/cx";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
+import { isSlotFilled } from "../../utils/slots";
 import { fontSizeToVar } from "../../utils/typography";
 
 export type AnchorVariant = "primary" | "subtle";
@@ -20,6 +21,10 @@ type AnchorOwnProps<E extends ElementType> = {
   variant?: AnchorVariant;
   /** Font size on the type scale. Left unset, the link inherits the surrounding text's size. */
   size?: Responsive<AnchorSize>;
+  /** Leading element (typically an icon) rendered before children with a shared inline gap. */
+  leading?: ReactNode;
+  /** Trailing element (typically an icon) rendered after children with a shared inline gap. */
+  trailing?: ReactNode;
 };
 
 // Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
@@ -31,12 +36,29 @@ export function Anchor<E extends ElementType = "a">({
   as,
   variant = "primary",
   size,
+  leading,
+  trailing,
+  children,
   className,
   style,
   ...rest
 }: AnchorProps<E>) {
   const tag = as ?? "a";
-  const classes = cx("ps1ui-anchor", `ps1ui-anchor--${variant}`, className);
+  // Opt-in row layout: without an adornment the link stays the plain inline box
+  // it has always been, so it still wraps across line boxes inside running text.
+  // An adorned link is an atomic unit by construction — "live ↗" must not break
+  // between the word and its icon — which is exactly what inline-flex gives.
+  // `isSlotFilled` rather than `!== undefined`: `trailing={isExternal && <Icon/>}`
+  // must leave an internal link an ordinary wrapping inline box, not a flex row.
+  const hasLeading = isSlotFilled(leading);
+  const hasTrailing = isSlotFilled(trailing);
+  const adorned = hasLeading || hasTrailing;
+  const classes = cx(
+    "ps1ui-anchor",
+    `ps1ui-anchor--${variant}`,
+    adorned && "ps1ui-anchor--adorned",
+    className,
+  );
   // No default size on purpose: an omitted `size` leaves Anchor.css's
   // font-size invalid at computed-value time, which resolves to the
   // inherited size — the only sane behaviour for a link sitting inside
@@ -51,5 +73,19 @@ export function Anchor<E extends ElementType = "a">({
     ...sizeVars,
   } as CSSProperties;
 
-  return createElement(tag, { ...rest, className: classes, style: mergedStyle });
+  // Wrapping `children` in a label box (rather than letting it fall through as a
+  // bare flex child) does two jobs: it stops a multi-fragment link text from
+  // being split into one flex item per fragment — each then separated by the row
+  // gap — and it gives Anchor.css a single element to paint the underline on.
+  const content = adorned ? (
+    <>
+      {hasLeading && <span className="ps1ui-anchor__leading">{leading}</span>}
+      <span className="ps1ui-anchor__label">{children}</span>
+      {hasTrailing && <span className="ps1ui-anchor__trailing">{trailing}</span>}
+    </>
+  ) : (
+    children
+  );
+
+  return createElement(tag, { ...rest, className: classes, style: mergedStyle }, content);
 }

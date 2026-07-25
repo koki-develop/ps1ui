@@ -63,6 +63,56 @@ const CASES: readonly Case[] = [
     node: () => <Text weight={weight}>{LABEL}</Text>,
   })),
   { name: "truncate", stageWidth: FRAME_WIDTH, node: () => <Text truncate>{LONG_LABEL}</Text> },
+  // Adornment row. Captured as its own small axis rather than crossed with
+  // variant/size/weight: the row's geometry (gap, icon alignment, baseline of
+  // the label against the icon) is independent of colour and type scale, and
+  // it is exactly what a pixel diff catches that a computed-style assertion
+  // cannot. The truncate case is here because the ellipsis moves to the label
+  // when adorned — the one place the two features interact visually.
+  {
+    name: "adorned-leading",
+    stageWidth: FRAME_WIDTH,
+    node: () => <Text leading={<span aria-hidden="true">★</span>}>1,204 stars</Text>,
+  },
+  {
+    name: "adorned-trailing",
+    stageWidth: FRAME_WIDTH,
+    node: () => <Text trailing={<span aria-hidden="true">↗</span>}>opens in a new tab</Text>,
+  },
+  {
+    name: "adorned-both",
+    stageWidth: FRAME_WIDTH,
+    node: () => (
+      <Text
+        leading={<span aria-hidden="true">★</span>}
+        trailing={<span aria-hidden="true">↗</span>}
+      >
+        1,204 stars
+      </Text>
+    ),
+  },
+  {
+    name: "adorned-inline-span",
+    stageWidth: FRAME_WIDTH,
+    node: () => (
+      <Text>
+        inline{" "}
+        <Text as="span" variant="accent" leading={<span aria-hidden="true">▲</span>}>
+          24%
+        </Text>{" "}
+        in running copy
+      </Text>
+    ),
+  },
+  {
+    name: "adorned-truncate",
+    stageWidth: FRAME_WIDTH,
+    node: () => (
+      <Text truncate leading={<span aria-hidden="true">▤</span>}>
+        {LONG_LABEL}
+      </Text>
+    ),
+  },
   // Responsive size — one capture per breakpoint band. PS1Root supplies
   // the containment ancestor for the @container queries in Text.css.
   // 320 CSS px width doubles as the WCAG 2.2 SC 1.4.10 (Reflow) baseline —

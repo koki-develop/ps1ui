@@ -1,7 +1,8 @@
 import { createElement } from "react";
-import type { ComponentProps, CSSProperties } from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { cx } from "../../utils/cx";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
+import { isSlotFilled } from "../../utils/slots";
 import {
   fontSizeToVar,
   weightToValue,
@@ -33,6 +34,10 @@ type TextOwnProps<E extends TextElement> = {
   weight?: Responsive<TextWeight>;
   /** Truncate overflowing text with an ellipsis instead of wrapping. */
   truncate?: boolean;
+  /** Leading element (typically an icon) rendered before children with a shared inline gap. */
+  leading?: ReactNode;
+  /** Trailing element (typically an icon) rendered after children with a shared inline gap. */
+  trailing?: ReactNode;
 };
 
 // Canonical statement of the polymorphic prop-derivation pattern — every `as`-bearing
@@ -56,7 +61,10 @@ export type TextProps<E extends TextElement = "p"> = TextOwnProps<E> &
   Omit<ComponentProps<E>, keyof TextOwnProps<E>>;
 
 // Exhaustive over TextElement so adding a tag without classifying it fails to typecheck,
-// instead of silently leaving truncate's inline-block fix un-applied for that tag.
+// instead of silently leaving the display fixes un-applied for that tag. Two features
+// read it: `truncate` (needs inline-block on an inline tag, since an inline box has no
+// ellipsis) and the adornment row (needs inline-flex rather than flex, so `<Text as="span"
+// leading="★">` stays inline-level inside running text).
 const INLINE_TEXT_ELEMENTS: Record<TextElement, boolean> = {
   p: false,
   div: false,
@@ -73,6 +81,9 @@ export function Text<E extends TextElement = "p">({
   size,
   weight,
   truncate = false,
+  leading,
+  trailing,
+  children,
   className,
   style,
   ...rest
@@ -81,11 +92,28 @@ export function Text<E extends TextElement = "p">({
   const sizeVars = resolveResponsive(size, "--_text-size", fontSizeToVar);
   const weightVars = resolveResponsive(weight, "--_text-weight", weightToValue);
 
+  // An adornment turns the root into a flex row and wraps `children` in a label
+  // box. Both are opt-in: without `leading`/`trailing` the rendered tree is byte
+  // for byte what it has always been — no wrapper element, no display change.
+  // `isSlotFilled` (not `!== undefined`) is what keeps that promise for
+  // `leading={cond && <Icon/>}`, whose false branch must not conjure a gap.
+  const hasLeading = isSlotFilled(leading);
+  const hasTrailing = isSlotFilled(trailing);
+  const adorned = hasLeading || hasTrailing;
+  const inline = INLINE_TEXT_ELEMENTS[tag];
+
   const classes = cx(
     "ps1ui-text",
     `ps1ui-text--${variant}`,
     truncate && "ps1ui-text--truncate",
-    truncate && INLINE_TEXT_ELEMENTS[tag] && "ps1ui-text--truncate-inline",
+    // At most one display modifier is emitted. `--adorned-inline` (inline-flex)
+    // supersedes `--truncate-inline` (inline-block) when both would apply, and the
+    // choice is made here rather than left to CSS source order — the two rules sit
+    // at equal specificity, so relying on order would make a later reshuffle of
+    // Text.css silently swap the winner.
+    truncate && !adorned && inline && "ps1ui-text--truncate-inline",
+    adorned && "ps1ui-text--adorned",
+    adorned && inline && "ps1ui-text--adorned-inline",
     className,
   );
 
@@ -98,5 +126,21 @@ export function Text<E extends TextElement = "p">({
     ...weightVars,
   } as CSSProperties;
 
-  return createElement(tag, { ...rest, className: classes, style: mergedStyle });
+  // `children` is wrapped rather than left as a bare flex child on purpose: a flex
+  // container turns each contiguous text run and each element child into its own
+  // flex item, so `<Text leading="★">read <Anchor/> now</Text>` would scatter the
+  // row gap between every fragment of the sentence. One label box keeps the gap
+  // where it belongs — between the adornment and the text — and gives `truncate`
+  // an element to hang its ellipsis on (see Text.css).
+  const content = adorned ? (
+    <>
+      {hasLeading && <span className="ps1ui-text__leading">{leading}</span>}
+      <span className="ps1ui-text__label">{children}</span>
+      {hasTrailing && <span className="ps1ui-text__trailing">{trailing}</span>}
+    </>
+  ) : (
+    children
+  );
+
+  return createElement(tag, { ...rest, className: classes, style: mergedStyle }, content);
 }

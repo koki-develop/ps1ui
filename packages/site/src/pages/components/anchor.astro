@@ -21,6 +21,22 @@ const inText = `<Text>
   <Anchor href="https://github.com/koki-develop/ps1ui">repository</Anchor>.
 </Text>`;
 
+const adornments = `<Anchor href="https://example.com" trailing="↗">live</Anchor>
+<Anchor href="https://example.com" variant="subtle" trailing="↗">source</Anchor>
+<Anchor href="/posts" leading="←">back to all posts</Anchor>`;
+
+const adornmentNode = `import { IconExternalLink } from "your-icon-library";
+
+<Anchor href="https://example.com" trailing={<IconExternalLink aria-hidden />}>
+  live
+</Anchor>`;
+
+const adornedInText = `<Text>
+  The demo is deployed at{" "}
+  <Anchor href="https://example.com" trailing="↗">example.com</Anchor>{" "}
+  and the code is on GitHub.
+</Text>`;
+
 const inheritedSize = `{/* No size prop — the link takes the surrounding text's size. */}
 <Text size="xl">
   An <Anchor href="https://github.com/koki-develop/ps1ui">inline link</Anchor> in xl copy.
@@ -69,6 +85,38 @@ const inheritedSize = `{/* No size prop — the link takes the surrounding text'
     </Text>
   </Demo>
 
+  <Demo title="Leading / trailing slots" code={adornments}>
+    <Stack direction="column" gap="sm" align="start">
+      <Anchor href="https://example.com" trailing="↗">live</Anchor>
+      <Anchor href="https://example.com" variant="subtle" trailing="↗">
+        source
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" leading="←">
+        back to all posts
+      </Anchor>
+    </Stack>
+  </Demo>
+
+  <Demo title="Leading / trailing slots (icon component)" code={adornmentNode}>
+    <Text variant="muted">
+      Both slots accept any <code>ReactNode</code>, so an icon component drops in the same
+      way — this docs page cannot render the JSX form directly (Astro cannot serialise React
+      children passed as a prop), but the pattern above is how consumers use it in real{" "}
+      <code>.tsx</code> code. Decorative icons should carry <code>aria-hidden</code> so the
+      link's accessible name stays the label text alone.
+    </Text>
+  </Demo>
+
+  <Demo title="Adorned link in running text" code={adornedInText}>
+    <div style="max-width: 20rem">
+      <Text>
+        The demo is deployed at <Anchor href="https://example.com" trailing="↗"
+          >example.com</Anchor
+        > and the code is on GitHub.
+      </Text>
+    </div>
+  </Demo>
+
   <Demo title="Inherited size" code={inheritedSize}>
     <Stack direction="column" gap="sm" align="start">
       <Text size="xl">
@@ -81,4 +129,11 @@ const inheritedSize = `{/* No size prop — the link takes the surrounding text'
       </Text>
     </Stack>
   </Demo>
+
+  <Text variant="muted">
+    An adorned link becomes an inline flex row, so it stays inline-level and never breaks
+    between the label and its icon. The underline moves to the label alone: a decoration
+    inherited from the row would paint under the icon while skipping the gap, rendering one
+    link as two disconnected dashes.
+  </Text>
 </ComponentPage>

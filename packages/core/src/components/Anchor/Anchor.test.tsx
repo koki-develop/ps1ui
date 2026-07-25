@@ -11,6 +11,7 @@ import { describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import { withPseudoState } from "../../testing/pseudo-state";
 import type { Breakpoint } from "../../utils/responsive";
 import { Anchor, type AnchorSize, type AnchorVariant } from "./Anchor";
 
@@ -466,6 +467,307 @@ describe("Anchor", () => {
     });
   });
 
+  // `leading` / `trailing` turn a link into an "icon + label" row without the
+  // consumer hand-rolling `display: inline-flex` — the `live ↗` / `source ↗`
+  // shape every site ends up writing twice. The load-bearing part is the
+  // underline: it has to move from the root to the label, because a
+  // decoration propagated from a flex container paints on the blockified slot
+  // too while skipping the `gap`, rendering one link as two dashes.
+  describe("adornments (leading / trailing)", () => {
+    describe("DOM structure", () => {
+      test("leading renders in a __leading slot before the label", async () => {
+        const screen = await render(
+          <Anchor href="/x" leading={<span data-testid="icon">→</span>}>
+            source
+          </Anchor>,
+        );
+        const link = screen.getByRole("link").element();
+        const [first, second] = Array.from(link.children);
+        expect(first?.classList.contains("ps1ui-anchor__leading")).toBe(true);
+        expect(first?.querySelector("[data-testid='icon']")).not.toBeNull();
+        expect(second?.classList.contains("ps1ui-anchor__label")).toBe(true);
+        expect(second?.textContent).toBe("source");
+      });
+
+      test("both slots render in leading → label → trailing order", async () => {
+        const screen = await render(
+          <Anchor href="/x" leading="→" trailing="↗">
+            live
+          </Anchor>,
+        );
+        const link = screen.getByRole("link").element();
+        expect(Array.from(link.children).map((child) => child.className)).toEqual([
+          "ps1ui-anchor__leading",
+          "ps1ui-anchor__label",
+          "ps1ui-anchor__trailing",
+        ]);
+      });
+
+      test("no adornment → no wrapper elements, children stay direct", async () => {
+        const screen = await render(
+          <Anchor href="/x">
+            read <em data-testid="em">this</em>
+          </Anchor>,
+        );
+        const link = screen.getByRole("link").element();
+        expect(link.querySelector(".ps1ui-anchor__label")).toBeNull();
+        expect(link.firstElementChild?.getAttribute("data-testid")).toBe("em");
+      });
+
+      test("multi-fragment children collapse into ONE label box", async () => {
+        const screen = await render(
+          <Anchor href="/x" trailing="↗">
+            read <em>this</em> now
+          </Anchor>,
+        );
+        const link = screen.getByRole("link").element();
+        expect(link.children.length).toBe(2);
+        expect(link.querySelector(".ps1ui-anchor__label")?.textContent).toBe("read this now");
+      });
+
+      test.for([
+        { label: "false (`isExternal && <Icon/>`)", node: false as const },
+        { label: "null (`isExternal ? <Icon/> : null`)", node: null },
+      ])("a $label adornment leaves the link an ordinary inline box", async ({ node }) => {
+        // Conditionally-external links are the whole reason `trailing` exists,
+        // so the false branch has to be inert: no slot, no label wrapper, and
+        // critically no inline-flex — an internal link must still wrap across
+        // line boxes inside running text.
+        const screen = await render(<Anchor href="/x" trailing={node} />);
+        const link = screen.getByRole("link").element() as HTMLElement;
+        expect(link.classList.contains("ps1ui-anchor--adorned")).toBe(false);
+        expect(link.querySelector(".ps1ui-anchor__label")).toBeNull();
+        expect(getComputedStyle(link).display).toBe("inline");
+      });
+
+      test("the slots reach a component supplied via `as`", async () => {
+        // `as` targets receive the composed content as ordinary children, so a
+        // router Link renders the row exactly like the native <a> does.
+        type MockLinkProps = { children: ReactNode; className?: string; href: string };
+        const MockLink = ({ children, className, href }: MockLinkProps) => (
+          <a className={className} data-router-link href={href}>
+            {children}
+          </a>
+        );
+        const screen = await render(
+          <Anchor as={MockLink} href="/docs" trailing="↗">
+            docs
+          </Anchor>,
+        );
+        const link = screen.getByRole("link").element();
+        expect(link.hasAttribute("data-router-link")).toBe(true);
+        expect(link.querySelector(".ps1ui-anchor__trailing")?.textContent).toBe("↗");
+      });
+    });
+
+    describe("class composition", () => {
+      test("an adornment emits --adorned; its absence does not", async () => {
+        const adorned = await render(
+          <Anchor href="/x" trailing="↗" data-testid="adorned">
+            live
+          </Anchor>,
+        );
+        expect(
+          adorned.getByTestId("adorned").element().classList.contains("ps1ui-anchor--adorned"),
+        ).toBe(true);
+      });
+
+      test("a bare Anchor carries no --adorned class", async () => {
+        const screen = await render(<Anchor href="/x">live</Anchor>);
+        expect(screen.getByRole("link").element().classList.contains("ps1ui-anchor--adorned")).toBe(
+          false,
+        );
+      });
+    });
+
+    describe("computed styles", () => {
+      test("adorned default <a> → inline-flex, 4px gap, centred", async () => {
+        const screen = await render(
+          <Anchor href="/x" leading="→" data-testid="a">
+            live
+          </Anchor>,
+        );
+        const cs = getComputedStyle(screen.getByTestId("a").element() as HTMLElement);
+        expect(cs.display).toBe("inline-flex");
+        expect(cs.columnGap).toBe("4px");
+        expect(cs.alignItems).toBe("center");
+      });
+
+      test("adorned as='span' is inline-flex too — never block-level flex", async () => {
+        // `as` accepts any ElementType, and a link fragment rendered as a span
+        // still has to sit inside a sentence next to other content. `flex` here
+        // would break it onto its own line.
+        const screen = await render(
+          <Anchor as="span" leading="→" data-testid="a">
+            live
+          </Anchor>,
+        );
+        expect(getComputedStyle(screen.getByTestId("a").element() as HTMLElement).display).toBe(
+          "inline-flex",
+        );
+      });
+
+      test("a bare Anchor stays an inline box so it can wrap across line boxes", async () => {
+        const screen = await render(<Anchor href="/x">live</Anchor>);
+        const cs = getComputedStyle(screen.getByRole("link").element() as HTMLElement);
+        expect(cs.display).toBe("inline");
+      });
+
+      test("the underline moves from the root to the label when adorned", async () => {
+        const screen = await render(
+          <Anchor href="/x" trailing="↗" data-testid="a">
+            live
+          </Anchor>,
+        );
+        const link = screen.getByTestId("a").element() as HTMLElement;
+        const label = link.querySelector(".ps1ui-anchor__label") as HTMLElement;
+        const slot = link.querySelector(".ps1ui-anchor__trailing") as HTMLElement;
+        expect(getComputedStyle(link).textDecorationLine).toBe("none");
+        expect(getComputedStyle(label).textDecorationLine).toBe("underline");
+        // The icon slot must not paint one of its own either — the whole point
+        // is that `↗` renders clean.
+        expect(getComputedStyle(slot).textDecorationLine).toBe("none");
+      });
+
+      test("a bare Anchor still underlines on the root itself", async () => {
+        const screen = await render(<Anchor href="/x">live</Anchor>);
+        const link = screen.getByRole("link").element() as HTMLElement;
+        expect(getComputedStyle(link).textDecorationLine).toBe("underline");
+      });
+
+      test.for(VARIANTS.map((variant) => ({ variant })))(
+        "variant=$variant: the adorned label's underline colour matches the bare link's",
+        async ({ variant }) => {
+          // The refactor that made this possible replaced a direct
+          // `text-decoration-color` declaration with the inherited
+          // `--_anchor-underline` custom property. This pins that both shapes
+          // resolve to the same colour, so an adorned link cannot drift.
+          const screen = await render(
+            <>
+              <Anchor variant={variant} href="/x" data-testid="bare">
+                live
+              </Anchor>
+              <Anchor variant={variant} href="/x" trailing="↗" data-testid="adorned">
+                live
+              </Anchor>
+            </>,
+          );
+          const bare = screen.getByTestId("bare").element() as HTMLElement;
+          const label = (screen.getByTestId("adorned").element() as HTMLElement).querySelector(
+            ".ps1ui-anchor__label",
+          ) as HTMLElement;
+          expect(getComputedStyle(label).textDecorationColor).toBe(
+            getComputedStyle(bare).textDecorationColor,
+          );
+        },
+      );
+
+      test("subtle + adorned: hovering shifts the label's underline off fg-subtle", async () => {
+        // subtle is the one variant whose underline is deliberately decoupled
+        // from its text colour at rest, so it is the only one where the
+        // hover shift can silently stop working on the adorned shape.
+        const screen = await render(
+          <>
+            <Anchor
+              variant="subtle"
+              href="/x"
+              trailing="↗"
+              data-testid="dec-anchor"
+              style={{ transition: "none" }}
+            >
+              live
+            </Anchor>
+            <span data-testid="dec-hover" style={{ color: "var(--ps1ui-color-primary)" }} />
+            <span data-testid="dec-base" style={{ color: "var(--ps1ui-color-fg-subtle)" }} />
+          </>,
+        );
+        const label = (screen.getByTestId("dec-anchor").element() as HTMLElement).querySelector(
+          ".ps1ui-anchor__label",
+        ) as HTMLElement;
+        const hoverColor = getComputedStyle(screen.getByTestId("dec-hover").element()).color;
+        const baseColor = getComputedStyle(screen.getByTestId("dec-base").element()).color;
+        expect(hoverColor).not.toBe(baseColor);
+        expect(getComputedStyle(label).textDecorationColor).toBe(baseColor);
+
+        // The label runs its own 120ms text-decoration-color transition (the
+        // root's inline `transition: none` cannot reach it — `transition` is
+        // not an inherited property), so the assertion has to wait for the
+        // shift to land rather than sampling the first frame.
+        await withPseudoState('[data-testid="dec-anchor"]', ["hover"], async () => {
+          await vi.waitFor(() => {
+            expect(getComputedStyle(label).textDecorationColor).toBe(hoverColor);
+          });
+        });
+      });
+
+      test("underline style and thickness are pinned, not inherited from an ancestor", async () => {
+        // base.css resets `a { text-decoration: inherit }`, so the component
+        // owns every decoration longhand explicitly. A wrapper with its own
+        // dotted, thick underline must not reach through to either shape —
+        // the regression this guards is dropping one longhand while reaching
+        // for the `text-decoration` shorthand.
+        const screen = await render(
+          <div
+            style={{
+              textDecorationLine: "underline",
+              textDecorationStyle: "dotted",
+              textDecorationThickness: "4px",
+            }}
+          >
+            <Anchor href="/x" data-testid="bare">
+              live
+            </Anchor>
+            <Anchor href="/x" trailing="↗" data-testid="adorned">
+              live
+            </Anchor>
+          </div>,
+        );
+        const bare = getComputedStyle(screen.getByTestId("bare").element() as HTMLElement);
+        expect(bare.textDecorationStyle).toBe("solid");
+        expect(bare.textDecorationThickness).toBe("1px");
+
+        const label = (screen.getByTestId("adorned").element() as HTMLElement).querySelector(
+          ".ps1ui-anchor__label",
+        ) as HTMLElement;
+        const labelCs = getComputedStyle(label);
+        expect(labelCs.textDecorationStyle).toBe("solid");
+        expect(labelCs.textDecorationThickness).toBe("1px");
+      });
+
+      test("slots never shrink; the label absorbs the squeeze", async () => {
+        const screen = await render(
+          <Anchor href="/x" leading="→" trailing="↗" data-testid="a">
+            live
+          </Anchor>,
+        );
+        const link = screen.getByTestId("a").element();
+        for (const selector of [".ps1ui-anchor__leading", ".ps1ui-anchor__trailing"]) {
+          const cs = getComputedStyle(link.querySelector(selector) as HTMLElement);
+          expect(cs.flexGrow).toBe("0");
+          expect(cs.flexShrink).toBe("0");
+          expect(cs.flexBasis).toBe("auto");
+        }
+        expect(
+          getComputedStyle(link.querySelector(".ps1ui-anchor__label") as HTMLElement).minWidth,
+        ).toBe("0px");
+      });
+
+      test("size still resolves on the adorned shape", async () => {
+        // `font-size` lands on the root and the label inherits it — the row
+        // layout must not introduce a second sizing surface.
+        const screen = await render(
+          <Anchor href="/x" size="xl" trailing="↗" data-testid="a">
+            live
+          </Anchor>,
+        );
+        const link = screen.getByTestId("a").element() as HTMLElement;
+        const label = link.querySelector(".ps1ui-anchor__label") as HTMLElement;
+        expect(getComputedStyle(link).fontSize).toBe(FONT_SIZE_PX.xl);
+        expect(getComputedStyle(label).fontSize).toBe(FONT_SIZE_PX.xl);
+      });
+    });
+  });
+
   describe("passthrough", () => {
     test("forwards native attributes verbatim (id, data-*, aria-*, download, hrefLang, target, rel)", async () => {
       const screen = await render(
@@ -633,6 +935,40 @@ describe("Anchor", () => {
             responsive link
           </Anchor>
         ),
+      },
+      {
+        // The accessible name must still come from the label alone — a decorative
+        // icon marked aria-hidden is the documented pattern, and axe would flag
+        // an unlabelled inline image or a link whose name is only a glyph.
+        name: "trailing icon marked aria-hidden",
+        node: () => (
+          <Anchor href="https://example.com" trailing={<span aria-hidden="true">↗</span>}>
+            live site
+          </Anchor>
+        ),
+      },
+      {
+        name: "leading + trailing icons",
+        node: () => (
+          <Anchor
+            href="https://example.com"
+            leading={<span aria-hidden="true">→</span>}
+            trailing={<span aria-hidden="true">↗</span>}
+          >
+            live site
+          </Anchor>
+        ),
+      },
+      {
+        name: "adorned + focused",
+        node: () => (
+          <Anchor href="/x" trailing={<span aria-hidden="true">↗</span>}>
+            live site
+          </Anchor>
+        ),
+        interact: async (screen) => {
+          (screen.getByRole("link").element() as HTMLElement).focus();
+        },
       },
     );
 

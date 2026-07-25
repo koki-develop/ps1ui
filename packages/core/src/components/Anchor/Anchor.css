@@ -54,8 +54,25 @@
    cascade. Component-scoped names make that composition merely redundant
    instead of broken. */
 .ps1ui-anchor {
+  /* The underline colour travels as a custom property because two different
+     boxes can end up carrying the underline: the root on a bare link, and
+     `__label` on an adorned one (see `--adorned` below). `text-decoration-color`
+     is not an inherited property, so the label could not simply pick the root's
+     value up — but a custom property IS inherited, which lets each variant state
+     below keep declaring the colour exactly once and have both shapes follow. */
+  --_anchor-underline: currentColor;
+
   font-family: var(--ps1ui-font-mono);
-  text-decoration: underline;
+  /* All four decoration longhands, spelled out rather than reached through the
+     `text-decoration` shorthand. The shorthand resets every longhand it covers
+     — colour AND style — so mixing it with the per-longhand declarations this
+     rule needs makes the outcome depend on source order. `style: solid` is not
+     redundant: base.css's reset sets `a { text-decoration: inherit }`, so
+     without an explicit value the underline style would be inherited from
+     whatever the link happens to sit inside. */
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: var(--_anchor-underline);
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
   border-radius: var(--ps1ui-radius-md);
@@ -96,6 +113,56 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Adornment row — emitted only when `leading` / `trailing` is passed.
+
+   Always `inline-flex`, never `flex`: a link is inline-level whatever `as`
+   resolves to, and "live ↗" has to sit in a sentence next to other content.
+
+   The underline moves from the root to `__label`, and that move is required,
+   not cosmetic. A propagated text decoration cannot be switched off by a
+   descendant (CSS Text Decoration 3 exempts only out-of-flow and atomic
+   inline-level descendants), and the `inline-flex` on the slots does not buy
+   that exemption either — a flex item is blockified, so `inline-flex` becomes
+   `flex` and the slot stays an in-flow block box that inherits the paint. The
+   root would therefore underline the icon as well as the word, while the flex
+   `gap` between them stayed bare: one link rendered as two disconnected
+   dashes with a gap punched through. Painting on the label alone gives one
+   continuous rule under the word and leaves the glyph clean.
+
+   The label keeps its own `transition` because the root's only covers the
+   root's decoration; `--subtle` shifts the underline from fg-subtle to
+   currentColor on hover and that step would otherwise land instantly on an
+   adorned link while easing on a bare one.
+
+   Slots never shrink, so a narrowing container eats into the label; the label
+   opts out of a flex item's automatic minimum size so it can actually wrap
+   instead of bursting the row. */
+.ps1ui-anchor--adorned {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ps1ui-space-xs);
+  text-decoration-line: none;
+}
+
+.ps1ui-anchor__label {
+  min-width: 0;
+  /* The same four longhands the root declares, for the same reasons. */
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: var(--_anchor-underline);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color var(--ps1ui-transition-fast);
+}
+
+.ps1ui-anchor__leading,
+.ps1ui-anchor__trailing {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
 /* outline (not box-shadow) so a wrapping inline anchor renders as connected fragments
    per line-box instead of two disjoint rectangles. Modern browsers follow border-radius. */
 .ps1ui-anchor:focus-visible {
@@ -103,7 +170,7 @@
   outline-offset: 2px;
 }
 
-/* text-decoration-color defaults to currentColor, so setting only `color` per state
+/* --_anchor-underline defaults to currentColor, so setting only `color` per state
    also shifts the underline. subtle's default intentionally decouples the two — the
    underline is dimmer than the text — hence the explicit override there. */
 .ps1ui-anchor--primary {
@@ -118,16 +185,15 @@
 
 .ps1ui-anchor--subtle {
   color: inherit;
-  text-decoration-color: var(--ps1ui-color-fg-subtle);
+  --_anchor-underline: var(--ps1ui-color-fg-subtle);
 }
-/* Reset text-decoration-color to currentColor so the underline follows the
-   hover/active color shift; without this it would stay pinned to fg-subtle
-   from the base rule. */
+/* Reset the underline to currentColor so it follows the hover/active color
+   shift; without this it would stay pinned to fg-subtle from the rule above. */
 .ps1ui-anchor--subtle:hover {
   color: var(--ps1ui-color-primary);
-  text-decoration-color: currentColor;
+  --_anchor-underline: currentColor;
 }
 .ps1ui-anchor--subtle:active {
   color: var(--ps1ui-color-primary-active);
-  text-decoration-color: currentColor;
+  --_anchor-underline: currentColor;
 }
