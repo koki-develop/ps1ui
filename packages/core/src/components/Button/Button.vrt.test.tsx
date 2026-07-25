@@ -36,16 +36,6 @@ describe("Button VRT", () => {
       state === "focus-visible" && server.browser === "webkit",
       "macOS Safari Full Keyboard Access excludes <button> from Tab",
     );
-    // Known flake — same pattern as Anchor subtle focus-visible: the
-    // secondary variant's transparent background + focus-ring alpha blend
-    // renders inconsistently across successive Firefox captures (measured
-    // 4-6% pixel drift, > any sane tolerance). Stable Screenshot Detection
-    // never converges. See packages/core/CLAUDE.md § "Known VRT flakes".
-    ctx.skip(
-      variant === "secondary" && state === "focus-visible" && server.browser === "firefox",
-      "Firefox: secondary + focus-visible rasterises inconsistently across captures",
-    );
-
     const screen = await render(
       <VrtFrame>
         <Button variant={variant} disabled={state === "disabled"} data-testid="vrt-target">

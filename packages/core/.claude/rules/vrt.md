@@ -26,7 +26,14 @@ The `vrt` Vitest project uses Vitest 4's `toMatchScreenshot` (pixelmatch, `thres
 - **Skip with `ctx.skip(condition, reason)`, never early `return`** — an early return reports as _pass_ while asserting nothing.
 - WebKit can't Tab-reach `:focus-visible` on buttons / links / checkboxes / `tabindex=0` divs (macOS Full Keyboard Access default) — `ctx.skip` those combos. Text inputs are reachable everywhere.
 
+## OS focus is a shared, single resource
+
+The `vrt` project runs `fileParallelism: false`. Not a performance knob — the machine has exactly one OS focus, Vitest's concurrent per-file pages take it from one another, and Firefox drops `:focus` styling the instant its page loses it. A focus-state capture spanning several stabilization frames then blinks its ring on and off and never converges. Serializing removes the competition; it also happens to be faster (three engines already saturate the CPU). **Don't re-enable parallelism here** — and note that `retry` cannot rescue this class of failure, it just repeats the race.
+
+The related helper-side guarantee lives in `src/testing/pseudo-state.ts`: `establishFocus` verifies that the pseudo-class actually matches before returning, so a focus state that can't be reached fails loudly instead of silently capturing an unfocused element. Only on a miss does it escalate to `bringPageToFront` — reclaiming OS focus steals it from every other running file, so it stays an escalation, never the default.
+
 ## Known flakes (not fixable from our side)
 
-- Firefox: `Button secondary + focus-visible` and `Anchor subtle + focus-visible` rasterise inconsistently (transparent bg + alpha focus-ring blend) — permanently skipped on Firefox; other browsers still cover them.
 - Local webkit+darwin `Button as='a'` captures have two stable variants across sessions — regenerate (`pnpm test:vrt:update`) and re-run before suspecting a real regression.
+
+Previously listed here and now **fixed, not skipped**: `Button secondary + focus-visible` and `Anchor subtle + focus-visible` on Firefox. They were filed as a transparent-bg/alpha rasterisation problem; the actual cause was the OS-focus loss above (the ring was randomly absent, not blended differently), which is why the drift measured 4-6% and never converged. Only the _Firefox_ skips came off — both files still `ctx.skip` `focus-visible` on WebKit for the unrelated Full-Keyboard-Access reason above.

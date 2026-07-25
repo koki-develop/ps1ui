@@ -92,15 +92,6 @@ describe("Anchor VRT", () => {
       state === "focus-visible" && server.browser === "webkit",
       "macOS Safari Full Keyboard Access excludes <a href> from Tab",
     );
-    // Known flake — same pattern as Button secondary focus-visible: the
-    // subtle variant's `color: inherit` + focus-ring alpha blend renders
-    // inconsistently across successive Firefox captures. See
-    // packages/core/CLAUDE.md § "Known VRT flakes".
-    ctx.skip(
-      variant === "subtle" && state === "focus-visible" && server.browser === "firefox",
-      "Firefox: subtle + focus-visible rasterises inconsistently across captures",
-    );
-
     // href="#" — no navigation is ever attempted: the `active` state's
     // synthesized mouse-down + release would fire a real click on an
     // <a href>, but pseudo-state.ts's `suppressClick` intercepts it. Any

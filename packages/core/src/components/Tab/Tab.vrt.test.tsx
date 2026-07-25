@@ -41,6 +41,22 @@ describe("Tab VRT", () => {
         interaction === "focus-visible" && server.browser === "webkit",
         "macOS Safari Full Keyboard Access excludes <button> from Tab",
       );
+      // An unselected tab holding focus is not a state this widget can be in.
+      // Tab.tsx's roving tabindex keeps every unselected tab out of the Tab
+      // sequence (`tabIndex={selected ? 0 : -1}`), and TabList drives arrow
+      // keys with AUTOMATIC activation — focus and selection move together, so
+      // the moment focus lands on a tab it is selected. The `selected` row
+      // below already captures the only reachable focus-visible appearance.
+      //
+      // This combination used to "pass" by capturing an unfocused tab under a
+      // focus-visible name: withPseudoState only checked that Tab landed on the
+      // element, which it did not, and nothing verified the pseudo-class ever
+      // matched. It now fails loudly instead (see establishFocus in
+      // src/testing/pseudo-state.ts), which is what surfaced this.
+      ctx.skip(
+        interaction === "focus-visible" && selected === "unselected",
+        "roving tabindex + automatic activation: an unselected tab can never hold focus",
+      );
 
       const screen = await render(
         <VrtFrame>

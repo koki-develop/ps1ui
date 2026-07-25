@@ -28,6 +28,57 @@ export const pointerUp: BrowserCommand<[]> = async (context) => {
   await context.page.mouse.up();
 };
 
+// Where to park the cursor when no viewport size is reported (a persistent
+// context sized to the window). Playwright dispatches `mouse.move` at the raw
+// coordinate without clamping it to the viewport, which is fine here — landing
+// outside the viewport is just as "off the fixture" as landing in its corner —
+// but it does mean this constant must stay at least as large as any viewport
+// the suite runs at, or the cursor could park ON content.
+const PARKING_FALLBACK = { width: 1280, height: 1024 };
+
+// Playwright's mouse is one physical cursor per page and NOTHING resets it
+// between tests — Vitest resets keyboard state only, and `userEvent.unhover`
+// dispatches the leave events without reliably moving the cursor off the
+// target. `pointerDown` must park the real cursor ON its target in order to
+// press there, so with no explicit reset it stays there for the REST OF THE
+// FILE and every later capture meant to show a resting state silently renders
+// `:hover` instead. Measured, not theorised: regenerating Button's
+// `secondary-default` baseline in isolation yields the resting fg-subtle
+// border, while the committed CI baseline (captured after the primary row's
+// hover/active tests) shows the primary-green HOVER border.
+//
+// The far corner of the viewport is the cheapest spot guaranteed to be clear of
+// the top-left-rendered fixtures.
+//
+// This is a move, never a click. Whether a bare move can still nudge Firefox's
+// `:focus-visible` modality heuristic is not something we rely on either way:
+// `establishFocus` verifies the pseudo-class actually matches and retries if it
+// does not, so a lost modality race costs an extra Tab rather than a wrong
+// assertion. See pseudo-state.test.tsx, whose focus-visible sanity check runs
+// last — after both pointer-driven tests have parked the cursor — precisely so
+// that ordering stays covered.
+export const resetPointer: BrowserCommand<[]> = async (context) => {
+  assertPlaywrightProvider(context, "resetPointer");
+  const { width, height } = context.page.viewportSize() ?? PARKING_FALLBACK;
+  await context.page.mouse.move(width - 1, height - 1);
+};
+
+// Firefox ties `:focus` / `:focus-visible` MATCHING to the page owning real OS
+// focus — `document.activeElement` pointing at the element is not enough, and
+// `document.hasFocus()` is what tells the two apart. Vitest runs test FILES
+// concurrently as separate pages in one browser instance, so a sibling file
+// bootstrapping steals the window's focus at an arbitrary moment and every
+// focus-dependent style read in this page silently returns the RESTING colours
+// instead. Chromium and WebKit keep matching either way, which is why this only
+// ever surfaced on Firefox — and why it was previously misfiled as Firefox's
+// `:focus-visible` modality heuristic mis-classifying a synthesized Tab (see
+// pseudo-state.test.tsx). Only Playwright's `Page` can hand focus back;
+// `bringToFront()` has no in-page equivalent.
+export const bringPageToFront: BrowserCommand<[]> = async (context) => {
+  assertPlaywrightProvider(context, "bringPageToFront");
+  await context.page.bringToFront();
+};
+
 // forced-colors can't be entered from inside the page — only Playwright's
 // `page.emulateMedia` flips it. `null` (not `"none"`) on release restores the
 // real environment default. Engine support varies; callers feature-detect via
@@ -53,6 +104,8 @@ type ClientCommand<T> = T extends (context: never, ...payload: infer P) => infer
 export type PseudoStateCommands = {
   pointerDown: ClientCommand<typeof pointerDown>;
   releasePointer: ClientCommand<typeof pointerUp>;
+  bringPageToFront: ClientCommand<typeof bringPageToFront>;
+  resetPointer: ClientCommand<typeof resetPointer>;
 };
 
 // Same derivation pattern as PseudoStateCommands, consumed by

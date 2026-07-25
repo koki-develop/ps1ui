@@ -25,6 +25,7 @@ Gotchas that errors won't teach you:
 - `render()` from vitest-browser-react is async — always `await render(...)`; assertions and interactions are awaited too (`await expect.element(...)`, `await locator.click()`).
 - Browser Mode isolates state per **file**, not per test.
 - Never add a manual `test.include` or `setProjectAnnotations()` setup to the `storybook` project — `storybookTest()` handles both; adding either breaks it.
+- Real input state is global and outlives a test: the Playwright cursor stays where it was last moved, and OS focus belongs to one page at a time. `withPseudoState` owns both — it parks the pointer off-fixture on release and reclaims focus before asserting one — so drive hover/active/focus through it, never through raw `userEvent.hover` / `.focus()` in a test that then reads styles. A cursor left on a fixture silently turns every later resting-state read in that file into a `:hover` read.
 - Prefer `CSS.supports(...)` feature detection over hardcoding browser names; fall back to `server.browser` only for verified rendering quirks (`src/styles/reset.test.tsx` has examples, including a `CSS.supports` false positive).
 - Known Firefox flake: `.focus()` + Space-key activation tests fail intermittently under full-suite load, never in isolation — re-run before assuming a regression (full account in `Checkbox.test.tsx`).
 
