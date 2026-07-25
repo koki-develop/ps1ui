@@ -10,7 +10,11 @@
 //     deliberately NOT expanded; they are summarized as passthrough entries.
 //   - passthrough entries — derived from the alias declaration's AST: either
 //     a fixed native tag (`ComponentProps<"div">`, minus `Omit`-ted keys) or
-//     a polymorphic target (`ComponentPropsWithoutRef<E>` + the `as` prop).
+//     a polymorphic target (`ComponentProps<E>` / `ComponentPropsWithoutRef<E>`
+//     plus the `as` prop). Core writes every polymorphic alias with
+//     `ComponentProps<E>` so `ref` survives; the WithoutRef spelling stays
+//     understood because the difference is reader-visible (the rendered
+//     passthrough sentence gains a "ref is not supported" clause).
 //
 // Everything here fails LOUDLY. A component whose Props alias doesn't match a
 // shape this module understands must extend this module, not silently render
@@ -608,9 +612,9 @@ function omittedKeys(ctx: Ctx, component: string, keys: TypeNode): string[] {
  * invariant 2: a destructured key must be an own prop, a universally merged
  * key, or a real native prop of a passthrough target (implementations may
  * intercept-and-chain those, like CodeBlock's onBlur). Polymorphic leaves
- * (`ComponentPropsWithoutRef<E>`) contribute nothing — their attribute set
- * depends on the `as` target; the universal set covers what those components
- * actually destructure.
+ * (`ComponentProps<E>`, where E is the alias's type parameter) contribute
+ * nothing — their attribute set depends on the `as` target; the universal set
+ * covers what those components actually destructure.
  */
 function nativePassthroughKeys(
   ctx: Ctx,

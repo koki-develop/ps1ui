@@ -13,6 +13,13 @@ const px = `<Container size="sm" px={{ base: "md", md: "2xl" }}>
   Horizontal padding scales with the container width.
 </Container>`;
 
+// Demoed as `as="section"`, not `as="main"`: this page already sits inside the
+// layout's <main>, and a document may only have one. The prose above the demo
+// names <main> as the usual choice — the live example just can't be one.
+const asSection = `<Container as="section" size="md" aria-label="Pricing">
+  Section content, centered and capped at 48rem.
+</Container>`;
+
 const queryContainer = `{/* The inner Container now measures the 320px outer
     Container instead of the page, so it stays on its \`base\` padding. */}
 <Container queryContainer size="full" px="none" style={{ width: 320 }}>
@@ -42,6 +49,38 @@ const queryContainer = `{/* The inner Container now measures the 320px outer
       <DemoBox>
         px switches from md to 2xl at the md container breakpoint.
       </DemoBox>
+    </Container>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Semantic element</Heading>
+    <Text>
+      A Container usually wraps the page's own content region, so it is normally
+      a landmark: <Code>&lt;main&gt;</Code>, a <Code>&lt;section&gt;</Code>, the
+      <Code>&lt;footer&gt;</Code>. Pass <Code>as</Code> to render that tag instead
+      of the default <Code>&lt;div&gt;</Code> rather than layering a <Code
+        >role</Code
+      > onto it.
+    </Text>
+    <Text>
+      The centering, max-width cap, padding and <Code>queryContainer</Code> behave
+      identically on any tag; the rendered element's own attributes (and a correctly
+      typed <Code>ref</Code>) become available, and <Code>as</Code> also accepts a
+      component rather than a tag name.
+    </Text>
+    <Text>
+      A document may only have one <Code>&lt;main&gt;</Code>, and this page is
+      already inside the site layout's — so the example below uses <Code
+        >as="section"</Code
+      >. On a real page the outermost Container is usually the <Code
+        >&lt;main&gt;</Code
+      > itself.
+    </Text>
+  </Stack>
+
+  <Demo title="As a landmark element" code={asSection}>
+    <Container as="section" size="md" aria-label="Pricing">
+      <DemoBox>as="section" — the landmark and the centered measure in one element</DemoBox>
     </Container>
   </Demo>
 

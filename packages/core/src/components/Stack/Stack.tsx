@@ -1,5 +1,7 @@
-import type { ComponentProps, CSSProperties } from "react";
+import { createElement } from "react";
+import type { ComponentProps, CSSProperties, ElementType } from "react";
 import { cx } from "../../utils/cx";
+import { listRoleFor } from "../../utils/listSemantics";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
 import { spaceToVar, type SpaceScale } from "../../utils/spacing";
 
@@ -8,7 +10,9 @@ export type StackGap = SpaceScale;
 export type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";
 export type StackJustify = "start" | "center" | "end" | "between" | "around" | "evenly";
 
-export type StackProps = ComponentProps<"div"> & {
+type StackOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the default <div> — e.g. "nav" / "main" when the layout box also carries page semantics. */
+  as?: E;
   /**
    * Main-axis direction.
    * @default "column"
@@ -38,6 +42,11 @@ export type StackProps = ComponentProps<"div"> & {
    */
   queryContainer?: boolean;
 };
+
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
+export type StackProps<E extends ElementType = "div"> = StackOwnProps<E> &
+  Omit<ComponentProps<E>, keyof StackOwnProps<E>>;
 
 // direction values pass straight through — CSS flex-direction accepts
 // `row` / `column` (and `row-reverse` / `column-reverse`, which the union
@@ -81,7 +90,8 @@ const justifyToValue = (v: StackJustify): string => {
 // boolean → CSS flex-wrap keyword.
 const wrapToValue = (v: boolean): string => (v ? "wrap" : "nowrap");
 
-export function Stack({
+export function Stack<E extends ElementType = "div">({
+  as,
   direction,
   gap,
   align,
@@ -91,7 +101,7 @@ export function Stack({
   className,
   style,
   ...rest
-}: StackProps) {
+}: StackProps<E>) {
   const directionVars = resolveResponsive(direction, "--_stack-direction", directionToValue);
   const gapVars = resolveResponsive(gap, "--_stack-gap", spaceToVar);
   const alignVars = resolveResponsive(align, "--_stack-align", alignToValue);
@@ -111,5 +121,13 @@ export function Stack({
 
   const classes = cx("ps1ui-stack", queryContainer && "ps1ui-stack--query-container", className);
 
-  return <div {...rest} className={classes} style={mergedStyle} />;
+  const tag = as ?? "div";
+  return createElement(tag, {
+    // Placed before `...rest` so a caller-supplied role still wins — see
+    // utils/listSemantics.ts for why the <ul> / <ol> / <menu> targets need it.
+    role: listRoleFor(tag),
+    ...rest,
+    className: classes,
+    style: mergedStyle,
+  });
 }

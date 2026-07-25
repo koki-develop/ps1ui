@@ -40,6 +40,14 @@ const gridItemResponsive = `<Grid columns={4} gap="md">
   <GridItem>05</GridItem>
 </Grid>`;
 
+const asList = `{/* A card grid is a list — say so in the markup rather than
+    with role="list" on a <div>. Pair the tags: <ul> takes <li> children. */}
+<Grid as="ul" columns={3} gap="md" aria-label="cards">
+  <GridItem as="li" colSpan={2}>hero</GridItem>
+  <GridItem as="li">02</GridItem>
+  <GridItem as="li">03</GridItem>
+</Grid>`;
+
 const queryContainer = `{/* The inner Grid — and any GridItem colSpan inside it —
     now measures the 320px outer Grid instead of the page. */}
 <Grid queryContainer columns={1} style={{ width: 320 }}>
@@ -92,6 +100,33 @@ const queryContainer = `{/* The inner Grid — and any GridItem colSpan inside i
       <GridItem><DemoBox>03</DemoBox></GridItem>
       <GridItem><DemoBox>04</DemoBox></GridItem>
       <GridItem><DemoBox>05</DemoBox></GridItem>
+    </Grid>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Semantic element</Heading>
+    <Text>
+      Pass <Code>as</Code> to render a tag other than the default <Code
+        >&lt;div&gt;</Code
+      >. A card grid is usually a list, so <Code>{'<Grid as="ul">'}</Code> beats layering
+      <Code>role="list"</Code> onto a <Code>&lt;div&gt;</Code> — and because a <Code
+        >&lt;ul&gt;</Code
+      > may only contain <Code>&lt;li&gt;</Code>, <Code>GridItem</Code> carries the
+      same prop. Change the two together.
+    </Text>
+    <Text>
+      Everything else is unchanged: columns, gap, <Code>colSpan</Code> and <Code
+        >queryContainer</Code
+      > behave identically on any tag, the rendered element's own attributes become
+      available, and <Code>as</Code> also accepts a component rather than a tag name.
+    </Text>
+  </Stack>
+
+  <Demo title="As a list" code={asList}>
+    <Grid as="ul" columns={3} gap="md" aria-label="cards">
+      <GridItem as="li" colSpan={2}><DemoBox>hero</DemoBox></GridItem>
+      <GridItem as="li"><DemoBox>02</DemoBox></GridItem>
+      <GridItem as="li"><DemoBox>03</DemoBox></GridItem>
     </Grid>
   </Demo>
 

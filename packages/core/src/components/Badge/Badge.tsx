@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
+import type { ComponentProps, ElementType, ReactNode } from "react";
 import { cx } from "../../utils/cx";
 
 export type BadgeVariant = "solid" | "outline" | "subtle";
@@ -16,14 +16,10 @@ type BadgeOwnProps<E extends ElementType> = {
   leading?: ReactNode;
 };
 
-// Deliberate exception to the general "use ComponentProps<'tag'>" rule other components follow —
-// same reasoning as Button / Anchor / Text: with a polymorphic `as` prop TypeScript cannot
-// correctly narrow the `ref` prop's type against the resolved element E. Badge defaults to a
-// static <span> for display, and accepts <button> / <a> / router Link components when consumers
-// need interactivity — a loose ref type would silently accept mismatched refs, so dropping ref
-// from the prop type is safer than a misleading loose type.
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
 export type BadgeProps<E extends ElementType = "span"> = BadgeOwnProps<E> &
-  Omit<ComponentPropsWithoutRef<E>, keyof BadgeOwnProps<E>>;
+  Omit<ComponentProps<E>, keyof BadgeOwnProps<E>>;
 
 export function Badge<E extends ElementType = "span">({
   as,

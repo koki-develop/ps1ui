@@ -166,6 +166,43 @@ describe("Button", () => {
       await expect.element(link).toHaveAttribute("rel", "noopener noreferrer");
       await expect.element(link).toHaveAttribute("download", "file.txt");
     });
+
+    // `ref` — polymorphic components accept it (React 19 ref-as-prop; the
+    // derivation and the history behind it are documented on TextProps in
+    // Text.tsx) and it lands on whatever `as` resolved to. The type side — a
+    // ref typed for the wrong element is rejected — lives in
+    // src/polymorphic.test-d.tsx.
+    test("forwards a ref to the default <button>", async () => {
+      let captured: HTMLButtonElement | null = null;
+      await render(
+        <Button
+          ref={(node: HTMLButtonElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Button>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLButtonElement).tagName.toLowerCase()).toBe("button");
+    });
+
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLAnchorElement | null = null;
+      await render(
+        <Button
+          as="a"
+          href="/x"
+          ref={(node: HTMLAnchorElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Button>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLAnchorElement).tagName.toLowerCase()).toBe("a");
+    });
   });
 
   describe("interaction", () => {

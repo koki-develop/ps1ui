@@ -502,6 +502,43 @@ describe("Anchor", () => {
       await expect.element(link).toHaveAttribute("target", "_blank");
       expect(link.element().hasAttribute("rel")).toBe(false);
     });
+
+    // `ref` — polymorphic components accept it (React 19 ref-as-prop; the
+    // derivation and the history behind it are documented on TextProps in
+    // Text.tsx) and it lands on whatever `as` resolved to. The type side — a
+    // ref typed for the wrong element is rejected — lives in
+    // src/polymorphic.test-d.tsx.
+    test("forwards a ref to the default <a>", async () => {
+      let captured: HTMLAnchorElement | null = null;
+      await render(
+        <Anchor
+          href="/x"
+          ref={(node: HTMLAnchorElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Anchor>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLAnchorElement).tagName.toLowerCase()).toBe("a");
+    });
+
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLSpanElement | null = null;
+      await render(
+        <Anchor
+          as="span"
+          ref={(node: HTMLSpanElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Anchor>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLSpanElement).tagName.toLowerCase()).toBe("span");
+    });
   });
 
   describe("interaction", () => {

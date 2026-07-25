@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { cx } from "../../utils/cx";
 import { resolveResponsive, withResponsiveBase, type Responsive } from "../../utils/responsive";
 import {
@@ -33,12 +33,10 @@ type HeadingOwnProps<E extends HeadingElement> = {
   weight?: Responsive<HeadingWeight>;
 };
 
-// Deliberate exception to the general "use ComponentProps<'tag'>" rule other components follow —
-// same reasoning as Text: with a polymorphic `as` prop TypeScript cannot correctly narrow the
-// `ref` type. All h1-h6 do resolve to HTMLHeadingElement so ref would happen to work today, but
-// keeping the polymorphic pattern consistent avoids surprises if the tag set ever widens.
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
 export type HeadingProps<E extends HeadingElement = HeadingElement> = HeadingOwnProps<E> &
-  Omit<ComponentPropsWithoutRef<E>, keyof HeadingOwnProps<E>>;
+  Omit<ComponentProps<E>, keyof HeadingOwnProps<E>>;
 
 // Exhaustive over HeadingLevel so a new level cannot be added without classifying its defaults.
 const LEVEL_DEFAULTS: Record<HeadingLevel, { size: HeadingSize; weight: HeadingWeight }> = {

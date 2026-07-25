@@ -1,10 +1,11 @@
 import "../../styles/styles.css";
 
-import type { CSSProperties, ReactElement } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
+import { Anchor } from "../Anchor/Anchor";
 import { Button } from "../Button/Button";
 import { CodeBlock } from "../CodeBlock/CodeBlock";
 import { Text } from "../Text/Text";
@@ -14,6 +15,7 @@ import {
   type StackDirection,
   type StackGap,
   type StackJustify,
+  type StackProps,
 } from "./Stack";
 
 const DIRECTIONS = ["row", "column"] as const satisfies readonly StackDirection[];
@@ -119,6 +121,102 @@ describe("Stack", () => {
       const screen = await render(<Stack data-testid="s">x</Stack>);
       const el = screen.getByTestId("s").element();
       expect(el.getAttribute("role")).toBeNull();
+    });
+
+    // `as` — a layout box is very often the semantic element too (a <nav> of
+    // links, the page <main>). Nothing Stack does is div-specific: the class
+    // and the inline `--_stack-*` variables carry the whole layout, so each
+    // case asserts BOTH that the tag changed and that the flex layout still
+    // resolves on it — a tag swap that quietly dropped the styling would
+    // otherwise read as a pass.
+    test.for([{ tag: "nav" }, { tag: "main" }, { tag: "section" }, { tag: "header" }] as const)(
+      "as=$tag renders that tag with the flex layout intact",
+      async ({ tag }) => {
+        const screen = await render(
+          <Stack as={tag} direction="row" gap="xl" data-testid="s">
+            <span>a</span>
+          </Stack>,
+        );
+        const el = screen.getByTestId("s").element() as HTMLElement;
+        expect(el.tagName.toLowerCase()).toBe(tag);
+        expect(el.classList.contains("ps1ui-stack")).toBe(true);
+        expect(el.style.getPropertyValue("--_stack-gap-base")).toBe(GAP_VAR.xl);
+        const cs = getComputedStyle(el);
+        expect(cs.display).toBe("flex");
+        expect(cs.flexDirection).toBe("row");
+        expect(cs.columnGap).toBe(GAP_PX.xl);
+      },
+    );
+
+    test("as={Component} renders the component and hands it the merged class and style", async () => {
+      type SectionProps = { className?: string; style?: CSSProperties; children?: ReactNode };
+      const Panel = ({ className, style, children }: SectionProps) => (
+        <section className={className} data-panel="1" data-testid="s" style={style}>
+          {children}
+        </section>
+      );
+      const screen = await render(
+        <Stack as={Panel} gap="xl" className="extra">
+          x
+        </Stack>,
+      );
+      const el = screen.getByTestId("s").element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("section");
+      expect(el.getAttribute("data-panel")).toBe("1");
+      expect(el.classList.contains("ps1ui-stack")).toBe(true);
+      expect(el.classList.contains("extra")).toBe(true);
+      expect(el.style.getPropertyValue("--_stack-gap-base")).toBe(GAP_VAR.xl);
+    });
+
+    // The motivating case from the issue that added `as`: a <nav> that is also
+    // a Stack, which previously forced callers to hand-roll flex CSS to keep
+    // the landmark. `queryContainer` rides along to prove the modifier class
+    // (and therefore containment) is not tied to the div either.
+    test("as=nav keeps its landmark role and can still establish containment", async () => {
+      const screen = await render(
+        <Stack as="nav" aria-label="primary" queryContainer data-testid="s">
+          <span>a</span>
+        </Stack>,
+      );
+      const el = screen.getByRole("navigation", { name: "primary" }).element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("nav");
+      expect(el.classList.contains("ps1ui-stack--query-container")).toBe(true);
+      expect(getComputedStyle(el).containerType).toBe("inline-size");
+    });
+
+    // base.css's reset computes `list-style-type: none` on <ul>/<ol>/<menu>,
+    // which drops the list semantic from Safari's a11y tree. `List` already
+    // stamps `role="list"` to restore it; `as="ul"` reaches the same element,
+    // so Stack does too — see utils/listSemantics.ts.
+    test.for([{ tag: "ul" }, { tag: "ol" }, { tag: "menu" }] as const)(
+      "as=$tag stamps role=list so Safari still announces the list semantic",
+      async ({ tag }) => {
+        const screen = await render(
+          <Stack as={tag} data-testid="s">
+            <li>a</li>
+          </Stack>,
+        );
+        expect(screen.getByTestId("s").element().getAttribute("role")).toBe("list");
+      },
+    );
+
+    test("as=ul with a caller-supplied role keeps the caller's role", async () => {
+      const screen = await render(
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises the role override on top of the `as="ul"` list default.
+        <Stack as="ul" role="menu" data-testid="s">
+          <li role="menuitem">a</li>
+        </Stack>,
+      );
+      expect(screen.getByTestId("s").element().getAttribute("role")).toBe("menu");
+    });
+
+    test("as=nav stamps no role (the list default is scoped to <ul>/<ol>/<menu>)", async () => {
+      const screen = await render(
+        <Stack as="nav" data-testid="s">
+          a
+        </Stack>,
+      );
+      expect(screen.getByTestId("s").element().getAttribute("role")).toBeNull();
     });
   });
 
@@ -824,8 +922,8 @@ describe("Stack", () => {
     type StackLeakCase = {
       outerFor: (
         bp: Exclude<Breakpoint, "base">,
-      ) => Partial<Omit<Parameters<typeof Stack>[0], "children" | "ref">>;
-      inner: Partial<Omit<Parameters<typeof Stack>[0], "children" | "ref">>;
+      ) => Partial<Omit<StackProps, "children" | "ref" | "as">>;
+      inner: Partial<Omit<StackProps, "children" | "ref" | "as">>;
       computed: (cs: CSSStyleDeclaration) => string;
       expected: string;
     };
@@ -925,7 +1023,7 @@ describe("Stack", () => {
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Stack's role passthrough; Stack is intentionally a bare <div>.
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Stack's role passthrough; `role="toolbar"` has no native tag equivalent.
         <Stack id="toolbar" role="toolbar" aria-label="actions" data-testid="s">
           x
         </Stack>,
@@ -948,6 +1046,34 @@ describe("Stack", () => {
       );
       expect(captured).not.toBeNull();
       expect((captured as unknown as HTMLDivElement).tagName.toLowerCase()).toBe("div");
+    });
+
+    // `as` moves the ref target along with the tag — `createElement` receives
+    // `ref` as an ordinary prop under React 19's ref-as-prop, so there is no
+    // forwardRef hop to lose it. The type side of this (a ref typed for the
+    // wrong element is rejected) lives in src/polymorphic.test-d.tsx.
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLElement | null = null;
+      const setRef = (node: HTMLElement | null) => {
+        captured = node;
+      };
+      await render(
+        <Stack as="nav" ref={setRef} data-testid="s">
+          x
+        </Stack>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLElement).tagName.toLowerCase()).toBe("nav");
+    });
+
+    test("forwards native attributes onto the element `as` resolved to", async () => {
+      const screen = await render(
+        <Stack as="a" href="/routed" data-testid="s">
+          x
+        </Stack>,
+      );
+      const el = screen.getByTestId("s");
+      await expect.element(el).toHaveAttribute("href", "/routed");
     });
   });
 
@@ -999,10 +1125,32 @@ describe("Stack", () => {
       {
         name: "as a labelled toolbar",
         node: () => (
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-toolbar pattern; Stack is intentionally a bare <div>.
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-toolbar pattern; `role="toolbar"` has no native tag equivalent.
           <Stack direction="row" role="toolbar" aria-label="actions" gap="sm">
             <Button variant="secondary">a</Button>
             <Button variant="secondary">b</Button>
+          </Stack>
+        ),
+      },
+      {
+        name: "as a labelled navigation landmark",
+        node: () => (
+          <Stack as="nav" aria-label="primary" direction="row" gap="sm">
+            <Anchor href="/a">a</Anchor>
+            <Anchor href="/b">b</Anchor>
+          </Stack>
+        ),
+      },
+      {
+        name: "as a list of items",
+        node: () => (
+          <Stack as="ul" gap="sm">
+            <li>
+              <Text>first</Text>
+            </li>
+            <li>
+              <Text>second</Text>
+            </li>
           </Stack>
         ),
       },

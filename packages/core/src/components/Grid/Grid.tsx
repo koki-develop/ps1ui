@@ -1,12 +1,16 @@
-import type { ComponentProps, CSSProperties } from "react";
+import { createElement } from "react";
+import type { ComponentProps, CSSProperties, ElementType } from "react";
 import { cx } from "../../utils/cx";
+import { listRoleFor } from "../../utils/listSemantics";
 import { safePositiveInt } from "../../utils/numbers";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
 import { spaceToVar, type SpaceScale } from "../../utils/spacing";
 
 export type GridGap = SpaceScale;
 
-export type GridProps = ComponentProps<"div"> & {
+type GridOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the default <div> — e.g. "ul" for a card grid, paired with `<GridItem as="li">`. */
+  as?: E;
   /**
    * Number of equal-width columns.
    * @default 1
@@ -28,7 +32,20 @@ export type GridProps = ComponentProps<"div"> & {
   queryContainer?: boolean;
 };
 
-export function Grid({ columns, gap, queryContainer, className, style, ...rest }: GridProps) {
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
+export type GridProps<E extends ElementType = "div"> = GridOwnProps<E> &
+  Omit<ComponentProps<E>, keyof GridOwnProps<E>>;
+
+export function Grid<E extends ElementType = "div">({
+  as,
+  columns,
+  gap,
+  queryContainer,
+  className,
+  style,
+  ...rest
+}: GridProps<E>) {
   // `repeat(N, ...)` requires N ≥ 1 integer — `safePositiveInt` clamps at
   // the system boundary. See utils/numbers.ts for the full rationale.
   const columnsVars = resolveResponsive(columns, "--_grid-columns", safePositiveInt);
@@ -41,5 +58,13 @@ export function Grid({ columns, gap, queryContainer, className, style, ...rest }
     ...gapVars,
   } as CSSProperties;
   const classes = cx("ps1ui-grid", queryContainer && "ps1ui-grid--query-container", className);
-  return <div {...rest} className={classes} style={mergedStyle} />;
+  const tag = as ?? "div";
+  return createElement(tag, {
+    // Placed before `...rest` so a caller-supplied role still wins — see
+    // utils/listSemantics.ts for why the <ul> / <ol> / <menu> targets need it.
+    role: listRoleFor(tag),
+    ...rest,
+    className: classes,
+    style: mergedStyle,
+  });
 }

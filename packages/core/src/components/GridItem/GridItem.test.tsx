@@ -1,13 +1,13 @@
 import "../../styles/styles.css";
 
-import type { CSSProperties, ReactElement } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
 import { Grid } from "../Grid/Grid";
 import { Text } from "../Text/Text";
-import { GridItem } from "./GridItem";
+import { GridItem, type GridItemProps } from "./GridItem";
 
 // Column-span counts exercised in unit/behavioural tests. Chosen to cover the
 // realistic range plus 1-span (default) — a change to the
@@ -71,6 +71,46 @@ describe("GridItem", () => {
       const screen = await render(<GridItem data-testid="gi">x</GridItem>);
       const el = screen.getByTestId("gi").element();
       expect(el.getAttribute("role")).toBeNull();
+    });
+
+    // `as` exists on GridItem for the same reason it exists on Grid, and it is
+    // not optional once Grid has it: `<Grid as="ul">` full of `<div>` cells is
+    // invalid HTML. Each case asserts BOTH that the tag changed and that the
+    // span still resolves on it.
+    test.for([{ tag: "li" }, { tag: "article" }, { tag: "section" }] as const)(
+      "as=$tag renders that tag with the span intact",
+      async ({ tag }) => {
+        const screen = await render(
+          <GridItem as={tag} colSpan={3} data-testid="gi">
+            a
+          </GridItem>,
+        );
+        const el = screen.getByTestId("gi").element() as HTMLElement;
+        expect(el.tagName.toLowerCase()).toBe(tag);
+        expect(el.classList.contains("ps1ui-griditem")).toBe(true);
+        expect(el.style.getPropertyValue("--_griditem-col-span-base")).toBe("3");
+        expect(readSpan(el)).toBe("3");
+      },
+    );
+
+    test("as={Component} renders the component and hands it the merged class and style", async () => {
+      type CellProps = { className?: string; style?: CSSProperties; children?: ReactNode };
+      const Cell = ({ className, style, children }: CellProps) => (
+        <article className={className} data-cell="1" data-testid="gi" style={style}>
+          {children}
+        </article>
+      );
+      const screen = await render(
+        <GridItem as={Cell} colSpan={3} className="extra">
+          x
+        </GridItem>,
+      );
+      const el = screen.getByTestId("gi").element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("article");
+      expect(el.getAttribute("data-cell")).toBe("1");
+      expect(el.classList.contains("ps1ui-griditem")).toBe(true);
+      expect(el.classList.contains("extra")).toBe(true);
+      expect(el.style.getPropertyValue("--_griditem-col-span-base")).toBe("3");
     });
   });
 
@@ -417,8 +457,8 @@ describe("GridItem", () => {
     type GridItemLeakCase = {
       outerFor: (
         bp: Exclude<Breakpoint, "base">,
-      ) => Partial<Omit<Parameters<typeof GridItem>[0], "children" | "ref">>;
-      inner: Partial<Omit<Parameters<typeof GridItem>[0], "children" | "ref">>;
+      ) => Partial<Omit<GridItemProps, "children" | "ref" | "as">>;
+      inner: Partial<Omit<GridItemProps, "children" | "ref" | "as">>;
       computed: (el: HTMLElement) => string;
       expected: string;
     };
@@ -500,7 +540,7 @@ describe("GridItem", () => {
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises GridItem's role passthrough; GridItem is intentionally a bare <div>.
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises GridItem's role passthrough; `as="li"` is the preferred spelling inside a `<Grid as="ul">`.
         <GridItem id="hero" role="listitem" aria-label="hero" data-testid="gi">
           x
         </GridItem>,
@@ -523,6 +563,34 @@ describe("GridItem", () => {
       );
       expect(captured).not.toBeNull();
       expect((captured as unknown as HTMLDivElement).tagName.toLowerCase()).toBe("div");
+    });
+
+    // `as` moves the ref target along with the tag — `createElement` receives
+    // `ref` as an ordinary prop under React 19's ref-as-prop, so there is no
+    // forwardRef hop to lose it. The type side of this (a ref typed for the
+    // wrong element is rejected) lives in src/polymorphic.test-d.tsx.
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLLIElement | null = null;
+      const setRef = (node: HTMLLIElement | null) => {
+        captured = node;
+      };
+      await render(
+        <GridItem as="li" ref={setRef} data-testid="gi">
+          x
+        </GridItem>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLLIElement).tagName.toLowerCase()).toBe("li");
+    });
+
+    test("forwards native attributes onto the element `as` resolved to", async () => {
+      const screen = await render(
+        <GridItem as="li" value={3} data-testid="gi">
+          x
+        </GridItem>,
+      );
+      const el = screen.getByTestId("gi");
+      await expect.element(el).toHaveAttribute("value", "3");
     });
   });
 
@@ -557,6 +625,22 @@ describe("GridItem", () => {
               <Text>a</Text>
             </GridItem>
             <GridItem>
+              <Text>b</Text>
+            </GridItem>
+          </Grid>
+        ),
+      },
+      {
+        name: "native <ul>/<li> card grid with a 2-span hero item",
+        node: () => (
+          <Grid as="ul" columns={4} aria-label="cards">
+            <GridItem as="li" colSpan={2}>
+              <Text>hero</Text>
+            </GridItem>
+            <GridItem as="li">
+              <Text>a</Text>
+            </GridItem>
+            <GridItem as="li">
               <Text>b</Text>
             </GridItem>
           </Grid>
