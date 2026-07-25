@@ -16,6 +16,12 @@ const ordered = `<List ordered>
   <ListItem>write the exit code</ListItem>
 </List>`;
 
+const withoutMarkers = `<List showMarkers={false}>
+  <ListItem>install the package</ListItem>
+  <ListItem>import the styles entry</ListItem>
+  <ListItem>wrap your tree in PS1Root</ListItem>
+</List>`;
+
 const nested = `<List ordered>
   <ListItem>build the package</ListItem>
   <ListItem>
@@ -45,6 +51,14 @@ const nested = `<List ordered>
       <ListItem>resolve the config</ListItem>
       <ListItem>dispatch the command</ListItem>
       <ListItem>write the exit code</ListItem>
+    </List>
+  </Demo>
+
+  <Demo title="Without markers" code={withoutMarkers}>
+    <List showMarkers={false}>
+      <ListItem>install the package</ListItem>
+      <ListItem>import the styles entry</ListItem>
+      <ListItem>wrap your tree in PS1Root</ListItem>
     </List>
   </Demo>
 

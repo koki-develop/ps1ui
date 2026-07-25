@@ -9,6 +9,7 @@ const meta = {
   component: List,
   argTypes: {
     ordered: { control: "boolean" },
+    showMarkers: { control: "boolean" },
   },
 } satisfies Meta<typeof List>;
 
@@ -39,6 +40,24 @@ export const Ordered: Story = {
         <ListItem>resolve the config</ListItem>
         <ListItem>dispatch the command</ListItem>
         <ListItem>write the exit code</ListItem>
+      </>
+    ),
+  },
+};
+
+// Markerless — for lists whose design carries its own separation (borders,
+// cards, generous spacing). Items sit flush with no reserved marker column,
+// while the markup stays a real <ul> so screen readers still announce it as
+// a list.
+export const WithoutMarkers: Story = {
+  args: {
+    showMarkers: false,
+    style: { maxWidth: 360 },
+    children: (
+      <>
+        <ListItem>install the package</ListItem>
+        <ListItem>import the styles entry</ListItem>
+        <ListItem>wrap your tree in PS1Root</ListItem>
       </>
     ),
   },

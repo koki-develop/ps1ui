@@ -94,6 +94,107 @@ describe("List", () => {
       expect(s.content).toContain('"."');
     });
 
+    // Markerless mode is a purely visual opt-out: the glyph and the column it
+    // hangs in both disappear, and nothing else about the list does. Both
+    // flavours are asserted because the marker column geometry is declared
+    // per flavour (1ch vs 3ch) — a rule that forgot the marker gate on one of
+    // them would leave that flavour indented with no marker in it.
+    const markerlessCases = [
+      {
+        name: "unordered",
+        node: () => (
+          <List showMarkers={false}>
+            <li data-testid="i">alpha</li>
+          </List>
+        ),
+      },
+      {
+        name: "ordered",
+        node: () => (
+          <List ordered showMarkers={false}>
+            <li data-testid="i">alpha</li>
+          </List>
+        ),
+      },
+    ] satisfies { name: string; node: () => ReactElement }[];
+
+    test.for(markerlessCases)(
+      "showMarkers=false ($name) draws no ::before marker and reserves no marker column",
+      async ({ node }) => {
+        const screen = await render(node());
+        const el = screen.getByTestId("i").element();
+        expect(getComputedStyle(el, "::before").content).toBe("none");
+        expect(Number.parseFloat(getComputedStyle(el).paddingLeft)).toBe(0);
+      },
+    );
+
+    // The whole point of the option: a design that wants no marker keeps the
+    // <ul>/<ol> element and its role, so VoiceOver still announces "list, N
+    // items" instead of the consumer falling back to a <div> stack.
+    test("showMarkers=false keeps the list element and role=list", async () => {
+      const screen = await render(
+        <List showMarkers={false} data-testid="l">
+          <li>a</li>
+        </List>,
+      );
+      const el = screen.getByTestId("l").element();
+      expect(el.tagName.toLowerCase()).toBe("ul");
+      expect(el.getAttribute("role")).toBe("list");
+    });
+
+    // Marker rules are child combinators off the list that owns them, so the
+    // marker state doesn't leak across nesting in either direction.
+    test("a markerless list can hold a markered sublist without either affecting the other", async () => {
+      const screen = await render(
+        <List showMarkers={false}>
+          <li data-testid="outer">
+            outer
+            <List>
+              <li data-testid="inner">inner</li>
+            </List>
+          </li>
+        </List>,
+      );
+      const outer = screen.getByTestId("outer").element();
+      const inner = screen.getByTestId("inner").element();
+      expect(getComputedStyle(outer, "::before").content).toBe("none");
+      expect(Number.parseFloat(getComputedStyle(outer).paddingLeft)).toBe(0);
+      expect(getComputedStyle(inner, "::before").content).toBe('"-"');
+      expect(Number.parseFloat(getComputedStyle(inner).paddingLeft)).toBeGreaterThan(0);
+    });
+
+    // Specificity contract for the marker axis: the `.ps1ui-list--markers`
+    // gate is written as `:where(...)`, so the marker rules weigh exactly what
+    // they did before the axis existed and a consumer stylesheet targeting the
+    // long-standing `.ps1ui-list--unordered > li` hook with a single-class
+    // selector still wins on source order. A plain compound gate
+    // (`.ps1ui-list--markers.ps1ui-list--unordered > li`) would silently
+    // outrank that override — this test is what catches the regression.
+    test("consumer CSS at single-class specificity still overrides the marker rules", async () => {
+      const consumerSheet = document.createElement("style");
+      consumerSheet.textContent = `
+        .ps1ui-list--unordered > li { padding-left: 0; }
+        .ps1ui-list--unordered > li::before { content: "*"; }
+      `;
+      // Appended to <head> after this file's styles.css import, mirroring a
+      // consumer sheet loaded after @ps1ui/core's.
+      document.head.append(consumerSheet);
+      try {
+        const screen = await render(
+          <List>
+            <li data-testid="i">alpha</li>
+          </List>,
+        );
+        const el = screen.getByTestId("i").element();
+        expect(Number.parseFloat(getComputedStyle(el).paddingLeft)).toBe(0);
+        expect(getComputedStyle(el, "::before").content).toBe('"*"');
+      } finally {
+        // Browser Mode isolates per file, not per test — an orphaned sheet
+        // would bleed into every later test here.
+        consumerSheet.remove();
+      }
+    });
+
     // Hanging-indent contract: <li> reserves marker space via padding-left
     // and the ::before sits inside that reservation via a negative margin-left.
     // Wrapped text on line 2+ starts at the padding-left position, flush with
@@ -186,6 +287,41 @@ describe("List", () => {
       const el = screen.getByTestId("l").element();
       expect(el.classList.contains("ps1ui-list--unordered")).toBe(true);
       expect(el.classList.contains("ps1ui-list--ordered")).toBe(false);
+    });
+
+    test("applies ps1ui-list--markers by default", async () => {
+      const screen = await render(
+        <List data-testid="l">
+          <li>a</li>
+        </List>,
+      );
+      await expect.element(screen.getByTestId("l")).toHaveClass("ps1ui-list--markers");
+    });
+
+    // The marker axis is additive — showMarkers=false drops the marker class
+    // and nothing else, so the element-type modifier consumers style against
+    // stays put.
+    test("omits ps1ui-list--markers when showMarkers=false, keeping the variant modifier", async () => {
+      const screen = await render(
+        <List showMarkers={false} data-testid="l">
+          <li>a</li>
+        </List>,
+      );
+      const el = screen.getByTestId("l").element();
+      expect(el.classList.contains("ps1ui-list--markers")).toBe(false);
+      expect(el.classList.contains("ps1ui-list")).toBe(true);
+      expect(el.classList.contains("ps1ui-list--unordered")).toBe(true);
+    });
+
+    test("omits ps1ui-list--markers when ordered and showMarkers=false", async () => {
+      const screen = await render(
+        <List ordered showMarkers={false} data-testid="l">
+          <li>a</li>
+        </List>,
+      );
+      const el = screen.getByTestId("l").element();
+      expect(el.classList.contains("ps1ui-list--markers")).toBe(false);
+      expect(el.classList.contains("ps1ui-list--ordered")).toBe(true);
     });
 
     test("merges caller-supplied className without dropping the base class", async () => {
@@ -290,6 +426,15 @@ describe("List", () => {
         name: "ordered plain-text items",
         node: () => (
           <List ordered>
+            <li>first</li>
+            <li>second</li>
+          </List>
+        ),
+      },
+      {
+        name: "markerless list",
+        node: () => (
+          <List showMarkers={false}>
             <li>first</li>
             <li>second</li>
           </List>

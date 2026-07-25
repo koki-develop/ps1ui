@@ -6,6 +6,25 @@
    so the "reset removes bullets" side effect turns into an on-brand
    plain-text glyph rather than a hole.
 
+   Markers are their own axis, orthogonal to the element type: every marker
+   rule below is gated on `.ps1ui-list--markers` (emitted for the default
+   `showMarkers`), while `--unordered` / `--ordered` still pick the glyph and
+   its column width. A markerless List (`showMarkers={false}`, for designs
+   that separate items with rules or borders instead of glyphs) therefore
+   matches none of those rules rather than undoing them with `content: none`
+   / `padding-left: 0` overrides — there is no second copy of the marker
+   geometry to keep in sync. The <ul>/<ol> element, its `role="list"`, and
+   the item semantics are identical either way — dropping the marker is a
+   purely visual opt-out.
+
+   The gate is written as `:where(.ps1ui-list--markers)` (same trick as
+   Badge's `:where(button, a)`) so it contributes no specificity: these
+   selectors weigh exactly what they did before the marker axis existed —
+   `.ps1ui-list--unordered > li` is still (0,1,1), `.ps1ui-list > li::before`
+   still (0,1,2). A consumer stylesheet overriding those long-standing hooks
+   with a single-class selector keeps winning on source order; writing the
+   gate as a plain compound class would have silently outranked it.
+
    The ordered marker uses `counter(list-item)` — the browser-maintained
    list-item counter that already honours `<ol start>`, `<ol reversed>`,
    and per-item `<li value>`. Using a hand-rolled `counter-reset` /
@@ -45,6 +64,10 @@
    respects the padding-left, so it renders indented under the item's text
    rather than under the marker.
 
+   Every selector here is a child combinator off the list, so the marker
+   state of one list never reaches another: a markerless List can hold a
+   markered sublist (and vice versa) with each keeping its own geometry.
+
    Marker column widths are hard-coded per variant (not lifted to a custom
    property) because the same numeric value shows up in `padding-left` on
    the <li> and in `width` / `margin-left` on the ::before; a shared var
@@ -57,15 +80,15 @@
    items visually break the right-align column — an acceptable trade for
    the common < 100 case. */
 
-.ps1ui-list--unordered > li {
+.ps1ui-list--unordered:where(.ps1ui-list--markers) > li {
   padding-left: calc(1ch + var(--ps1ui-space-sm));
 }
 
-.ps1ui-list--ordered > li {
+.ps1ui-list--ordered:where(.ps1ui-list--markers) > li {
   padding-left: calc(3ch + var(--ps1ui-space-sm));
 }
 
-.ps1ui-list > li::before {
+.ps1ui-list:where(.ps1ui-list--markers) > li::before {
   display: inline-block;
   padding-right: var(--ps1ui-space-sm);
   color: var(--ps1ui-color-fg-muted);
@@ -73,13 +96,13 @@
   text-align: right;
 }
 
-.ps1ui-list--unordered > li::before {
+.ps1ui-list--unordered:where(.ps1ui-list--markers) > li::before {
   content: "-";
   width: 1ch;
   margin-left: calc((1ch + var(--ps1ui-space-sm)) * -1);
 }
 
-.ps1ui-list--ordered > li::before {
+.ps1ui-list--ordered:where(.ps1ui-list--markers) > li::before {
   content: counter(list-item) ".";
   width: 3ch;
   margin-left: calc((3ch + var(--ps1ui-space-sm)) * -1);

@@ -150,7 +150,7 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
       {
         slug: "list",
         name: "List",
-        description: "Ordered or unordered <ul>/<ol> with plain-text markers.",
+        description: "Ordered or unordered <ul>/<ol> with optional plain-text markers.",
         childComponents: ["ListItem"],
       },
       {
