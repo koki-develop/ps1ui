@@ -79,6 +79,7 @@ export function CodeBlock({
   const mergedRef = useMergedRef(scrollerRef, forwardedRef);
 
   return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the only handler here is `onBlur`, and the <pre> is a deliberately focusable scroll region (see the tabIndex disable below). The handler is bookkeeping for that element's own scroll affordance — it re-measures overflow so the tab stop can be dropped once focus leaves — not an interaction handler standing in for a real control.
     <pre
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- axe scrollable-region-focusable requires the <pre> be keyboard-reachable when its content overflows; useScrollableFocus gates this on measured overflow so short snippets stay out of the tab order.
       tabIndex={tabIndex}

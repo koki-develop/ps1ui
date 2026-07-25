@@ -88,6 +88,7 @@ export function TabList({
   };
 
   return (
+    // oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- the rule sees a `tablist` + onKeyDown and assumes the container is the focus target, but WAI-ARIA APG puts the tabs' single tab stop on the selected <Tab> via roving tabindex (`tabIndex={selected ? 0 : -1}` in Tab.tsx). The tablist is only the key-event delegate; making it focusable would add a second, redundant tab stop for the same widget.
     <div
       {...rest}
       ref={mergedRef}
