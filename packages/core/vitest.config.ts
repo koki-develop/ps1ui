@@ -5,7 +5,13 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
-import { emulateForcedColors, pointerDown, pointerUp } from "./vitest.browser-commands";
+import {
+  bringPageToFront,
+  emulateForcedColors,
+  pointerDown,
+  pointerUp,
+  resetPointer,
+} from "./vitest.browser-commands";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,7 +59,13 @@ function browserBase() {
     provider: playwright(),
     instances: browserInstances(),
     headless: true,
-    commands: { pointerDown, releasePointer: pointerUp, emulateForcedColors },
+    commands: {
+      pointerDown,
+      releasePointer: pointerUp,
+      emulateForcedColors,
+      bringPageToFront,
+      resetPointer,
+    },
   };
 }
 
@@ -116,15 +128,42 @@ export default defineConfig({
         test: {
           name: "vrt",
           include: ["src/**/*.vrt.test.tsx"],
+          // Serialized on purpose, and it is not a tax: a machine-wide OS focus
+          // is a single resource, and Vitest's concurrent per-file pages take
+          // it from one another at arbitrary moments. Once pseudo-state.ts
+          // started genuinely reclaiming focus (see `bringPageToFront` in
+          // vitest.browser-commands.ts), any `interaction="focus"` capture
+          // became a tug-of-war: Firefox drops :focus styling the instant its
+          // page loses OS focus, so the ring blinked in and out across the
+          // stabilization frames and `toMatchScreenshot` reported "Matcher did
+          // not succeed in time" on roughly 4 of 10 full runs (Input /
+          // Textarea, Firefox). Nothing inside the page can defend against
+          // that; removing the competition is the only fix. Measured on an
+          // 8-core darwin box the serialized suite is FASTER end to end
+          // (28.6s vs 33.8s) — three browser engines were already saturating
+          // the CPU, so file parallelism was buying contention, not throughput.
+          // The unit and storybook projects keep their parallelism. Their focus
+          // reads are single-shot and happen microseconds after
+          // `establishFocus` verified the match, so the exposure is a race
+          // window rather than a multi-frame one; `establishFocus` also lands
+          // focus WITHOUT stealing it on the first attempt precisely so this
+          // helper doesn't add contention there. If focus-dependent unit tests
+          // ever do start flaking under load, this same flag is the fix for
+          // that project too — measure before assuming parallelism is buying
+          // anything.
+          fileParallelism: false,
           // Absorbs sub-pixel rasterisation drift on Firefox/WebKit that
           // slips past `toMatchScreenshot`'s Stable Screenshot Detection
-          // and pixelmatch's threshold. Genuinely stuck cases (the two
-          // `focus-visible + transparent bg` Firefox pairs documented in
-          // CLAUDE.md's "Known VRT flakes") stay skipped — retry can't
-          // rescue a 100% failure — but the intermittent 2-6% drifts that
-          // otherwise force an unrelated PR onto the auto-heal treadmill
-          // absorb here. Kept at the project level rather than per-test
-          // so a new *.vrt.test.tsx file inherits it automatically.
+          // and pixelmatch's threshold — the intermittent 2-6% drifts that
+          // would otherwise force an unrelated PR onto the auto-heal
+          // treadmill. Kept at the project level rather than per-test so a
+          // new *.vrt.test.tsx file inherits it automatically.
+          //
+          // It used to also carry the two `focus-visible + transparent bg`
+          // Firefox pairs (Button secondary, Anchor subtle) as permanently
+          // skipped "retry can't rescue a 100% failure" cases. Those skips are
+          // gone: the symptom was a focus ring that randomly wasn't painted at
+          // all, which is the OS-focus loss described above, not rasterisation.
           retry: 3,
           // Waits for JetBrains Mono to be resident before every capture —
           // see src/testing/vrt-setup.ts for the font-load race this closes.

@@ -120,3 +120,50 @@
   color: var(--ps1ui-color-fg-subtle);
   border-color: var(--ps1ui-color-border);
 }
+
+/* The bottom rung of the emphasis ladder that starts at --primary: no fill and
+   no visible border at rest, so only the label paints. That makes it the one
+   variant usable in dense chrome — tree-row toggles, toolbar buttons, table-cell
+   actions — where an outlined control reads as a box nested inside another box.
+
+   The base rule's `border: 1px solid transparent` is kept rather than removed:
+   the border box then measures identically to every other variant, so a ghost
+   button sitting in a row beside a primary one shares its height and text
+   baseline instead of sitting 2px short.
+
+   Hover/active are load-bearing here in a way they aren't elsewhere. The other
+   three variants carry a resting affordance and only have to shift it; ghost
+   has none, so hover is the moment the control announces it is a control at
+   all. The primary tint therefore arrives on BOTH the background and the label,
+   and at a stronger mix than --secondary's 6% supporting wash — a wash that
+   faint on a borderless target reads as a rendering artifact rather than
+   feedback. Contrast at both states is verified in Button.contrast.test.tsx
+   (hover ≈ 9.9:1, active ≈ 5.7:1 against the tinted background). */
+.ps1ui-button--ghost {
+  background: transparent;
+  color: var(--ps1ui-color-fg);
+  /* Redundant against the base rule on purpose — it states that "no visible
+     border" is this variant's defining property rather than an omission, so a
+     future edit to the base border can't silently hand ghost an outline.
+     :focus-visible still repaints this border primary via the base rule, and
+     that outranks the no-chrome rule: a focus indicator is not optional. */
+  border-color: transparent;
+}
+.ps1ui-button--ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ps1ui-color-primary) 12%, transparent);
+  color: var(--ps1ui-color-primary);
+}
+.ps1ui-button--ghost:active:not(:disabled) {
+  background: color-mix(in srgb, var(--ps1ui-color-primary-active) 18%, transparent);
+  color: var(--ps1ui-color-primary-active);
+}
+/* Unlike the other three, disabled does NOT paint a border here. An outline
+   that appears only once the control becomes unavailable would make the
+   disabled state the most prominent thing on the surface — exactly backwards.
+   Dimming the label to fg-subtle (the same disabled colour the others use) is
+   the whole treatment; that token holds ≥ 4.5:1 against both
+   --ps1ui-color-bg and --ps1ui-color-surface, so a disabled ghost stays
+   readable. */
+.ps1ui-button--ghost:disabled {
+  color: var(--ps1ui-color-fg-subtle);
+}
