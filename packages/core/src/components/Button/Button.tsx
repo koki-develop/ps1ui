@@ -2,13 +2,13 @@ import { createElement } from "react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";
 import { cx } from "../../utils/cx";
 
-export type ButtonVariant = "primary" | "secondary" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonOwnProps<E extends ElementType> = {
   /** Element or component to render instead of the native <button> — e.g. "a" or a router Link. */
   as?: E;
-  /** Visual style: "primary" for the main action, "secondary" for supporting actions, "danger" for destructive actions. */
+  /** Visual style: "primary" for the main action, "secondary" for supporting actions, "danger" for destructive actions, "ghost" for chrome-free actions that only paint their label until hovered. */
   variant?: ButtonVariant;
   /** Control size — affects font size, padding, and inline gap. */
   size?: ButtonSize;

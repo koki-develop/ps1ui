@@ -10,7 +10,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "inline-radio" },
-      options: ["primary", "secondary", "danger"],
+      options: ["primary", "secondary", "danger", "ghost"],
     },
     size: {
       control: { type: "inline-radio" },
@@ -45,6 +45,13 @@ export const Danger: Story = {
   },
 };
 
+export const Ghost: Story = {
+  args: {
+    variant: "ghost",
+    children: "expand",
+  },
+};
+
 export const Disabled: Story = {
   args: {
     variant: "primary",
@@ -67,6 +74,28 @@ export const DangerDisabled: Story = {
     children: "delete account",
     disabled: true,
   },
+};
+
+export const GhostDisabled: Story = {
+  args: {
+    variant: "ghost",
+    children: "expand",
+    disabled: true,
+  },
+};
+
+// The four variants side by side — the only view where ghost's defining trait
+// reads at a glance: it holds the same box as its bordered siblings while
+// painting nothing but its label.
+export const Variants: Story = {
+  render: () => (
+    <Stack direction="row" gap="md" align="center">
+      <Button variant="primary">primary</Button>
+      <Button variant="secondary">secondary</Button>
+      <Button variant="danger">danger</Button>
+      <Button variant="ghost">ghost</Button>
+    </Stack>
+  ),
 };
 
 export const Small: Story = {

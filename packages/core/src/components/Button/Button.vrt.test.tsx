@@ -17,7 +17,12 @@ import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state
 import { VrtFrame } from "../../testing/vrt";
 import { Button, type ButtonSize, type ButtonVariant } from "./Button";
 
-const VARIANTS = ["primary", "secondary", "danger"] as const satisfies readonly ButtonVariant[];
+const VARIANTS = [
+  "primary",
+  "secondary",
+  "danger",
+  "ghost",
+] as const satisfies readonly ButtonVariant[];
 const SIZES = ["sm", "md", "lg"] as const satisfies readonly ButtonSize[];
 const STATES = ["default", "hover", "focus-visible", "active", "disabled"] as const;
 const PSEUDO_STATES = [
