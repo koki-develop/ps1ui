@@ -17,9 +17,18 @@ export type GridProps = ComponentProps<"div"> & {
    * @default "md"
    */
   gap?: Responsive<GridGap>;
+  /**
+   * Make this Grid a container-query context so descendants' responsive props
+   * — including child `GridItem`s' `colSpan` — resolve against its width
+   * instead of the nearest ancestor container. Costs the Grid its intrinsic
+   * width — it collapses to 0 in shrink-to-fit parents (row flex, auto grid
+   * track, float), so give it a definite inline size when opting in.
+   * @default false
+   */
+  queryContainer?: boolean;
 };
 
-export function Grid({ columns, gap, className, style, ...rest }: GridProps) {
+export function Grid({ columns, gap, queryContainer, className, style, ...rest }: GridProps) {
   // `repeat(N, ...)` requires N ≥ 1 integer — `safePositiveInt` clamps at
   // the system boundary. See utils/numbers.ts for the full rationale.
   const columnsVars = resolveResponsive(columns, "--_grid-columns", safePositiveInt);
@@ -31,5 +40,6 @@ export function Grid({ columns, gap, className, style, ...rest }: GridProps) {
     ...columnsVars,
     ...gapVars,
   } as CSSProperties;
-  return <div {...rest} className={cx("ps1ui-grid", className)} style={mergedStyle} />;
+  const classes = cx("ps1ui-grid", queryContainer && "ps1ui-grid--query-container", className);
+  return <div {...rest} className={classes} style={mergedStyle} />;
 }

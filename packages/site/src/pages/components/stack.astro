@@ -1,8 +1,9 @@
 ---
-import { Stack } from "@ps1ui/core";
+import { Anchor, Code, Heading, Stack, Text } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 import DemoBox from "../../components/DemoBox.astro";
+import { href } from "../../lib/url";
 
 const row = `<Stack direction="row" gap="md">
   <div>01</div>
@@ -20,6 +21,16 @@ const responsive = `<Stack direction={{ base: "column", md: "row" }} gap="md">
   <div>01</div>
   <div>02</div>
   <div>03</div>
+</Stack>`;
+
+const queryContainer = `{/* The inner Stack now measures the 320px outer Stack
+    instead of the page, so it stays on its \`base\` value. */}
+<Stack queryContainer style={{ width: 320 }}>
+  <Stack direction={{ base: "column", md: "row" }} gap="md">
+    <div>01</div>
+    <div>02</div>
+    <div>03</div>
+  </Stack>
 </Stack>`;
 ---
 
@@ -45,6 +56,36 @@ const responsive = `<Stack direction={{ base: "column", md: "row" }} gap="md">
       <DemoBox>01</DemoBox>
       <DemoBox>02</DemoBox>
       <DemoBox>03</DemoBox>
+    </Stack>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Query container</Heading>
+    <Text>
+      Responsive props resolve against the nearest ancestor that is a
+      container-query context — normally the <Anchor href={href("components/ps1root/")}
+        >PS1Root</Anchor
+      > wrapping your app. Pass <Code>queryContainer</Code> to make a
+      <Code>Stack</Code> that context instead, so its descendants respond to that
+      Stack's own width rather than the page's. Useful for sidebars, split panes
+      and card slots.
+    </Text>
+    <Text>
+      It is opt-in because <Code>container-type: inline-size</Code> erases the element's
+      intrinsic width: an opted-in <Code>Stack</Code> collapses to zero inside any
+      shrink-to-fit parent (a row <Code>Stack</Code>, an auto grid track, a float).
+      Give it a definite inline size — an explicit width, <Code>flex: 1</Code>, or a
+      block-level parent — whenever you turn it on.
+    </Text>
+  </Stack>
+
+  <Demo title="Query container" code={queryContainer}>
+    <Stack queryContainer style={{ width: 320, maxWidth: "100%" }}>
+      <Stack direction={{ base: "column", md: "row" }} gap="md">
+        <DemoBox>01</DemoBox>
+        <DemoBox>02</DemoBox>
+        <DemoBox>03</DemoBox>
+      </Stack>
     </Stack>
   </Demo>
 </ComponentPage>

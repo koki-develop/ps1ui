@@ -6,6 +6,7 @@ import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
 import { Button } from "../Button/Button";
+import { CodeBlock } from "../CodeBlock/CodeBlock";
 import { Text } from "../Text/Text";
 import {
   Stack,
@@ -159,30 +160,93 @@ describe("Stack", () => {
   });
 
   describe("containment context", () => {
-    test("establishes an inline-size containment context", async () => {
+    // Three fixed-width blocks with gap="none" so the Stack's max-content
+    // inline size is exactly 30px — a number a collapsed (contained) Stack
+    // can never produce.
+    const CONTENT_WIDTH = 30;
+    const contentCells = [0, 1, 2].map((i) => (
+      <span key={i} style={{ display: "block", width: 10, height: 10 }} />
+    ));
+
+    test("is not a query container by default", async () => {
       const screen = await render(<Stack data-testid="s">x</Stack>);
       const el = screen.getByTestId("s").element() as HTMLDivElement;
-      expect(getComputedStyle(el).containerType).toBe("inline-size");
+      expect(el.classList.contains("ps1ui-stack--query-container")).toBe(false);
+      expect(getComputedStyle(el).containerType).toBe("normal");
     });
 
-    test("names the container context `ps1ui-stack`", async () => {
-      const screen = await render(<Stack data-testid="s">x</Stack>);
+    test("queryContainer establishes an inline-size context named `ps1ui-stack`", async () => {
+      const screen = await render(
+        <Stack queryContainer data-testid="s">
+          x
+        </Stack>,
+      );
       const el = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(el.classList.contains("ps1ui-stack--query-container")).toBe(true);
+      expect(getComputedStyle(el).containerType).toBe("inline-size");
       expect(getComputedStyle(el).containerName).toBe("ps1ui-stack");
     });
 
-    // `container-type: inline-size` implies `contain: inline-size`, which
-    // treats intrinsic width as 0. Placing Stack inside a shrink-to-fit flex
-    // parent (`align-items: flex-start` in a column) would otherwise collapse
-    // it to width 0. Stack.css sets `align-self: stretch` (+ `justify-self`,
-    // `min-width: 0`) to keep it filling the cross-axis of the parent.
-    test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
+    // The regression the opt-in default exists for. `container-type:
+    // inline-size` implies `contain: inline-size`, which resolves the
+    // element's intrinsic inline size as 0 — so a row-flex child with
+    // `flex-basis: auto` gets a hypothetical main size of 0 and collapses,
+    // spilling its children outside its box. No CSS can undo that (the
+    // cross-axis `align-self: stretch` defense does not reach the main axis),
+    // which is exactly why a bare Stack must not be a query container.
+    test("keeps its content width as a row-flex child", async () => {
+      const screen = await render(
+        <div style={{ display: "flex", flexDirection: "row", width: 500 }}>
+          <Stack direction="row" gap="none" data-testid="s">
+            {contentCells}
+          </Stack>
+        </div>,
+      );
+      const stack = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(stack.getBoundingClientRect().width).toBe(CONTENT_WIDTH);
+    });
+
+    // The documented cost of opting in, pinned so it stays a conscious trade
+    // rather than a surprise: same tree, `queryContainer` added, width 0.
+    test("queryContainer forfeits intrinsic width as a row-flex child", async () => {
+      const screen = await render(
+        <div style={{ display: "flex", flexDirection: "row", width: 500 }}>
+          <Stack queryContainer direction="row" gap="none" data-testid="s">
+            {contentCells}
+          </Stack>
+        </div>,
+      );
+      const stack = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(stack.getBoundingClientRect().width).toBe(0);
+    });
+
+    // The cross-axis defense in components.css is scoped to the modifier, so
+    // a default Stack sizes like any other flex item: shrink-wrapped by a
+    // `align-items: flex-start` parent instead of silently stretched.
+    test("shrink-wraps in a shrink-wrap flex parent by default", async () => {
       const screen = await render(
         <div
-          data-testid="p"
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
         >
-          <Stack data-testid="s">
+          <Stack direction="row" gap="none" data-testid="s">
+            {contentCells}
+          </Stack>
+        </div>,
+      );
+      const stack = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(getComputedStyle(stack).alignSelf).toBe("auto");
+      expect(stack.getBoundingClientRect().width).toBe(CONTENT_WIDTH);
+    });
+
+    // …and once opted in, the shared `.ps1ui-*--query-container` rule in
+    // components.css must keep it filling the parent's cross axis, which is
+    // the one axis containment loss CAN be defended on.
+    test("queryContainer resists cross-axis collapse via align-self: stretch", async () => {
+      const screen = await render(
+        <div
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
+        >
+          <Stack queryContainer data-testid="s">
             <span>x</span>
           </Stack>
         </div>,
@@ -190,6 +254,34 @@ describe("Stack", () => {
       const stack = screen.getByTestId("s").element() as HTMLDivElement;
       expect(getComputedStyle(stack).alignSelf).toBe("stretch");
       expect(stack.getBoundingClientRect().width).toBe(500);
+    });
+
+    // Behavioral proof that the prop actually redirects the query surface:
+    // the same 400px-wide outer Stack sits inside a 1200px query context, so
+    // the inner Stack's `md` breakpoint fires only when the OUTER Stack is
+    // the container it resolves against (400 < 768 → `base`).
+    describe("redirects descendants' @container queries when opted in", () => {
+      const tree = (queryContainer: boolean) => (
+        <div style={{ containerType: "inline-size", width: 1200 } as CSSProperties}>
+          <Stack queryContainer={queryContainer} style={{ width: 400 }} data-testid="outer">
+            <Stack direction={{ base: "column", md: "row" }} data-testid="inner">
+              x
+            </Stack>
+          </Stack>
+        </div>
+      );
+
+      test("default → inner resolves against the outer 1200px context", async () => {
+        const screen = await render(tree(false));
+        const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(getComputedStyle(inner).flexDirection).toBe("row");
+      });
+
+      test("queryContainer → inner resolves against the 400px Stack", async () => {
+        const screen = await render(tree(true));
+        const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(getComputedStyle(inner).flexDirection).toBe("column");
+      });
     });
   });
 
@@ -679,11 +771,11 @@ describe("Stack", () => {
     });
   });
 
-  describe("nested Stack responds to outer Stack width", () => {
-    test("inner Stack inside a 900px-wide outer → responds to outer's inline-size", async () => {
+  describe("nested Stack responds to an opted-in outer Stack's width", () => {
+    test("inner Stack inside a 900px-wide `queryContainer` outer → responds to outer's inline-size", async () => {
       const screen = await render(
         <div style={{ width: 900 }}>
-          <Stack data-testid="outer">
+          <Stack queryContainer data-testid="outer">
             <Stack direction={{ base: "column", md: "row" }} data-testid="inner">
               x
             </Stack>
@@ -807,6 +899,27 @@ describe("Stack", () => {
         expect(computed(getComputedStyle(innerEl))).toBe(expected);
       },
     );
+  });
+
+  // Independent of containment, and load-bearing on its own: a flex item's
+  // automatic minimum size is its content's min-content width, and CodeBlock is
+  // `white-space: pre` — so its min-content width is the longest unwrapped
+  // source line. Without the shared `min-width: 0` base rule in components.css
+  // the Stack refuses to shrink and bursts the row open (measured at 3498px
+  // inside a 300px parent), sending the whole document into horizontal scroll
+  // instead of letting CodeBlock's own `overflow-x: auto` take over.
+  describe("nested overflow-scroll surfaces", () => {
+    test("lets a nested CodeBlock shrink inside a narrow row-flex parent", async () => {
+      const screen = await render(
+        <div style={{ display: "flex", flexDirection: "row", width: 300 }}>
+          <Stack data-testid="s">
+            <CodeBlock language="tsx" code={`const x = ${"a".repeat(400)};`} />
+          </Stack>
+        </div>,
+      );
+      const el = screen.getByTestId("s").element() as HTMLDivElement;
+      expect(el.getBoundingClientRect().width).toBeLessThanOrEqual(300);
+    });
   });
 
   describe("passthrough", () => {

@@ -28,6 +28,15 @@ export type StackProps = ComponentProps<"div"> & {
    * @default false
    */
   wrap?: Responsive<boolean>;
+  /**
+   * Make this Stack a container-query context so descendants' responsive
+   * props resolve against its width instead of the nearest ancestor
+   * container. Costs the Stack its intrinsic width — it collapses to 0 in
+   * shrink-to-fit parents (row flex, auto grid track, float), so give it a
+   * definite inline size when opting in.
+   * @default false
+   */
+  queryContainer?: boolean;
 };
 
 // direction values pass straight through — CSS flex-direction accepts
@@ -78,6 +87,7 @@ export function Stack({
   align,
   justify,
   wrap,
+  queryContainer,
   className,
   style,
   ...rest
@@ -99,5 +109,7 @@ export function Stack({
     ...wrapVars,
   } as CSSProperties;
 
-  return <div {...rest} className={cx("ps1ui-stack", className)} style={mergedStyle} />;
+  const classes = cx("ps1ui-stack", queryContainer && "ps1ui-stack--query-container", className);
+
+  return <div {...rest} className={classes} style={mergedStyle} />;
 }

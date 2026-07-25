@@ -25,11 +25,12 @@
 }
 
 /* GridItem — child of Grid that spans multiple column tracks.
-   GridItem is a leaf: it queries an ancestor containment context (typically
-   the parent Grid, which establishes `container: ps1ui-grid / inline-size`),
-   but does NOT establish one itself. Establishing containment on every
-   GridItem would fragment the query surface for descendants and impose a
-   `contain: layout` side effect on every cell — needless overhead for a
+   GridItem is a leaf: it queries the nearest ancestor containment context —
+   the parent `<Grid queryContainer>` when the Grid opts in, otherwise
+   whatever is above it (normally `<PS1Root>`) — but never establishes one
+   itself, and exposes no `queryContainer` prop. Establishing containment on
+   every GridItem would fragment the query surface for descendants and impose
+   a `contain: layout` side effect on every cell — needless overhead for a
    component whose only job is to declare its own column span.
 
    Responsive values propagate via a CSS custom-property cascade. The

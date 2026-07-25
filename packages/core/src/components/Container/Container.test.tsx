@@ -6,6 +6,7 @@ import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
 import type { SpaceScale } from "../../utils/spacing";
+import { CodeBlock } from "../CodeBlock/CodeBlock";
 import { Text } from "../Text/Text";
 import { Container, type ContainerSize } from "./Container";
 
@@ -137,29 +138,69 @@ describe("Container", () => {
   });
 
   describe("containment context", () => {
-    test("establishes an inline-size containment context", async () => {
+    // Container's `width: 100%` shields it from the row-flex collapse that
+    // hits Stack / Grid, but not from a `max-content` grid track: the track
+    // is sized from the item's intrinsic contribution, which containment
+    // zeroes, and 100% of 0 is 0. `px="none"` removes the padding so the
+    // expected width is exactly the 30px cell.
+    const CONTENT_WIDTH = 30;
+    const contentCell = <span style={{ display: "block", width: 30, height: 10 }} />;
+    const shrinkToFitGrid = (children: ReactNode) => (
+      <div style={{ display: "grid", gridTemplateColumns: "max-content", width: 500 }}>
+        {children}
+      </div>
+    );
+
+    test("is not a query container by default", async () => {
       const screen = await render(<Container data-testid="c">x</Container>);
       const el = screen.getByTestId("c").element() as HTMLDivElement;
-      expect(getComputedStyle(el).containerType).toBe("inline-size");
+      expect(el.classList.contains("ps1ui-container--query-container")).toBe(false);
+      expect(getComputedStyle(el).containerType).toBe("normal");
     });
 
-    test("names the container context `ps1ui-container`", async () => {
-      const screen = await render(<Container data-testid="c">x</Container>);
+    test("queryContainer establishes an inline-size context named `ps1ui-container`", async () => {
+      const screen = await render(
+        <Container queryContainer data-testid="c">
+          x
+        </Container>,
+      );
       const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(el.classList.contains("ps1ui-container--query-container")).toBe(true);
+      expect(getComputedStyle(el).containerType).toBe("inline-size");
       expect(getComputedStyle(el).containerName).toBe("ps1ui-container");
     });
 
-    // `container-type: inline-size` implies `contain: inline-size`, which
-    // treats intrinsic width as 0. Placing Container inside a shrink-to-fit
-    // flex parent (`align-items: flex-start` in a column) would otherwise
-    // collapse it to width 0. The shared containment-defense rule in
-    // components.css (`.ps1ui-root, .ps1ui-container, .ps1ui-grid, .ps1ui-stack`)
-    // sets `align-self: stretch` (+ `justify-self`, `min-width: 0`) to keep
-    // it filling the cross-axis of the parent.
-    test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
+    test("keeps its content width in a max-content grid track", async () => {
+      const screen = await render(
+        shrinkToFitGrid(
+          <Container px="none" data-testid="c">
+            {contentCell}
+          </Container>,
+        ),
+      );
+      const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(el.getBoundingClientRect().width).toBe(CONTENT_WIDTH);
+    });
+
+    // The documented cost of opting in, pinned so it stays a conscious trade.
+    test("queryContainer forfeits intrinsic width in a max-content grid track", async () => {
+      const screen = await render(
+        shrinkToFitGrid(
+          <Container queryContainer px="none" data-testid="c">
+            {contentCell}
+          </Container>,
+        ),
+      );
+      const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(el.getBoundingClientRect().width).toBe(0);
+    });
+
+    // The cross-axis defense in components.css is scoped to the modifier, so
+    // a default Container sizes like any other flex item — `width: 100%`
+    // still fills, but `align-self` is left alone.
+    test("does not force align-self: stretch by default", async () => {
       const screen = await render(
         <div
-          data-testid="p"
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
         >
           <Container data-testid="c">
@@ -168,8 +209,52 @@ describe("Container", () => {
         </div>,
       );
       const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(getComputedStyle(el).alignSelf).toBe("auto");
+    });
+
+    // …and once opted in, the shared `.ps1ui-*--query-container` rule in
+    // components.css keeps it filling the parent's cross axis.
+    test("queryContainer resists cross-axis collapse via align-self: stretch", async () => {
+      const screen = await render(
+        <div
+          style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: 500 }}
+        >
+          <Container queryContainer data-testid="c">
+            <span>x</span>
+          </Container>
+        </div>,
+      );
+      const el = screen.getByTestId("c").element() as HTMLDivElement;
       expect(getComputedStyle(el).alignSelf).toBe("stretch");
       expect(el.getBoundingClientRect().width).toBe(500);
+    });
+
+    // Behavioral proof that the prop redirects the query surface: a 400px
+    // Container inside a 1200px query context. The inner Container's `md`
+    // padding fires against the 1200px ancestor but not against the 400px
+    // opted-in Container.
+    describe("redirects descendants' @container queries when opted in", () => {
+      const tree = (queryContainer: boolean) => (
+        <div style={{ containerType: "inline-size", width: 1200 } as CSSProperties}>
+          <Container queryContainer={queryContainer} style={{ width: 400 }} data-testid="outer">
+            <Container px={{ base: "none", md: "2xl" }} data-testid="inner">
+              x
+            </Container>
+          </Container>
+        </div>
+      );
+
+      test("default → inner resolves against the outer 1200px context", async () => {
+        const screen = await render(tree(false));
+        const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(getComputedStyle(inner).paddingLeft).toBe("32px");
+      });
+
+      test("queryContainer → inner resolves against the 400px Container", async () => {
+        const screen = await render(tree(true));
+        const inner = screen.getByTestId("inner").element() as HTMLDivElement;
+        expect(getComputedStyle(inner).paddingLeft).toBe("0px");
+      });
     });
   });
 
@@ -553,11 +638,11 @@ describe("Container", () => {
     );
   });
 
-  describe("nested Container responds to outer Container width", () => {
-    test("inner Container inside a 700px-wide outer Container → effective size = sm entry", async () => {
+  describe("nested Container responds to an opted-in outer Container's width", () => {
+    test("inner Container inside a 700px-wide `queryContainer` outer Container → effective size = sm entry", async () => {
       const screen = await render(
         <div style={{ width: 900 }}>
-          <Container size="full" px="none" data-testid="outer">
+          <Container queryContainer size="full" px="none" data-testid="outer">
             {/* outer forces its own inline-size to ~900px; but we constrain
                 its parent to 900 and its own width is 100% of parent. */}
             <div style={{ width: 700 }}>
@@ -577,6 +662,27 @@ describe("Container", () => {
       // max-width caps at 700 in layout — however getComputedStyle
       // reports the specified value regardless: expect the raw 1024px.
       expect(getComputedStyle(inner).maxWidth).toBe("1024px");
+    });
+  });
+
+  // Independent of containment, and load-bearing on its own: a flex item's
+  // automatic minimum size is its content's min-content width, and CodeBlock is
+  // `white-space: pre` — so its min-content width is the longest unwrapped
+  // source line. Without the shared `min-width: 0` base rule in components.css
+  // the Container refuses to shrink and bursts the row open (measured at 3498px
+  // inside a 300px parent), sending the whole document into horizontal scroll
+  // instead of letting CodeBlock's own `overflow-x: auto` take over.
+  describe("nested overflow-scroll surfaces", () => {
+    test("lets a nested CodeBlock shrink inside a narrow row-flex parent", async () => {
+      const screen = await render(
+        <div style={{ display: "flex", flexDirection: "row", width: 300 }}>
+          <Container data-testid="c">
+            <CodeBlock language="tsx" code={`const x = ${"a".repeat(400)};`} />
+          </Container>
+        </div>,
+      );
+      const el = screen.getByTestId("c").element() as HTMLDivElement;
+      expect(el.getBoundingClientRect().width).toBeLessThanOrEqual(300);
     });
   });
 

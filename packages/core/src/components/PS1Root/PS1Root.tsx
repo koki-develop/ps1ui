@@ -8,9 +8,14 @@ export type PS1RootProps = ComponentProps<"div">;
 // Wrap your app's tree in `<PS1Root>` once, at the top level. Responsive props
 // on descendant ps1ui components (`Grid columns={{ base: 1, md: 3 }}` and
 // friends) query their nearest ancestor with CSS `container-type: inline-size`
-// — this component provides that ancestor. Without a PS1Root (or another
-// containment ancestor like Container / Grid / Stack), responsive props
-// silently fall back to their `base` value only.
+// — this component provides that ancestor. Without a PS1Root (or a
+// `queryContainer`-opted-in Container / Grid / Stack in between), responsive
+// props silently fall back to their `base` value only.
+//
+// PS1Root is the one primitive that is a query container unconditionally: it
+// is a full-width block-level wrapper, so the intrinsic-size loss that makes
+// containment opt-in everywhere else (see `.ps1ui-stack--query-container` in
+// Stack.css) has nothing to collapse here.
 //
 // A side effect of `container-type: inline-size` per CSS Containment L2:
 // `contain: layout` is implied, which makes PS1Root the containing block for

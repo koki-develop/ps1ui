@@ -64,11 +64,15 @@ export const VerticalInRow: Story = {
 };
 
 // Vertical rule variants side-by-side. Flat row (label / rule / label / …)
-// instead of nested Stacks — a nested `ps1ui-stack` inherits the shared
-// `align-self: stretch; min-width: 0` defence and collapses inside a
-// `direction="row"` parent, which visually overlaps the labels. The parent
-// Stack pins a fixed height so each vertical rule has cross-axis space to
-// stretch against.
+// instead of one nested Stack per label+rule pair: a vertical Divider stretches
+// against its parent's cross axis, and a nested Stack would size to its own
+// content height instead of the 60px pinned here, leaving every rule stub-short.
+// The parent Stack pins that height so each vertical rule has cross-axis space
+// to stretch against.
+//
+// (This used to be justified by nested Stacks collapsing to zero width inside a
+// `direction="row"` parent. That was the `container-type: inline-size` bug fixed
+// by making containment opt-in — a nested Stack sizes correctly now.)
 export const VerticalVariants: Story = {
   render: () => (
     <Stack direction="row" gap="md" align="center" style={{ height: 60 }}>

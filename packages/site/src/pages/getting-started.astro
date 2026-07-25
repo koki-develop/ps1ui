@@ -51,7 +51,9 @@ export function App() {
           <Code>PS1Root</Code> establishes the container-query context that responsive props
           resolve against. Without it, responsive props silently fall back to their <Code
             >base</Code
-          > values. Wrap once, at the top of your tree.
+          > values. Wrap once, at the top of your tree. Layout primitives can each become a
+          nested context of their own via <Code>queryContainer</Code>, but never do so by
+          default.
         </Text>
         <CodeBlock language="tsx" code={usage} />
       </Stack>
