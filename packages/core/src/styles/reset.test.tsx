@@ -3,9 +3,12 @@
 // reset can't silently regress the "same look across browsers" guarantee.
 // Runs against Chromium, Firefox, and WebKit (see vitest.config.ts); a few
 // declarations are genuinely engine-specific vendor properties or values —
-// those use CSS.supports() feature detection (see "reset — interpolate-size"
-// below for the established pattern) so "this engine doesn't parse the
-// declaration" and "our rule stopped applying it" stay distinguishable.
+// those guard with CSS.supports() (see the -webkit-text-size-adjust test
+// below for the established pattern). Feature detection, not the older
+// `if (!value) return`: that pattern also fired when the rule itself was
+// deleted (getPropertyValue returns "" in that case too), silently masking a
+// regression. CSS.supports() separates "this engine doesn't parse the
+// declaration" (skip) from "our rule stopped applying it" (assert and fail).
 //
 // Declarations that CANNOT be verified from any Vitest Browser Mode
 // environment are catalogued (with reasons) at the bottom of the file so
@@ -50,13 +53,9 @@ describe("reset — html base", () => {
     expect(gcs(document.documentElement).tabSize).toBe("4");
   });
 
-  test("text-rendering: optimizeLegibility", () => {
-    expect(gcs(document.documentElement).textRendering).toBe("optimizelegibility");
-  });
-
   test("-webkit-text-size-adjust: 100% (iOS rotation zoom locked out)", () => {
     // Blink/WebKit-only property, invented for mobile Safari; feature-detect
-    // rather than hardcode an engine name (see interpolate-size below).
+    // rather than hardcode an engine name (see the file header).
     if (!CSS.supports("-webkit-text-size-adjust", "100%")) return;
     expect(gcs(document.documentElement).getPropertyValue("-webkit-text-size-adjust")).toBe("100%");
   });
@@ -82,23 +81,6 @@ describe("reset — body base", () => {
       "0px",
       "0px",
     ]);
-  });
-
-  test("body min-height fills the viewport (100dvh)", () => {
-    expect(parseFloat(gcs(document.body).minHeight)).toBeCloseTo(window.innerHeight, 0);
-  });
-
-  test("-webkit-font-smoothing: antialiased (macOS Chrome/Safari parity)", () => {
-    // Firefox 128+ deliberately aliases -webkit-font-smoothing to
-    // -moz-osx-font-smoothing (https://bugzilla.mozilla.org/show_bug.cgi?id=1670993)
-    // — the values differ (grayscale/auto vs. antialiased/subpixel-antialiased),
-    // so ANY declared -webkit-font-smoothing keyword resolves to one of the
-    // two -moz-osx-font-smoothing states. CSS.supports("-webkit-font-smoothing",
-    // "antialiased") returns true regardless (verified empirically), so unlike
-    // the other vendor-property tests above, feature detection can't
-    // distinguish this from a real regression. Skipped by engine name.
-    if (server.browser === "firefox") return;
-    expect(gcs(document.body).getPropertyValue("-webkit-font-smoothing")).toBe("antialiased");
   });
 });
 
@@ -239,11 +221,6 @@ describe("reset — headings", () => {
     },
   );
 
-  test("h1 has text-wrap: balance (even wrap for headings)", async () => {
-    const { get } = await renderProbes(<h1 data-testid="probe">x</h1>);
-    expect(gcs(get("probe")).textWrap).toBe("balance");
-  });
-
   test("h1 has overflow-wrap: break-word (long tokens don't overflow)", async () => {
     const { get } = await renderProbes(<h1 data-testid="probe">x</h1>);
     expect(gcs(get("probe")).overflowWrap).toBe("break-word");
@@ -255,14 +232,6 @@ describe("reset — headings", () => {
 // ---------------------------------------------------------------------------
 
 describe("reset — paragraph", () => {
-  test("p has text-wrap: pretty (widow avoidance)", async () => {
-    // Chromium-only CSS Text Level 4 value as of writing; Firefox/WebKit fall
-    // back to the initial "wrap" and never parse "pretty" as valid.
-    if (!CSS.supports("text-wrap", "pretty")) return;
-    const { get } = await renderProbes(<p data-testid="probe">x</p>);
-    expect(gcs(get("probe")).textWrap).toBe("pretty");
-  });
-
   test("p has overflow-wrap: break-word", async () => {
     const { get } = await renderProbes(<p data-testid="probe">x</p>);
     expect(gcs(get("probe")).overflowWrap).toBe("break-word");
@@ -406,15 +375,6 @@ describe("reset — form controls", () => {
       expect(probe.opacity).toBe("1");
     },
   );
-
-  test("button has cursor: pointer (Firefox otherwise gives default)", async () => {
-    const { get } = await renderProbes(
-      <button type="button" data-testid="probe">
-        x
-      </button>,
-    );
-    expect(gcs(get("probe")).cursor).toBe("pointer");
-  });
 
   test("button and submit/reset/button inputs use appearance: button (locks UA button widget)", async () => {
     const { get } = await renderProbes(
@@ -643,20 +603,6 @@ describe("reset — [hidden] wins over display: flex/grid", () => {
   });
 });
 
-describe("reset — interpolate-size (Chromium)", () => {
-  test("html declares interpolate-size: allow-keywords when the browser supports it", () => {
-    // Skip via CSS.supports() feature detection — the previous `if (!value) return`
-    // pattern also fired when the @media block itself was deleted (getPropertyValue
-    // returns "" in that case too), silently masking a regression. Feature-detection
-    // separates "browser doesn't support the property" from "our rule stopped
-    // applying it": the former skips, the latter asserts and fails.
-    if (!CSS.supports("interpolate-size", "allow-keywords")) return;
-    expect(gcs(document.documentElement).getPropertyValue("interpolate-size")).toBe(
-      "allow-keywords",
-    );
-  });
-});
-
 // ---------------------------------------------------------------------------
 // Declarations that are NOT verifiable from any current Vitest Browser Mode
 // environment (Chromium / Firefox / WebKit — see vitest.config.ts), plus
@@ -664,17 +610,6 @@ describe("reset — interpolate-size (Chromium)", () => {
 // Enumerated per packages/core/CLAUDE.md ("silent omission is not an option").
 // ---------------------------------------------------------------------------
 //
-//   * -webkit-font-smoothing on Firefox         Firefox 128+ deliberately aliases this to
-//                                              -moz-osx-font-smoothing (Mozilla bug 1670993:
-//                                              https://bugzilla.mozilla.org/show_bug.cgi?id=1670993),
-//                                              whose only two states are "grayscale"/"auto" — any
-//                                              declared -webkit-font-smoothing keyword resolves to
-//                                              one of those two, so the computed value is never the
-//                                              declared keyword verbatim. CSS.supports("-webkit-
-//                                              font-smoothing", "antialiased") returns true in
-//                                              Firefox regardless (verified empirically), so feature
-//                                              detection can't tell that apart from a real
-//                                              regression; skipped by engine name instead.
 //   * <select> border-radius on WebKit         A well-documented WebKit/Safari limitation (see e.g.
 //                                              github.com/alphagov/govuk-frontend/issues/3520,
 //                                              github.com/google/model-viewer/issues/662): a native-
@@ -694,7 +629,6 @@ describe("reset — interpolate-size (Chromium)", () => {
 //                                              native disclosure chrome — a bigger, more opinionated
 //                                              change than this reset's normalize-don't-redesign
 //                                              scope covers.
-//   * -moz-osx-font-smoothing: grayscale       Firefox-only property; unobservable outside Firefox.
 //   * :-moz-ui-invalid, :-moz-focusring        Firefox-only pseudos.
 //   * input[type=number] { -moz-appearance }   Firefox-only; Chromium/WebKit hide the spinner via
 //                                              ::-webkit-inner-spin-button (see below). The

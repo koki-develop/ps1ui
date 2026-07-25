@@ -70,13 +70,6 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   tab-size: 4;
-  text-rendering: optimizeLegibility;
-}
-
-body {
-  min-height: 100dvh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Heading responsibility belongs to <Heading>; raw h1..h6 inherit so a bare
@@ -89,12 +82,10 @@ h5,
 h6 {
   font-size: inherit;
   font-weight: inherit;
-  text-wrap: balance;
   overflow-wrap: break-word;
 }
 
 p {
-  text-wrap: pretty;
   overflow-wrap: break-word;
 }
 
@@ -162,10 +153,6 @@ input:where([type="button"], [type="reset"], [type="submit"]),
 ::file-selector-button {
   appearance: button;
   -webkit-appearance: button;
-}
-
-button {
-  cursor: pointer;
 }
 
 textarea {
@@ -290,12 +277,6 @@ summary {
 /* [hidden] would lose to `display: flex` etc. without this. */
 [hidden]:where(:not([hidden="until-found"])) {
   display: none !important;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    interpolate-size: allow-keywords;
-  }
 }
 
 /* ==========================================================================
