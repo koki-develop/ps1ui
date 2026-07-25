@@ -18,13 +18,19 @@ Enforced twice, and a new responsive axis must satisfy both:
 1. `pnpm check:responsive-property-coverage` — structural: every `resolveResponsive` prefix needs all 5 `@property` blocks in the sibling CSS; orphan blocks are flagged.
 2. Each component's "does not inherit outer's per-breakpoint input vars" test matrix — behavioral; its axes table is typed so a new axis fails compilation until covered.
 
-## Containment side effects (`container-type: inline-size`)
+## Containment is opt-in (`queryContainer`)
 
-1. `position: fixed` / `absolute` / `sticky` descendants re-parent to the nearest primitive — overlay components must Portal to `document.body`.
-2. Each primitive is an isolated stacking context — inner `z-index: 9999` won't paint over external siblings.
-3. Intrinsic inline-size is 0 in shrink-to-fit flex/grid parents — defended by the grouped `.ps1ui-root, .ps1ui-container, .ps1ui-grid, .ps1ui-stack` selector in `src/styles/components.css` (`align-self/justify-self: stretch; min-width: 0`). **A new responsive-container primitive must join that selector**; per-primitive "resists collapse" tests catch it.
+Only `PS1Root` is a query container unconditionally. `Container` / `Grid` / `Stack` establish one **only** when passed `queryContainer`, which adds `.ps1ui-<comp>--query-container` — the sole selector carrying `container-type: inline-size`. `GridItem` / `Heading` / `Text` are leaves and never establish one.
 
-Without a `container-type` ancestor (`<PS1Root>`), responsive props silently fall back to `base` — documented behavior, not a bug.
+`container-type: inline-size` costs three global layout side effects, which is why it isn't the default:
+
+1. `position: fixed` / `absolute` / `sticky` descendants re-parent to the nearest query container — overlay components must Portal to `document.body`.
+2. It is an isolated stacking context — inner `z-index: 9999` won't paint over external siblings.
+3. Intrinsic inline-size resolves to 0, so any shrink-to-fit parent (row flex, auto/max-content grid track, float, inline-block) collapses it to zero width. **This is unfixable in CSS** — the measurement is destroyed, not overridden, and wrapping doesn't help. `align-self/justify-self: stretch` (grouped selector in `src/styles/components.css`) only defends the CROSS axis; a row flex parent's main axis stays exposed. Full write-up lives on `.ps1ui-stack--query-container` in `Stack.css`.
+
+The grouped defense selector in `components.css` must list exactly the classes that declare `container-type` — `.ps1ui-root` plus each `--query-container` modifier. Both directions are covered by per-primitive "containment context" tests (default → `containerType: normal` + shrink-wraps; `queryContainer` → contained + stretched).
+
+Without a query-container ancestor (`<PS1Root>`), responsive props silently fall back to `base` — documented behavior, not a bug.
 
 ## Test conventions
 

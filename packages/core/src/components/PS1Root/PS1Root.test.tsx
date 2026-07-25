@@ -59,9 +59,11 @@ describe("PS1Root", () => {
     // flex parent (`align-items: flex-start` in a column) would otherwise
     // collapse it to width 0 — silently degrading every `@container`-driven
     // descendant. The shared containment-defense rule in components.css
-    // (`.ps1ui-root, .ps1ui-container, .ps1ui-grid, .ps1ui-stack`) sets
+    // (`.ps1ui-root` + each primitive's `--query-container` modifier) sets
     // `align-self: stretch` (+ `justify-self`, `min-width: 0`) to keep it
-    // filling the cross-axis of the parent.
+    // filling the cross-axis of the parent. PS1Root is the one primitive that
+    // is a query container unconditionally — everywhere else containment is
+    // opt-in via `queryContainer`.
     test("resists collapse via align-self: stretch in shrink-wrap flex parent", async () => {
       const screen = await render(
         <div

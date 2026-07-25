@@ -2,9 +2,13 @@
    `container-type: inline-size` turns this element into a query context for
    `@container` rules used by responsive ps1ui components. Named `ps1ui-root`
    for future targeted queries; unnamed queries in component CSS match this
-   via nearest-ancestor lookup. */
-/* Containment side-effect defense (align-self / justify-self / min-width) lives
-   in components.css's shared selector list — see the block header there. */
+   via nearest-ancestor lookup. Unlike Container / Grid / Stack — where
+   containment is opt-in via `queryContainer` — PS1Root is a query container
+   unconditionally: it is a full-width block-level wrapper, so the
+   intrinsic-size loss containment causes has nothing here to collapse. */
+/* `min-width: 0` and the containment side-effect defense (align-self /
+   justify-self) both live in components.css's shared selector lists — see the
+   block header there. */
 .ps1ui-root {
   container: ps1ui-root / inline-size;
 }

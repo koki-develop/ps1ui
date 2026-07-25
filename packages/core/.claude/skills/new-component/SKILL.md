@@ -12,7 +12,7 @@ description: Add a new component to @ps1ui/core, including its @ps1ui/site docs 
 3. Decide the conditional extras:
    - New (fg-token, bg-token) pair not covered by `Text.contrast.test.tsx` → add a `<Name>.contrast.test.tsx`.
    - Box-shadow focus ring → add the class to the grouped `@media (forced-colors: active)` selector in `src/styles/components.css`.
-   - Responsive props → follow `.claude/rules/responsive.md`; add the class to the grouped stretch selector in `components.css`, and add the component's directory to that rule's `paths` frontmatter.
+   - Responsive props → follow `.claude/rules/responsive.md`, and add the component's directory to that rule's `paths` frontmatter. Add the base class to the grouped `min-width: 0` selector in `components.css`. Only add to the grouped stretch selector below it if the component establishes a `container-type` context — and for Container / Grid / Stack that is opt-in, so what goes there is the `.ps1ui-<name>--query-container` modifier, never the base class.
    - Client-only hooks → `"use client"` at the top of the module (`check:dist` verifies it survives the build).
 4. Run `pnpm build` and `pnpm test run` — the structural checks name anything missed.
 

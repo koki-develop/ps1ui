@@ -16,6 +16,15 @@ export type ContainerProps = ComponentProps<"div"> & {
    * @default "lg"
    */
   px?: Responsive<SpaceScale>;
+  /**
+   * Make this Container a container-query context so descendants' responsive
+   * props resolve against its width instead of the nearest ancestor
+   * container. Costs the Container its intrinsic width — `width: 100%` keeps
+   * it upright in most parents, but as an auto-sized grid track's item it
+   * still collapses to 0.
+   * @default false
+   */
+  queryContainer?: boolean;
 };
 
 // size → max-width. `full` maps to `none` (unbounded), the rest reference
@@ -23,7 +32,7 @@ export type ContainerProps = ComponentProps<"div"> & {
 const sizeToVar = (v: ContainerSize): string =>
   v === "full" ? "none" : `var(--ps1ui-container-${v})`;
 
-export function Container({ size, px, className, style, ...rest }: ContainerProps) {
+export function Container({ size, px, queryContainer, className, style, ...rest }: ContainerProps) {
   const sizeVars = resolveResponsive(size, "--_container-size", sizeToVar);
   const pxVars = resolveResponsive(px, "--_container-px", spaceToVar);
   // Caller style first, internal `--_*` vars win — see Text.tsx. Cast because
@@ -33,5 +42,10 @@ export function Container({ size, px, className, style, ...rest }: ContainerProp
     ...sizeVars,
     ...pxVars,
   } as CSSProperties;
-  return <div {...rest} className={cx("ps1ui-container", className)} style={mergedStyle} />;
+  const classes = cx(
+    "ps1ui-container",
+    queryContainer && "ps1ui-container--query-container",
+    className,
+  );
+  return <div {...rest} className={classes} style={mergedStyle} />;
 }

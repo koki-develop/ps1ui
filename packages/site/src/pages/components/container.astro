@@ -1,8 +1,9 @@
 ---
-import { Container, Stack } from "@ps1ui/core";
+import { Anchor, Code, Container, Heading, Stack, Text } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 import DemoBox from "../../components/DemoBox.astro";
+import { href } from "../../lib/url";
 
 const sizes = `<Container size="sm">max-width 40rem</Container>
 <Container size="md">max-width 48rem</Container>
@@ -10,6 +11,14 @@ const sizes = `<Container size="sm">max-width 40rem</Container>
 
 const px = `<Container size="sm" px={{ base: "md", md: "2xl" }}>
   Horizontal padding scales with the container width.
+</Container>`;
+
+const queryContainer = `{/* The inner Container now measures the 320px outer
+    Container instead of the page, so it stays on its \`base\` padding. */}
+<Container queryContainer size="full" px="none" style={{ width: 320 }}>
+  <Container px={{ base: "none", md: "2xl" }}>
+    Padding flips at the md container breakpoint.
+  </Container>
 </Container>`;
 ---
 
@@ -33,6 +42,32 @@ const px = `<Container size="sm" px={{ base: "md", md: "2xl" }}>
       <DemoBox>
         px switches from md to 2xl at the md container breakpoint.
       </DemoBox>
+    </Container>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Query container</Heading>
+    <Text>
+      Responsive props resolve against the nearest ancestor that is a
+      container-query context — normally the <Anchor href={href("components/ps1root/")}
+        >PS1Root</Anchor
+      > wrapping your app. Pass <Code>queryContainer</Code> to make a
+      <Code>Container</Code> that context instead, so its descendants respond to
+      that Container's own width rather than the page's.
+    </Text>
+    <Text>
+      It is opt-in because <Code>container-type: inline-size</Code> erases the element's
+      intrinsic width. <Code>width: 100%</Code> keeps <Code>Container</Code> upright in
+      most parents, but as an item of an auto-sized grid track it still collapses to
+      zero — give it a definite inline size whenever you turn it on.
+    </Text>
+  </Stack>
+
+  <Demo title="Query container" code={queryContainer}>
+    <Container queryContainer size="full" px="none" style={{ width: 320, maxWidth: "100%" }}>
+      <Container px={{ base: "none", md: "2xl" }}>
+        <DemoBox>Padding flips at the md container breakpoint.</DemoBox>
+      </Container>
     </Container>
   </Demo>
 </ComponentPage>

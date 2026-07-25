@@ -1,8 +1,9 @@
 ---
-import { Grid, GridItem } from "@ps1ui/core";
+import { Anchor, Code, Grid, GridItem, Heading, Stack, Text } from "@ps1ui/core";
 import ComponentPage from "../../layouts/ComponentPage.astro";
 import Demo from "../../components/Demo.astro";
 import DemoBox from "../../components/DemoBox.astro";
+import { href } from "../../lib/url";
 
 const columns = `<Grid columns={3} gap="md">
   <div>01</div>
@@ -37,6 +38,16 @@ const gridItemResponsive = `<Grid columns={4} gap="md">
   <GridItem>03</GridItem>
   <GridItem>04</GridItem>
   <GridItem>05</GridItem>
+</Grid>`;
+
+const queryContainer = `{/* The inner Grid — and any GridItem colSpan inside it —
+    now measures the 320px outer Grid instead of the page. */}
+<Grid queryContainer columns={1} style={{ width: 320 }}>
+  <Grid columns={{ base: 1, md: 3 }} gap="md">
+    <div>01</div>
+    <div>02</div>
+    <div>03</div>
+  </Grid>
 </Grid>`;
 ---
 
@@ -81,6 +92,35 @@ const gridItemResponsive = `<Grid columns={4} gap="md">
       <GridItem><DemoBox>03</DemoBox></GridItem>
       <GridItem><DemoBox>04</DemoBox></GridItem>
       <GridItem><DemoBox>05</DemoBox></GridItem>
+    </Grid>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Query container</Heading>
+    <Text>
+      Responsive props resolve against the nearest ancestor that is a
+      container-query context — normally the <Anchor href={href("components/ps1root/")}
+        >PS1Root</Anchor
+      > wrapping your app. Pass <Code>queryContainer</Code> to make a
+      <Code>Grid</Code> that context instead. This is also what makes a child
+      <Code>GridItem</Code>'s responsive <Code>colSpan</Code> track the Grid's own
+      width rather than the page's.
+    </Text>
+    <Text>
+      It is opt-in because <Code>container-type: inline-size</Code> erases the element's
+      intrinsic width: an opted-in <Code>Grid</Code> collapses to zero inside any
+      shrink-to-fit parent (a row <Code>Stack</Code>, an auto grid track, a float).
+      Give it a definite inline size whenever you turn it on.
+    </Text>
+  </Stack>
+
+  <Demo title="Query container" code={queryContainer}>
+    <Grid queryContainer columns={1} style={{ width: 320, maxWidth: "100%" }}>
+      <Grid columns={{ base: 1, md: 3 }} gap="md">
+        <DemoBox>01</DemoBox>
+        <DemoBox>02</DemoBox>
+        <DemoBox>03</DemoBox>
+      </Grid>
     </Grid>
   </Demo>
 </ComponentPage>

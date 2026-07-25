@@ -459,11 +459,30 @@ describe("GridItem", () => {
     );
   });
 
-  describe("GridItem inside Grid responds to Grid's inline-size", () => {
-    test("GridItem inside a 900px-wide Grid → responds to Grid's @container width", async () => {
-      // Grid establishes `container: ps1ui-grid / inline-size`. Its child
-      // GridItem's @container queries match against Grid's width, not the
-      // ancestor viewport. At 900 px, md band fires → colSpan.md wins.
+  describe("GridItem inside an opted-in Grid responds to the Grid's inline-size", () => {
+    test("GridItem inside a 900px-wide `queryContainer` Grid → responds to Grid's @container width", async () => {
+      // `<Grid queryContainer>` establishes `container: ps1ui-grid /
+      // inline-size`. Its child GridItem's @container queries then match
+      // against the Grid's width, not the ancestor context. At 900 px, the md
+      // band fires → colSpan.md wins.
+      const screen = await render(
+        <div style={{ width: 900 }}>
+          <Grid queryContainer columns={6}>
+            <GridItem colSpan={{ base: 1, sm: 2, md: 4 }} data-testid="gi">
+              x
+            </GridItem>
+          </Grid>
+        </div>,
+      );
+      const el = screen.getByTestId("gi").element() as HTMLDivElement;
+      expect(readSpan(el)).toBe("4");
+    });
+
+    // The mirror image, and the reason GridItem's colSpan is documented as
+    // resolving against the NEAREST query container: a plain Grid no longer
+    // establishes one, so the same tree falls through to whatever is above it
+    // — here nothing, so `base` applies.
+    test("GridItem inside a plain 900px-wide Grid → falls through to `base`", async () => {
       const screen = await render(
         <div style={{ width: 900 }}>
           <Grid columns={6}>
@@ -474,7 +493,7 @@ describe("GridItem", () => {
         </div>,
       );
       const el = screen.getByTestId("gi").element() as HTMLDivElement;
-      expect(readSpan(el)).toBe("4");
+      expect(readSpan(el)).toBe("1");
     });
   });
 

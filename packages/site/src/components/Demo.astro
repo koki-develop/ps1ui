@@ -18,7 +18,19 @@ const { title, code } = Astro.props;
 </Stack>
 
 <style>
+  /* The preview box is a container-query context so a responsive demo measures
+     the frame the reader is actually looking at, not the page. Without this,
+     `<Stack direction={{ base: "column", md: "row" }}>` resolves against
+     PS1Root (the viewport) and can flip to `row` while the box it sits in is
+     still narrower than the md threshold — the demo would then contradict
+     itself. `container-type` is safe to apply unconditionally here: this is a
+     block-level div filling its grid track, so the intrinsic-size loss it
+     causes has nothing to collapse (the same reason PS1Root can carry it
+     unconditionally while core's layout primitives make it opt-in). Overlay
+     components portal to document.body, so nothing is trapped by the implied
+     `contain: layout`. */
   .preview {
+    container-type: inline-size;
     padding: var(--ps1ui-space-xl);
     border: 1px solid var(--ps1ui-color-border);
     border-radius: var(--ps1ui-radius-lg);

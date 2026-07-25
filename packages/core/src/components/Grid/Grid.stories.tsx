@@ -105,6 +105,33 @@ export const ResponsiveGap: Story = {
   ),
 };
 
+// `queryContainer` — opt into being the containment context descendants'
+// responsive props resolve against. Both panes hold an identical inner Grid
+// (`columns={{ base: 1, md: 3 }}`); only the outer Grid's width differs, so
+// the column count is driven by the OUTER Grid rather than the page.
+//
+// The opted-in Grid loses its intrinsic width (`container-type: inline-size`
+// implies `contain: inline-size`), which is why each pane is given an explicit
+// width here instead of being left to shrink-wrap.
+export const QueryContainer: Story = {
+  render: () => (
+    <Stack direction="row" gap="lg" align="start">
+      {[320, 820].map((width) => (
+        <Stack key={width} gap="sm">
+          <Text as="div" variant="muted" size="xs">
+            {width}px
+          </Text>
+          <Grid queryContainer columns={1} style={{ width }}>
+            <Grid columns={{ base: 1, md: 3 }} gap="sm">
+              {["one", "two", "three"].map((l) => cell(l))}
+            </Grid>
+          </Grid>
+        </Stack>
+      ))}
+    </Stack>
+  ),
+};
+
 export const AsList: Story = {
   render: () => (
     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-list pattern; Grid is intentionally a bare <div>.

@@ -22,5 +22,11 @@ export function App() {
       silently fall back to their <Code>base</Code> values.
     </Text>
     <CodeBlock language="tsx" code={usage} />
+    <Text>
+      <Code>PS1Root</Code> is the only component that is a container-query context
+      unconditionally. <Code>Container</Code>, <Code>Grid</Code> and <Code>Stack</Code> can each
+      become one too, but only when you pass them <Code>queryContainer</Code> — establishing a
+      context costs an element its intrinsic width, so it is never applied for you.
+    </Text>
   </Stack>
 </ComponentPage>

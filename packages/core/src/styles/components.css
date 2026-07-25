@@ -58,34 +58,69 @@
 @import "../components/Tooltip/Tooltip.css";
 @import "../components/Heading/Heading.css";
 
-/* Containment side-effect defense — applied uniformly to every primitive that
-   establishes a `container-type: inline-size` context (i.e. every layout
-   primitive whose responsive props drive `@container` queries).
+/* Two rules that look related but answer different questions. Keep them apart:
+   the first is an unconditional ergonomic default for every layout primitive,
+   the second repairs damage that `container-type` does — so it must apply to
+   exactly the elements that carry `container-type`, and nothing else.
 
-   `container-type: inline-size` implies `contain: inline-size`, which treats
-   the element's intrinsic inline-size as 0 for parent sizing. Placing any of
-   these primitives inside a shrink-to-fit flex/grid parent (`align-items:
-   flex-start`, `justify-items: start`, etc.) would otherwise collapse them to
-   0 wide, silently degrading every `@container`-driven descendant.
+   ── 1. Nested-scroller escape hatch ──────────────────────────────────────
+   A flex item's automatic minimum size (`min-width: auto`) is its content's
+   min-content width, and a nested overflow-scroll surface has an enormous one:
+   CodeBlock is `white-space: pre` (CodeBlock.css explains why), so its
+   min-content width is the longest unwrapped source line. Dropped into a
+   narrow row parent — `<Stack direction="row"><Stack><CodeBlock/></Stack>` —
+   the inner primitive refuses to shrink and bursts the row open, taking the
+   whole document into horizontal scroll instead of letting CodeBlock's own
+   `overflow-x: auto` do its job. `min-width: 0` hands that job back.
 
-   `align-self: stretch` and `justify-self: stretch` force fill-cross-axis /
-   fill-inline-track in flex and grid contexts respectively (both no-ops in
-   block context). `min-width: 0` lets the primitive shrink below content-min
-   inside a narrow row parent so inner overflow-scroll surfaces (CodeBlock)
-   take over instead of bursting the row open.
-
-   Adding a new responsive-container primitive means adding its class to this
-   selector list — that's the load-bearing invariant. Per-primitive regression
-   tests (Stack.test.tsx / Container.test.tsx / Grid.test.tsx / PS1Root.test.tsx's
-   "resists collapse via align-self: stretch in shrink-wrap flex parent") catch
-   accidental removal. */
+   This has NOTHING to do with containment — `contain: inline-size` happens to
+   zero min-content too, which once made this rule look redundant on contained
+   elements, but the rule earns its keep on every uncontained one. It stays on
+   the base classes. ContributionGraph sets the same property on itself for the
+   same reason; see its CSS header. Covered by each primitive's "lets a nested
+   overflow-scroll surface shrink inside a narrow row parent" test. */
 .ps1ui-root,
 .ps1ui-container,
 .ps1ui-grid,
 .ps1ui-stack {
+  min-width: 0;
+}
+
+/* ── 2. Containment side-effect defense ──────────────────────────────────
+   Scoped to exactly the elements that establish a `container-type:
+   inline-size` context: PS1Root, which is unconditionally a query container
+   (that is its whole job), plus the opt-in `--query-container` modifier of
+   each responsive primitive.
+
+   `container-type: inline-size` implies `contain: inline-size`, which treats
+   the element's intrinsic inline-size as 0 for parent sizing. Placing a query
+   container inside a shrink-to-fit flex/grid parent (`align-items:
+   flex-start`, `justify-items: start`, etc.) would otherwise collapse it to
+   0 wide, silently degrading every `@container`-driven descendant.
+   `align-self: stretch` and `justify-self: stretch` force fill-cross-axis /
+   fill-inline-track in flex and grid contexts respectively (both no-ops in
+   block context).
+
+   This is a CROSS-axis defense only, and deliberately so — no CSS can restore
+   an intrinsic size that containment erased, so a query container in a row
+   flex parent's MAIN axis still collapses. That asymmetry is exactly why
+   containment is opt-in rather than baked into the base class; the full
+   argument lives on `.ps1ui-stack--query-container` in Stack.css.
+
+   The load-bearing invariants: (a) a new responsive-container primitive must
+   add its `--query-container` modifier to this selector list, and (b) this
+   list must stay in lockstep with the set of rules that declare
+   `container-type` — defending a non-container would silently re-introduce
+   `align-self: stretch` on a primitive that should size like a plain element.
+   Per-primitive regression tests (Stack.test.tsx / Container.test.tsx /
+   Grid.test.tsx / PS1Root.test.tsx's "containment context" blocks) cover both
+   directions. */
+.ps1ui-root,
+.ps1ui-container--query-container,
+.ps1ui-grid--query-container,
+.ps1ui-stack--query-container {
   align-self: stretch;
   justify-self: stretch;
-  min-width: 0;
 }
 
 /* forced-colors (Windows High Contrast) strips box-shadow, so every component

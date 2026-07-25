@@ -47,9 +47,8 @@
 }
 
 /* Container — max-width + horizontal padding + auto centering.
-   Establishes an inline-size containment context so descendants respond to
-   Container's width via `@container` queries. Named `ps1ui-container` for
-   future targeted queries.
+   Container does NOT establish a containment context by default; opt in with
+   the `queryContainer` prop (`.ps1ui-container--query-container` below).
 
    Responsive values propagate via a CSS custom-property cascade. The
    component emits `--_container-size-{bp}` / `--_container-px-{bp}` via
@@ -62,10 +61,9 @@
    Breakpoint thresholds mirror --ps1ui-breakpoint-* in tokens.css; kept
    inline as literal values because `@container` conditions cannot resolve
    `var()`. Keep them in sync. */
-/* Containment side-effect defense (align-self / justify-self / min-width) lives
-   in components.css's shared selector list — see the block header there. */
+/* `min-width: 0` (nested-scroller escape hatch) comes from the shared base-class
+   rule in components.css — see the block header there. */
 .ps1ui-container {
-  container: ps1ui-container / inline-size;
   width: 100%;
   margin-inline: auto;
 
@@ -86,6 +84,16 @@
 
   max-width: var(--_size);
   padding-inline: var(--_px);
+}
+
+/* Opt-in query container — emitted by Container's `queryContainer` prop. Full
+   rationale for why containment is opt-in (and what it costs) lives on
+   `.ps1ui-stack--query-container` in Stack.css. Container's `width: 100%`
+   makes it the least collapse-prone of the three primitives, but it is not
+   immune: as an item of an auto-sized grid track the track measures 0, and
+   100% of 0 is 0. */
+.ps1ui-container--query-container {
+  container: ps1ui-container / inline-size;
 }
 
 @container (min-width: 40rem) {

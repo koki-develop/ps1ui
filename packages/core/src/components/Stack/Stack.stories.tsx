@@ -180,6 +180,32 @@ export const ResponsiveAlign: Story = {
   ),
 };
 
+// `queryContainer` — opt into being the containment context descendants'
+// responsive props resolve against. Both panes hold an identical inner Stack
+// (`direction={{ base: "column", md: "row" }}`); only the pane width differs,
+// so the flip is driven by the OUTER Stack rather than the page. Without the
+// prop both panes would read the ambient context and render identically.
+//
+// The opted-in Stack loses its intrinsic width (`container-type: inline-size`
+// implies `contain: inline-size`), which is why each pane is given an explicit
+// width here instead of being left to shrink-wrap.
+export const QueryContainer: Story = {
+  render: () => (
+    <Stack direction="row" gap="lg" align="start">
+      {[320, 820].map((width) => (
+        <Stack key={width} gap="sm">
+          <Text>{width}px</Text>
+          <Stack queryContainer gap="sm" style={{ width }}>
+            <Stack direction={{ base: "column", md: "row" }} gap="sm">
+              {["one", "two", "three"].map((l) => cell(l))}
+            </Stack>
+          </Stack>
+        </Stack>
+      ))}
+    </Stack>
+  ),
+};
+
 export const AsToolbar: Story = {
   render: () => (
     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-toolbar pattern; Stack is intentionally a bare <div>.

@@ -117,6 +117,37 @@ export const ResponsivePadding: Story = {
   ),
 };
 
+// `queryContainer` — opt into being the containment context descendants'
+// responsive props resolve against. Both panes hold an identical inner
+// Container (`px={{ base: "none", md: "2xl" }}`); only the outer Container's
+// width differs, so the padding step is driven by the OUTER Container rather
+// than the page.
+//
+// The opted-in Container loses its intrinsic width (`container-type:
+// inline-size` implies `contain: inline-size`); `width: 100%` keeps it upright
+// in most parents, but the explicit width here is what makes each pane a
+// distinct query context.
+export const QueryContainer: Story = {
+  render: () => (
+    <Stack direction="row" gap="lg" align="start">
+      {[320, 820].map((width) => (
+        <Stack key={width} gap="sm">
+          <Text as="div" variant="muted" size="xs">
+            {width}px
+          </Text>
+          <Container queryContainer size="full" px="none" style={{ ...outlineStyle, width }}>
+            <Container px={{ base: "none", md: "2xl" }} style={outlineStyle}>
+              <Card style={markerPadding}>
+                <Text>px flips at md</Text>
+              </Card>
+            </Container>
+          </Container>
+        </Stack>
+      ))}
+    </Stack>
+  ),
+};
+
 export const AsMainLandmark: Story = {
   render: () => (
     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-landmark pattern; Container is intentionally a bare <div>.

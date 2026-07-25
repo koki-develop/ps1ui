@@ -117,9 +117,10 @@
 }
 
 /* Stack — flexbox composition of children along one axis.
-   Establishes an inline-size containment context so descendants respond to
-   Stack's width via `@container` queries. Named `ps1ui-stack` for future
-   targeted queries.
+   Stack does NOT establish a containment context by default; opt in with the
+   `queryContainer` prop, which adds `.ps1ui-stack--query-container` (see that
+   rule below for the full rationale — it is the canonical write-up the other
+   responsive primitives point at).
 
    Responsive values propagate via a CSS custom-property cascade. The
    component emits `--_stack-{axis}-{bp}` via inline style (see Stack.tsx).
@@ -143,10 +144,9 @@
    Each default matches the property's own initial-value behaviour so
    omitting the corresponding prop is equivalent to not writing the
    declaration at all. */
-/* Containment side-effect defense (align-self / justify-self / min-width) lives
-   in components.css's shared selector list — see the block header there. */
+/* `min-width: 0` (nested-scroller escape hatch) comes from the shared base-class
+   rule in components.css — see the block header there. */
 .ps1ui-stack {
-  container: ps1ui-stack / inline-size;
   display: flex;
 
   --_direction-base: var(--_stack-direction-base, column);
@@ -190,6 +190,42 @@
   align-items: var(--_align);
   justify-content: var(--_justify);
   flex-wrap: var(--_wrap);
+}
+
+/* Opt-in query container — emitted by Stack's `queryContainer` prop. This is
+   the canonical rationale for the whole library; Grid.css / Container.css
+   point here rather than repeating it.
+
+   `container-type: inline-size` is not free. Per CSS Containment Level 3 it
+   applies layout, style AND inline-size containment to the principal box, and
+   inline-size containment makes the element's intrinsic inline size resolve
+   as though it had no contents — i.e. 0. Every shrink-to-fit context then
+   collapses the element outright: a row flex parent (`flex-basis: auto` →
+   hypothetical main size 0), an auto-sized grid track, a float, an
+   inline-block, an absolutely positioned box. Nothing on the element or an
+   ancestor can undo that — the measurement is destroyed, not overridden, and
+   wrapping the element does not help either (the wrapper's own max-content
+   size is derived from the contained child's, so it is 0 too). The
+   `align-self` / `justify-self: stretch` defense in components.css only fills
+   the CROSS axis, so a row flex parent's main axis is undefended by
+   construction. Two further side effects come along for the ride: the element
+   becomes a stacking context (inner `z-index` can't paint over outside
+   siblings) and the containing block for `position: fixed` / `absolute`
+   descendants (overlays must Portal out).
+
+   Three global layout side effects is too high a price to charge every
+   `<Stack>` for a capability most instances never use, so containment is
+   opt-in. Responsive props keep working without it — they resolve against the
+   nearest ancestor query container, normally the `<PS1Root>` an app wraps its
+   tree in once.
+
+   Opt in when descendants should respond to THIS Stack's width rather than
+   the app's: a sidebar, a split pane, a card slot. The collapse then becomes
+   a conscious trade — keep the Stack in a block context, or give it a
+   definite inline size (`flex: 1`, an explicit width, a stretched cross
+   axis). */
+.ps1ui-stack--query-container {
+  container: ps1ui-stack / inline-size;
 }
 
 @container (min-width: 40rem) {
