@@ -4,7 +4,7 @@ export type { PS1RootProps } from "./components/PS1Root/PS1Root";
 export type { Breakpoint, Responsive } from "./utils/responsive";
 
 export { Anchor } from "./components/Anchor/Anchor";
-export type { AnchorProps, AnchorVariant } from "./components/Anchor/Anchor";
+export type { AnchorProps, AnchorSize, AnchorVariant } from "./components/Anchor/Anchor";
 
 export { Badge } from "./components/Badge/Badge";
 export type { BadgeColor, BadgeProps, BadgeVariant } from "./components/Badge/Badge";

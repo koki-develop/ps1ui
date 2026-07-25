@@ -14,6 +14,10 @@ const meta = {
       control: { type: "inline-radio" },
       options: ["primary", "subtle"],
     },
+    size: {
+      control: { type: "inline-radio" },
+      options: ["xs", "sm", "md", "lg", "xl"],
+    },
     href: { control: "text" },
     target: {
       control: { type: "inline-radio" },
@@ -52,6 +56,46 @@ export const Variants: Story = {
       <Anchor href="#" variant="subtle">
         subtle — inherits color, underline in fg-subtle
       </Anchor>
+    </Stack>
+  ),
+};
+
+export const Sizes: Story = {
+  args: { href: "#" },
+  render: () => (
+    <Stack gap="sm">
+      <Anchor href="#" size="xl">
+        size xl
+      </Anchor>
+      <Anchor href="#" size="lg">
+        size lg
+      </Anchor>
+      <Anchor href="#" size="md">
+        size md
+      </Anchor>
+      <Anchor href="#" size="sm">
+        size sm
+      </Anchor>
+      <Anchor href="#" size="xs">
+        size xs
+      </Anchor>
+    </Stack>
+  ),
+};
+
+// No `size` prop means no size of its own: the link takes the surrounding
+// text's font size. That is what makes a bare <Anchor> read correctly inside
+// running text at any Text size — pass `size` only to deviate from it.
+export const InheritedSize: Story = {
+  args: { href: "#" },
+  render: () => (
+    <Stack gap="sm">
+      <Text size="xl">
+        xl body copy with an <Anchor href="#">inherited-size link</Anchor> inside.
+      </Text>
+      <Text size="xs">
+        xs body copy with an <Anchor href="#">inherited-size link</Anchor> inside.
+      </Text>
     </Stack>
   ),
 };

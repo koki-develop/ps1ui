@@ -10,9 +10,23 @@ const variants = `<Anchor href="https://github.com/koki-develop/ps1ui">
   subtle — for secondary navigation
 </Anchor>`;
 
+const sizes = `<Anchor href="https://github.com/koki-develop/ps1ui" size="xl">size xl</Anchor>
+<Anchor href="https://github.com/koki-develop/ps1ui" size="lg">size lg</Anchor>
+<Anchor href="https://github.com/koki-develop/ps1ui" size="md">size md</Anchor>
+<Anchor href="https://github.com/koki-develop/ps1ui" size="sm">size sm</Anchor>
+<Anchor href="https://github.com/koki-develop/ps1ui" size="xs">size xs</Anchor>`;
+
 const inText = `<Text>
   Anchors sit inline within running text, like this link to the{" "}
   <Anchor href="https://github.com/koki-develop/ps1ui">repository</Anchor>.
+</Text>`;
+
+const inheritedSize = `{/* No size prop — the link takes the surrounding text's size. */}
+<Text size="xl">
+  An <Anchor href="https://github.com/koki-develop/ps1ui">inline link</Anchor> in xl copy.
+</Text>
+<Text size="xs">
+  An <Anchor href="https://github.com/koki-develop/ps1ui">inline link</Anchor> in xs copy.
 </Text>`;
 ---
 
@@ -28,10 +42,43 @@ const inText = `<Text>
     </Stack>
   </Demo>
 
+  <Demo title="Sizes" code={sizes}>
+    <Stack direction="column" gap="sm" align="start">
+      <Anchor href="https://github.com/koki-develop/ps1ui" size="xl">
+        size xl
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" size="lg">
+        size lg
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" size="md">
+        size md
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" size="sm">
+        size sm
+      </Anchor>
+      <Anchor href="https://github.com/koki-develop/ps1ui" size="xs">
+        size xs
+      </Anchor>
+    </Stack>
+  </Demo>
+
   <Demo title="In running text" code={inText}>
     <Text>
       Anchors sit inline within running text, like this link to the <Anchor
         href="https://github.com/koki-develop/ps1ui">repository</Anchor>.
     </Text>
+  </Demo>
+
+  <Demo title="Inherited size" code={inheritedSize}>
+    <Stack direction="column" gap="sm" align="start">
+      <Text size="xl">
+        An <Anchor href="https://github.com/koki-develop/ps1ui">inline link</Anchor
+        > in xl copy.
+      </Text>
+      <Text size="xs">
+        An <Anchor href="https://github.com/koki-develop/ps1ui">inline link</Anchor
+        > in xs copy.
+      </Text>
+    </Stack>
   </Demo>
 </ComponentPage>

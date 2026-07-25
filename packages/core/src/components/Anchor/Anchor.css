@@ -1,3 +1,58 @@
+/* Input custom properties emitted by Anchor.tsx per set responsive-prop
+   breakpoint (`--_anchor-size-<bp>`). Registered as non-inheriting for the
+   same reason as Stack — see Stack.css's @property block for the full
+   rationale. */
+@property --_anchor-size-base {
+  syntax: "*";
+  inherits: false;
+}
+@property --_anchor-size-sm {
+  syntax: "*";
+  inherits: false;
+}
+@property --_anchor-size-md {
+  syntax: "*";
+  inherits: false;
+}
+@property --_anchor-size-lg {
+  syntax: "*";
+  inherits: false;
+}
+@property --_anchor-size-xl {
+  syntax: "*";
+  inherits: false;
+}
+
+/* Anchor — link primitive. Like Text and Heading it is a leaf: it queries an
+   ancestor containment context but never establishes one itself (see
+   Text.css for the rationale).
+
+   `size` propagates through the same responsive custom-property cascade as
+   Text / Heading: Anchor.tsx emits `--_anchor-size-{bp}` via inline style,
+   each `@container (min-width: X)` block below repoints `--_anchor-resolved`
+   at the matching breakpoint, and the `--_anchor-resolved-{bp}` fallback
+   chain inherits the previous breakpoint's effective value so a partial
+   responsive object cascades naturally.
+
+   Unlike Text and Heading, the base fallback is `initial` — the
+   guaranteed-invalid value — rather than a font-size token. Anchor has NO
+   default size: substituting a CSS-wide keyword makes `font-size` invalid at
+   computed-value time, and an invalid inherited property computes to the
+   inherited value. So an Anchor without a `size` prop renders at exactly the
+   surrounding text's size, which is the only correct default for a link
+   inside running text (`<Text size="xl">… <Anchor>link</Anchor> …</Text>`
+   must not shrink the link). Text.css uses the same `initial` idiom for its
+   `weight` axis. The declaration is still ours, so it beats any UA rule —
+   only the resolved value is inherited.
+
+   The intermediate variables are named `--_anchor-resolved-*` rather than
+   Text's and Heading's generic `--_size-*`. Those two constrain `as` to a
+   fixed set of host tags, so their classes can never share an element;
+   Anchor's `as` accepts any ElementType, so `<Anchor as={Text}>` puts
+   `ps1ui-anchor` and `ps1ui-text` on one element at equal specificity and
+   whichever stylesheet is imported last would silently capture the other's
+   cascade. Component-scoped names make that composition merely redundant
+   instead of broken. */
 .ps1ui-anchor {
   font-family: var(--ps1ui-font-mono);
   text-decoration: underline;
@@ -8,6 +63,37 @@
   transition:
     color var(--ps1ui-transition-fast),
     text-decoration-color var(--ps1ui-transition-fast);
+
+  --_anchor-resolved-base: var(--_anchor-size-base, initial);
+  --_anchor-resolved-sm: var(--_anchor-size-sm, var(--_anchor-resolved-base));
+  --_anchor-resolved-md: var(--_anchor-size-md, var(--_anchor-resolved-sm));
+  --_anchor-resolved-lg: var(--_anchor-size-lg, var(--_anchor-resolved-md));
+  --_anchor-resolved-xl: var(--_anchor-size-xl, var(--_anchor-resolved-lg));
+
+  --_anchor-resolved: var(--_anchor-resolved-base);
+
+  font-size: var(--_anchor-resolved);
+}
+
+@container (min-width: 40rem) {
+  .ps1ui-anchor {
+    --_anchor-resolved: var(--_anchor-resolved-sm);
+  }
+}
+@container (min-width: 48rem) {
+  .ps1ui-anchor {
+    --_anchor-resolved: var(--_anchor-resolved-md);
+  }
+}
+@container (min-width: 64rem) {
+  .ps1ui-anchor {
+    --_anchor-resolved: var(--_anchor-resolved-lg);
+  }
+}
+@container (min-width: 80rem) {
+  .ps1ui-anchor {
+    --_anchor-resolved: var(--_anchor-resolved-xl);
+  }
 }
 
 /* outline (not box-shadow) so a wrapping inline anchor renders as connected fragments
