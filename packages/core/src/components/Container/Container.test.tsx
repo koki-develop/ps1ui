@@ -8,7 +8,7 @@ import type { Breakpoint } from "../../utils/responsive";
 import type { SpaceScale } from "../../utils/spacing";
 import { CodeBlock } from "../CodeBlock/CodeBlock";
 import { Text } from "../Text/Text";
-import { Container, type ContainerSize } from "./Container";
+import { Container, type ContainerProps, type ContainerSize } from "./Container";
 
 const SIZES = ["sm", "md", "lg", "xl", "full"] as const satisfies readonly ContainerSize[];
 const PXS = ["none", "xs", "sm", "md", "lg", "xl", "2xl"] as const satisfies readonly SpaceScale[];
@@ -98,6 +98,103 @@ describe("Container", () => {
       const screen = await render(<Container data-testid="c">x</Container>);
       const el = screen.getByTestId("c").element();
       expect(el.getAttribute("role")).toBeNull();
+    });
+
+    // `as` — the centered measure is usually the page's own landmark (<main>,
+    // a <section>, the <footer>). Nothing Container does is div-specific: the
+    // class and the inline `--_container-*` variables carry the whole
+    // treatment, so each case asserts BOTH that the tag changed and that the
+    // max-width / padding still resolve on it — a tag swap that quietly
+    // dropped the styling would otherwise read as a pass.
+    test.for([{ tag: "main" }, { tag: "section" }, { tag: "article" }, { tag: "footer" }] as const)(
+      "as=$tag renders that tag with the container treatment intact",
+      async ({ tag }) => {
+        const screen = await render(
+          <Container as={tag} size="md" px="xl" data-testid="c">
+            content
+          </Container>,
+        );
+        const el = screen.getByTestId("c").element() as HTMLElement;
+        expect(el.tagName.toLowerCase()).toBe(tag);
+        expect(el.classList.contains("ps1ui-container")).toBe(true);
+        expect(el.style.getPropertyValue("--_container-size-base")).toBe(SIZE_VAR.md);
+        const cs = getComputedStyle(el);
+        expect(cs.maxWidth).toBe(`${MAX_WIDTH_PX.md}px`);
+        expect(cs.paddingLeft).toBe(PX_VALUE.xl);
+        expect(cs.marginLeft).toBe(cs.marginRight);
+      },
+    );
+
+    test("as={Component} renders the component and hands it the merged class and style", async () => {
+      type PanelProps = { className?: string; style?: CSSProperties; children?: ReactNode };
+      const Panel = ({ className, style, children }: PanelProps) => (
+        <section className={className} data-panel="1" data-testid="c" style={style}>
+          {children}
+        </section>
+      );
+      const screen = await render(
+        <Container as={Panel} size="md" className="extra">
+          x
+        </Container>,
+      );
+      const el = screen.getByTestId("c").element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("section");
+      expect(el.getAttribute("data-panel")).toBe("1");
+      expect(el.classList.contains("ps1ui-container")).toBe(true);
+      expect(el.classList.contains("extra")).toBe(true);
+      expect(el.style.getPropertyValue("--_container-size-base")).toBe(SIZE_VAR.md);
+    });
+
+    // The motivating case: a <main> landmark that is also the centered
+    // measure. `queryContainer` rides along to prove the modifier class (and
+    // therefore containment) is not tied to the div either.
+    test("as=main keeps its landmark role and can still establish containment", async () => {
+      const screen = await render(
+        <Container as="main" queryContainer data-testid="c">
+          content
+        </Container>,
+      );
+      const el = screen.getByRole("main").element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("main");
+      expect(el.classList.contains("ps1ui-container--query-container")).toBe(true);
+      expect(getComputedStyle(el).containerType).toBe("inline-size");
+    });
+
+    // base.css's reset computes `list-style-type: none` on <ul>/<ol>/<menu>,
+    // which drops the list semantic from Safari's a11y tree. `List` already
+    // stamps `role="list"` to restore it; `as="ul"` reaches the same element,
+    // so Container does too — see utils/listSemantics.ts. Rarer here than on
+    // Stack / Grid, but the defence is uniform across the layout primitives
+    // rather than something a reader has to remember per component.
+    test.for([{ tag: "ul" }, { tag: "ol" }, { tag: "menu" }] as const)(
+      "as=$tag stamps role=list so Safari still announces the list semantic",
+      async ({ tag }) => {
+        const screen = await render(
+          <Container as={tag} data-testid="c">
+            <li>a</li>
+          </Container>,
+        );
+        expect(screen.getByTestId("c").element().getAttribute("role")).toBe("list");
+      },
+    );
+
+    test("as=ul with a caller-supplied role keeps the caller's role", async () => {
+      const screen = await render(
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises the role override on top of the `as="ul"` list default.
+        <Container as="ul" role="menu" data-testid="c">
+          <li role="menuitem">a</li>
+        </Container>,
+      );
+      expect(screen.getByTestId("c").element().getAttribute("role")).toBe("menu");
+    });
+
+    test("as=main stamps no role (the list default is scoped to <ul>/<ol>/<menu>)", async () => {
+      const screen = await render(
+        <Container as="main" data-testid="c">
+          a
+        </Container>,
+      );
+      expect(screen.getByTestId("c").element().getAttribute("role")).toBeNull();
     });
   });
 
@@ -588,8 +685,8 @@ describe("Container", () => {
     type ContainerLeakCase = {
       outerFor: (
         bp: Exclude<Breakpoint, "base">,
-      ) => Partial<Omit<Parameters<typeof Container>[0], "children" | "ref">>;
-      inner: Partial<Omit<Parameters<typeof Container>[0], "children" | "ref">>;
+      ) => Partial<Omit<ContainerProps, "children" | "ref" | "as">>;
+      inner: Partial<Omit<ContainerProps, "children" | "ref" | "as">>;
       computed: (cs: CSSStyleDeclaration) => string;
       expected: string;
     };
@@ -689,7 +786,7 @@ describe("Container", () => {
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Container's role passthrough; Container is intentionally a bare <div>.
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Container's role passthrough; `as="main"` is the preferred spelling for a real landmark.
         <Container id="main" role="main" aria-label="main content" data-testid="c">
           x
         </Container>,
@@ -712,6 +809,34 @@ describe("Container", () => {
       );
       expect(captured).not.toBeNull();
       expect((captured as unknown as HTMLDivElement).tagName.toLowerCase()).toBe("div");
+    });
+
+    // `as` moves the ref target along with the tag — `createElement` receives
+    // `ref` as an ordinary prop under React 19's ref-as-prop, so there is no
+    // forwardRef hop to lose it. The type side of this (a ref typed for the
+    // wrong element is rejected) lives in src/polymorphic.test-d.tsx.
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLElement | null = null;
+      const setRef = (node: HTMLElement | null) => {
+        captured = node;
+      };
+      await render(
+        <Container as="main" ref={setRef} data-testid="c">
+          x
+        </Container>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLElement).tagName.toLowerCase()).toBe("main");
+    });
+
+    test("forwards native attributes onto the element `as` resolved to", async () => {
+      const screen = await render(
+        <Container as="form" action="/submit" data-testid="c">
+          x
+        </Container>,
+      );
+      const el = screen.getByTestId("c");
+      await expect.element(el).toHaveAttribute("action", "/submit");
     });
   });
 
@@ -754,9 +879,20 @@ describe("Container", () => {
         ),
       },
       {
-        name: "as a labelled main landmark",
+        name: "as a native labelled <main> landmark",
         node: () => (
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-landmark usage; Container is intentionally a bare <div>.
+          <Container as="main" aria-labelledby="page-title">
+            <Text as="div" id="page-title" weight="semibold">
+              Page title
+            </Text>
+            <Text as="p">Body copy.</Text>
+          </Container>
+        ),
+      },
+      {
+        name: "as a labelled main landmark via role passthrough",
+        node: () => (
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- keeps the ARIA stand-in path covered; `as="main"` (the case above) is the preferred spelling since Container became polymorphic.
           <Container role="main" aria-labelledby="page-title">
             <Text as="div" id="page-title" weight="semibold">
               Page title

@@ -212,6 +212,43 @@ describe("Badge", () => {
       );
       await expect.element(screen.getByRole("link")).toHaveAttribute("aria-disabled", "true");
     });
+
+    // `ref` — polymorphic components accept it (React 19 ref-as-prop; the
+    // derivation and the history behind it are documented on TextProps in
+    // Text.tsx) and it lands on whatever `as` resolved to. The type side — a
+    // ref typed for the wrong element is rejected — lives in
+    // src/polymorphic.test-d.tsx.
+    test("forwards a ref to the default <span>", async () => {
+      let captured: HTMLSpanElement | null = null;
+      await render(
+        <Badge
+          ref={(node: HTMLSpanElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Badge>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLSpanElement).tagName.toLowerCase()).toBe("span");
+    });
+
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLAnchorElement | null = null;
+      await render(
+        <Badge
+          as="a"
+          href="/x"
+          ref={(node: HTMLAnchorElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Badge>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLAnchorElement).tagName.toLowerCase()).toBe("a");
+    });
   });
 
   describe("interaction", () => {

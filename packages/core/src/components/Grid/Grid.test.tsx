@@ -1,13 +1,14 @@
 import "../../styles/styles.css";
 
-import type { CSSProperties, ReactElement } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import type { Breakpoint } from "../../utils/responsive";
 import { CodeBlock } from "../CodeBlock/CodeBlock";
+import { GridItem } from "../GridItem/GridItem";
 import { Text } from "../Text/Text";
-import { Grid, type GridGap } from "./Grid";
+import { Grid, type GridGap, type GridProps } from "./Grid";
 
 const GAPS = ["none", "xs", "sm", "md", "lg", "xl", "2xl"] as const satisfies readonly GridGap[];
 
@@ -83,6 +84,115 @@ describe("Grid", () => {
       const screen = await render(<Grid data-testid="g">x</Grid>);
       const el = screen.getByTestId("g").element();
       expect(el.getAttribute("role")).toBeNull();
+    });
+
+    // `as` — a card grid is usually a list, and `role="list"` on a <div> is
+    // only ever a stand-in for the real <ul>. Nothing Grid does is
+    // div-specific: the class and the inline `--_grid-*` variables carry the
+    // whole layout, so each case asserts BOTH that the tag changed and that
+    // the grid still resolves on it — a tag swap that quietly dropped the
+    // styling would otherwise read as a pass.
+    test.for([{ tag: "nav" }, { tag: "section" }, { tag: "article" }, { tag: "aside" }] as const)(
+      "as=$tag renders that tag with the grid layout intact",
+      async ({ tag }) => {
+        const screen = await render(
+          <Grid as={tag} columns={3} gap="xl" data-testid="g">
+            <span>a</span>
+          </Grid>,
+        );
+        const el = screen.getByTestId("g").element() as HTMLElement;
+        expect(el.tagName.toLowerCase()).toBe(tag);
+        expect(el.classList.contains("ps1ui-grid")).toBe(true);
+        expect(el.style.getPropertyValue("--_grid-gap-base")).toBe(GAP_VAR.xl);
+        const cs = getComputedStyle(el);
+        expect(cs.display).toBe("grid");
+        expect(cs.gridTemplateColumns.split(" ")).toHaveLength(3);
+        expect(cs.columnGap).toBe(GAP_PX.xl);
+      },
+    );
+
+    test("as={Component} renders the component and hands it the merged class and style", async () => {
+      type PanelProps = { className?: string; style?: CSSProperties; children?: ReactNode };
+      const Panel = ({ className, style, children }: PanelProps) => (
+        <section className={className} data-panel="1" data-testid="g" style={style}>
+          {children}
+        </section>
+      );
+      const screen = await render(
+        <Grid as={Panel} gap="xl" className="extra">
+          x
+        </Grid>,
+      );
+      const el = screen.getByTestId("g").element() as HTMLElement;
+      expect(el.tagName.toLowerCase()).toBe("section");
+      expect(el.getAttribute("data-panel")).toBe("1");
+      expect(el.classList.contains("ps1ui-grid")).toBe(true);
+      expect(el.classList.contains("extra")).toBe(true);
+      expect(el.style.getPropertyValue("--_grid-gap-base")).toBe(GAP_VAR.xl);
+    });
+
+    // The pairing `as` exists for: a real <ul>/<li> card grid, where the list
+    // semantics come from the markup rather than from ARIA stand-ins. Also
+    // pins that GridItem's colSpan still lands on a non-div grid item.
+    test("as=ul with GridItem as=li keeps both the list semantics and the span", async () => {
+      const screen = await render(
+        <Grid as="ul" columns={3} aria-label="cards" data-testid="g">
+          <GridItem as="li" colSpan={2} data-testid="i">
+            a
+          </GridItem>
+        </Grid>,
+      );
+      const list = screen.getByRole("list", { name: "cards" }).element() as HTMLElement;
+      expect(list.tagName.toLowerCase()).toBe("ul");
+      // The item needs NO `role="listitem"` of its own: <li>'s implicit role is
+      // listitem whenever its parent is a <ul>/<ol>/<menu>, which it literally
+      // is here. (The `role="list"`-on-a-<div>` spelling this replaces DID have
+      // to mark its children — a <div> has no implicit listitem role. That
+      // asymmetry is why the two shapes look different in the stories.)
+      // Querying by role rather than by tag is what makes this an assertion
+      // about the accessibility tree instead of about the markup.
+      const item = screen.getByRole("listitem").element() as HTMLElement;
+      expect(item.tagName.toLowerCase()).toBe("li");
+      expect(item.hasAttribute("role")).toBe(false);
+      expect(item.getAttribute("data-testid")).toBe("i");
+      // `grid-column: span N` computes to `grid-column-start: span N` — see
+      // GridItem.test.tsx's readSpan() for the full note on the serialisation.
+      expect(getComputedStyle(item).gridColumnStart.trim()).toBe("span 2");
+    });
+
+    // base.css's reset computes `list-style-type: none` on <ul>/<ol>/<menu>,
+    // which drops the list semantic from Safari's a11y tree. `List` already
+    // stamps `role="list"` to restore it; `as="ul"` reaches the same element,
+    // so Grid does too — see utils/listSemantics.ts.
+    test.for([{ tag: "ul" }, { tag: "ol" }, { tag: "menu" }] as const)(
+      "as=$tag stamps role=list so Safari still announces the list semantic",
+      async ({ tag }) => {
+        const screen = await render(
+          <Grid as={tag} data-testid="g">
+            <li>a</li>
+          </Grid>,
+        );
+        expect(screen.getByTestId("g").element().getAttribute("role")).toBe("list");
+      },
+    );
+
+    test("as=ul with a caller-supplied role keeps the caller's role", async () => {
+      const screen = await render(
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises the role override on top of the `as="ul"` list default.
+        <Grid as="ul" role="menu" data-testid="g">
+          <li role="menuitem">a</li>
+        </Grid>,
+      );
+      expect(screen.getByTestId("g").element().getAttribute("role")).toBe("menu");
+    });
+
+    test("as=section stamps no role (the list default is scoped to <ul>/<ol>/<menu>)", async () => {
+      const screen = await render(
+        <Grid as="section" data-testid="g">
+          a
+        </Grid>,
+      );
+      expect(screen.getByTestId("g").element().getAttribute("role")).toBeNull();
     });
   });
 
@@ -635,8 +745,8 @@ describe("Grid", () => {
     type GridLeakCase = {
       outerFor: (
         bp: Exclude<Breakpoint, "base">,
-      ) => Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
-      inner: Partial<Omit<Parameters<typeof Grid>[0], "children" | "ref">>;
+      ) => Partial<Omit<GridProps, "children" | "ref" | "as">>;
+      inner: Partial<Omit<GridProps, "children" | "ref" | "as">>;
       computed: (cs: CSSStyleDeclaration) => string;
       expected: string;
     };
@@ -729,7 +839,7 @@ describe("Grid", () => {
   describe("passthrough", () => {
     test("forwards native <div> attributes (id, role, aria-label, data-*)", async () => {
       const screen = await render(
-        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Grid's role passthrough; Grid is intentionally a bare <div>.
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- exercises Grid's role passthrough; `as="ul"` is the preferred spelling for a real list.
         <Grid id="cards" role="list" aria-label="cards" data-testid="g">
           {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- children must be listitems to satisfy WAI-ARIA's list → listitem parent rule; only relevant here because Grid's role passthrough is being exercised. */}
           <div role="listitem">a</div>
@@ -755,6 +865,34 @@ describe("Grid", () => {
       );
       expect(captured).not.toBeNull();
       expect((captured as unknown as HTMLDivElement).tagName.toLowerCase()).toBe("div");
+    });
+
+    // `as` moves the ref target along with the tag — `createElement` receives
+    // `ref` as an ordinary prop under React 19's ref-as-prop, so there is no
+    // forwardRef hop to lose it. The type side of this (a ref typed for the
+    // wrong element is rejected) lives in src/polymorphic.test-d.tsx.
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLUListElement | null = null;
+      const setRef = (node: HTMLUListElement | null) => {
+        captured = node;
+      };
+      await render(
+        <Grid as="ul" ref={setRef} data-testid="g">
+          <li>x</li>
+        </Grid>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLUListElement).tagName.toLowerCase()).toBe("ul");
+    });
+
+    test("forwards native attributes onto the element `as` resolved to", async () => {
+      const screen = await render(
+        <Grid as="ol" start={3} data-testid="g">
+          <li>x</li>
+        </Grid>,
+      );
+      const el = screen.getByTestId("g");
+      await expect.element(el).toHaveAttribute("start", "3");
     });
   });
 
@@ -792,9 +930,25 @@ describe("Grid", () => {
         ),
       },
       {
-        name: "as a labelled list of items",
+        name: "as a native labelled <ul> of <li> cards",
         node: () => (
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-list pattern; Grid is intentionally a bare <div>.
+          <Grid as="ul" columns={3} aria-label="cards">
+            <GridItem as="li">
+              <Text>one</Text>
+            </GridItem>
+            <GridItem as="li">
+              <Text>two</Text>
+            </GridItem>
+            <GridItem as="li" colSpan={2}>
+              <Text>three</Text>
+            </GridItem>
+          </Grid>
+        ),
+      },
+      {
+        name: "as a labelled list of items via role passthrough",
+        node: () => (
+          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- keeps the ARIA stand-in path covered; `as="ul"` (the case above) is the preferred spelling since Grid became polymorphic.
           <Grid columns={3} role="list" aria-label="cards">
             {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- child role must be listitem to keep the WAI-ARIA list→listitem parent-child requirement axe checks. */}
             <div role="listitem">

@@ -630,6 +630,44 @@ describe("Heading", () => {
       await expect.element(el).toHaveAttribute("id", "section-1");
       await expect.element(el).toHaveAttribute("aria-describedby", "hint");
     });
+
+    // `ref` — polymorphic components accept it (React 19 ref-as-prop; the
+    // derivation and the history behind it are documented on TextProps in
+    // Text.tsx) and it lands on whatever `as` resolved to. All of h1–h6 share
+    // HTMLHeadingElement, so the tag assertion is what distinguishes the two
+    // cases here. The type side lives in src/polymorphic.test-d.tsx.
+    test("forwards a ref to the tag `level` selected", async () => {
+      let captured: HTMLHeadingElement | null = null;
+      await render(
+        <Heading
+          level={2}
+          ref={(node: HTMLHeadingElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Heading>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLHeadingElement).tagName.toLowerCase()).toBe("h2");
+    });
+
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLHeadingElement | null = null;
+      await render(
+        <Heading
+          level={2}
+          as="h4"
+          ref={(node: HTMLHeadingElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Heading>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLHeadingElement).tagName.toLowerCase()).toBe("h4");
+    });
   });
 
   describe("a11y", () => {

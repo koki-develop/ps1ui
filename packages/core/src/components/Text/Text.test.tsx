@@ -689,6 +689,42 @@ describe("Text", () => {
       const el = screen.getByTestId("t").element();
       expect(el.getAttribute("for")).toBe("email");
     });
+
+    // `ref` — polymorphic components accept it (React 19 ref-as-prop; the
+    // derivation and the history behind it are documented on TextProps in
+    // Text.tsx) and it lands on whatever `as` resolved to. The type side — a
+    // ref typed for the wrong element is rejected — lives in
+    // src/polymorphic.test-d.tsx.
+    test("forwards a ref to the default <p>", async () => {
+      let captured: HTMLParagraphElement | null = null;
+      await render(
+        <Text
+          ref={(node: HTMLParagraphElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Text>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLParagraphElement).tagName.toLowerCase()).toBe("p");
+    });
+
+    test("forwards a ref to the element `as` resolved to", async () => {
+      let captured: HTMLSpanElement | null = null;
+      await render(
+        <Text
+          as="span"
+          ref={(node: HTMLSpanElement | null) => {
+            captured = node;
+          }}
+        >
+          x
+        </Text>,
+      );
+      expect(captured).not.toBeNull();
+      expect((captured as unknown as HTMLSpanElement).tagName.toLowerCase()).toBe("span");
+    });
   });
 
   describe("a11y", () => {

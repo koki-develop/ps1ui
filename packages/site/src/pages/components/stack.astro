@@ -23,6 +23,23 @@ const responsive = `<Stack direction={{ base: "column", md: "row" }} gap="md">
   <div>03</div>
 </Stack>`;
 
+// Labelled "Example", not "primary": the demo renders a real <nav> landmark on
+// this page, alongside the site header's and the sidebar's. Every <nav> in a
+// document needs a distinct label, and a decorative one must not claim to be
+// the page's primary navigation.
+const asNav = `{/* The layout box IS the landmark — no wrapper, no hand-rolled flex CSS. */}
+<Stack as="nav" aria-label="Example" direction="row" gap="md">
+  <Anchor href="/docs">docs</Anchor>
+  <Anchor href="/blog">blog</Anchor>
+  <Anchor href="/about">about</Anchor>
+</Stack>`;
+
+const asList = `<Stack as="ul" gap="sm">
+  <li>01</li>
+  <li>02</li>
+  <li>03</li>
+</Stack>`;
+
 const queryContainer = `{/* The inner Stack now measures the 320px outer Stack
     instead of the page, so it stays on its \`base\` value. */}
 <Stack queryContainer style={{ width: 320 }}>
@@ -56,6 +73,41 @@ const queryContainer = `{/* The inner Stack now measures the 320px outer Stack
       <DemoBox>01</DemoBox>
       <DemoBox>02</DemoBox>
       <DemoBox>03</DemoBox>
+    </Stack>
+  </Demo>
+
+  <Stack direction="column" gap="md">
+    <Heading level={2} size="lg">Semantic element</Heading>
+    <Text>
+      A layout box is very often the semantic element too — a <Code>&lt;nav&gt;</Code
+      > of links, the page <Code>&lt;main&gt;</Code>, a <Code>&lt;ul&gt;</Code> of
+      rows. Pass <Code>as</Code> to render that tag instead of the default <Code
+        >&lt;div&gt;</Code
+      >; every layout prop, the styling and <Code>queryContainer</Code> behave exactly
+      as they do on a <Code>&lt;div&gt;</Code>, and the rendered element's own attributes
+      (plus a correctly typed <Code>ref</Code>) become available on <Code>Stack</Code
+      >.
+    </Text>
+    <Text>
+      <Code>as</Code> also takes a component, not just a tag name — <Code
+        >{'as={NextLink}'}</Code
+      > forwards the merged class and style to it.
+    </Text>
+  </Stack>
+
+  <Demo title="As a navigation landmark" code={asNav}>
+    <Stack as="nav" aria-label="Example" direction="row" gap="md">
+      <Anchor href={href("components/")}>docs</Anchor>
+      <Anchor href={href("components/grid/")}>grid</Anchor>
+      <Anchor href={href("components/container/")}>container</Anchor>
+    </Stack>
+  </Demo>
+
+  <Demo title="As a list" code={asList}>
+    <Stack as="ul" gap="sm">
+      <li><DemoBox>01</DemoBox></li>
+      <li><DemoBox>02</DemoBox></li>
+      <li><DemoBox>03</DemoBox></li>
     </Stack>
   </Demo>
 

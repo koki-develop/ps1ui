@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Card } from "../Card/Card";
+import { GridItem } from "../GridItem/GridItem";
 import { PS1Root } from "../PS1Root/PS1Root";
 import { Stack } from "../Stack/Stack";
 import { Text } from "../Text/Text";
@@ -132,9 +133,25 @@ export const QueryContainer: Story = {
   ),
 };
 
+// `as` — the native spelling of the ARIA stand-in below: a real <ul> of real
+// <li> cells, so the list semantics come from the markup. Visually identical
+// to the role version (base.css already strips the UA list styling), which is
+// exactly why the role stand-in is no longer the recommended shape.
+export const SemanticList: Story = {
+  render: () => (
+    <Grid as="ul" columns={3} gap="lg" aria-label="cards" style={{ width: STAGE_WIDTH }}>
+      {["one", "two", "three"].map((l) => (
+        <GridItem as="li" key={l}>
+          <Card style={{ padding: 12, textAlign: "center" }}>{l}</Card>
+        </GridItem>
+      ))}
+    </Grid>
+  ),
+};
+
 export const AsList: Story = {
   render: () => (
-    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-list pattern; Grid is intentionally a bare <div>.
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- keeps the ARIA stand-in path documented; `as="ul"` (SemanticList) is the preferred spelling since Grid became polymorphic.
     <Grid columns={3} gap="lg" role="list" aria-label="cards" style={{ width: STAGE_WIDTH }}>
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- child role must be listitem to keep the WAI-ARIA list→listitem parent-child requirement axe checks; documents the labelled-list pattern. */}
       <Card role="listitem" style={{ padding: 12, textAlign: "center" }}>

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { Anchor } from "../Anchor/Anchor";
 import { Button } from "../Button/Button";
 import { Card } from "../Card/Card";
 import { PS1Root } from "../PS1Root/PS1Root";
@@ -208,11 +209,33 @@ export const QueryContainer: Story = {
 
 export const AsToolbar: Story = {
   render: () => (
-    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-toolbar pattern; Stack is intentionally a bare <div>.
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-toolbar pattern; `role="toolbar"` has no native tag equivalent, so this stays a role rather than an `as` target.
     <Stack direction="row" gap="sm" role="toolbar" aria-label="editor actions">
       <Button variant="secondary">bold</Button>
       <Button variant="secondary">italic</Button>
       <Button variant="secondary">underline</Button>
+    </Stack>
+  ),
+};
+
+// `as` — where a native tag DOES exist, render it instead of layering a role
+// onto a <div>. Visually identical to the same Stack as a <div> (the layout is
+// entirely class- and variable-driven), so this story earns its keep on the
+// a11y side: axe sees a real navigation landmark and a real list, which the
+// role stand-in above can only approximate.
+export const SemanticElements: Story = {
+  render: () => (
+    <Stack gap="lg">
+      <Stack as="nav" aria-label="primary" direction="row" gap="md">
+        <Anchor href="#overview">overview</Anchor>
+        <Anchor href="#usage">usage</Anchor>
+        <Anchor href="#props">props</Anchor>
+      </Stack>
+      <Stack as="ul" gap="sm">
+        {["one", "two", "three"].map((l) => (
+          <li key={l}>{cell(l)}</li>
+        ))}
+      </Stack>
     </Stack>
   ),
 };

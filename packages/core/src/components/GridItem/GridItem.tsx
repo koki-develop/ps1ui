@@ -1,9 +1,12 @@
-import type { ComponentProps, CSSProperties } from "react";
+import { createElement } from "react";
+import type { ComponentProps, CSSProperties, ElementType } from "react";
 import { cx } from "../../utils/cx";
 import { safePositiveInt } from "../../utils/numbers";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
 
-export type GridItemProps = ComponentProps<"div"> & {
+type GridItemOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the default <div> — pair it with the parent Grid's `as` (e.g. `as="li"` inside `<Grid as="ul">`) so the markup stays valid. */
+  as?: E;
   /**
    * Number of grid columns the item spans.
    * @default 1
@@ -11,7 +14,18 @@ export type GridItemProps = ComponentProps<"div"> & {
   colSpan?: Responsive<number>;
 };
 
-export function GridItem({ colSpan, className, style, ...rest }: GridItemProps) {
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
+export type GridItemProps<E extends ElementType = "div"> = GridItemOwnProps<E> &
+  Omit<ComponentProps<E>, keyof GridItemOwnProps<E>>;
+
+export function GridItem<E extends ElementType = "div">({
+  as,
+  colSpan,
+  className,
+  style,
+  ...rest
+}: GridItemProps<E>) {
   // `grid-column: span N` requires N ≥ 1 integer — `safePositiveInt` clamps
   // at the system boundary. See utils/numbers.ts for the full rationale.
   const colSpanVars = resolveResponsive(colSpan, "--_griditem-col-span", safePositiveInt);
@@ -21,5 +35,9 @@ export function GridItem({ colSpan, className, style, ...rest }: GridItemProps) 
     ...style,
     ...colSpanVars,
   } as CSSProperties;
-  return <div {...rest} className={cx("ps1ui-griditem", className)} style={mergedStyle} />;
+  return createElement(as ?? "div", {
+    ...rest,
+    className: cx("ps1ui-griditem", className),
+    style: mergedStyle,
+  });
 }

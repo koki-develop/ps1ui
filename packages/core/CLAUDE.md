@@ -33,6 +33,7 @@ Gotchas that errors won't teach you:
 Each component: `src/components/<Name>/` with `<Name>.tsx / .css / .test.tsx / .stories.tsx / .vrt.test.tsx` (+ conditional `.contrast.test.tsx`). Use the `new-component` skill for the full checklist — it includes the required `@ps1ui/site` docs page.
 
 - Ultra-thin native wrappers: type props as `ComponentProps<"tag"> & { extras }` and spread `...rest` onto the element. React 19 ref-as-prop — no `forwardRef`, and don't "fix" to `ComponentPropsWithoutRef` (it would drop `ref`).
+- Polymorphic (`as`-bearing) components use one shape, no exceptions: `<Name>Props<E> = <Name>OwnProps<E> & Omit<ComponentProps<E>, keyof <Name>OwnProps<E>>`, rendered through `createElement(as ?? "<default>", …)`. The canonical write-up (including why it is `ComponentProps`, not `ComponentPropsWithoutRef`) sits on `TextProps` in `Text.tsx`; the contract is pinned across every such component by `src/polymorphic.test-d.tsx`. Don't extract a shared helper type — `@ps1ui/site`'s props extractor can't follow a type parameter through a nested generic alias.
 - Build `className` with `cx(...)` (`src/utils/cx.ts`).
 - Class naming: `ps1ui-<component>` base, `ps1ui-<component>--<modifier>` for variants. Existing names are public API — don't rename.
 - `style` merge order is `{ ...callerStyle, ...resolvedVars }` — internal `--_*` vars intentionally win over same-named caller keys.

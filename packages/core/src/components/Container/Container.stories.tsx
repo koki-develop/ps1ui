@@ -148,9 +148,29 @@ export const QueryContainer: Story = {
   ),
 };
 
+// `as` — the native spelling of the ARIA stand-in below. A Container is
+// usually the page's own landmark, so rendering the <main> element directly
+// beats layering `role="main"` onto a <div>; the centering, max-width, and
+// padding are unchanged because they all hang off the class and the inline
+// `--_container-*` variables.
+export const SemanticMainLandmark: Story = {
+  render: () => (
+    <Container as="main" aria-labelledby="semantic-page-title" style={outlineStyle}>
+      <Card style={markerPadding}>
+        <Text as="div" id="semantic-page-title" weight="semibold" style={{ marginBottom: 6 }}>
+          page heading
+        </Text>
+        <Text as="p" variant="muted">
+          `as=&quot;main&quot;` renders the landmark element itself — no role stand-in needed.
+        </Text>
+      </Card>
+    </Container>
+  ),
+};
+
 export const AsMainLandmark: Story = {
   render: () => (
-    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- documents the labelled-landmark pattern; Container is intentionally a bare <div>.
+    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- keeps the ARIA stand-in path documented; `as="main"` (SemanticMainLandmark) is the preferred spelling since Container became polymorphic.
     <Container role="main" aria-labelledby="page-title" style={outlineStyle}>
       <Card style={markerPadding}>
         <Text as="div" id="page-title" weight="semibold" style={{ marginBottom: 6 }}>

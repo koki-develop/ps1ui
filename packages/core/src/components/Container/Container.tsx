@@ -1,11 +1,15 @@
-import type { ComponentProps, CSSProperties } from "react";
+import { createElement } from "react";
+import type { ComponentProps, CSSProperties, ElementType } from "react";
 import { cx } from "../../utils/cx";
+import { listRoleFor } from "../../utils/listSemantics";
 import { resolveResponsive, type Responsive } from "../../utils/responsive";
 import { spaceToVar, type SpaceScale } from "../../utils/spacing";
 
 export type ContainerSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export type ContainerProps = ComponentProps<"div"> & {
+type ContainerOwnProps<E extends ElementType> = {
+  /** Element or component to render instead of the default <div> — e.g. "main" / "section" when the centered measure is also the page landmark. */
+  as?: E;
   /**
    * Max-width preset; "full" removes the cap.
    * @default "lg"
@@ -27,12 +31,25 @@ export type ContainerProps = ComponentProps<"div"> & {
   queryContainer?: boolean;
 };
 
+// Polymorphic prop derivation — `ComponentProps` (ref included) on purpose;
+// the full account of why lives on TextProps in Text.tsx.
+export type ContainerProps<E extends ElementType = "div"> = ContainerOwnProps<E> &
+  Omit<ComponentProps<E>, keyof ContainerOwnProps<E>>;
+
 // size → max-width. `full` maps to `none` (unbounded), the rest reference
 // the --ps1ui-container-* max-width tokens in tokens.css.
 const sizeToVar = (v: ContainerSize): string =>
   v === "full" ? "none" : `var(--ps1ui-container-${v})`;
 
-export function Container({ size, px, queryContainer, className, style, ...rest }: ContainerProps) {
+export function Container<E extends ElementType = "div">({
+  as,
+  size,
+  px,
+  queryContainer,
+  className,
+  style,
+  ...rest
+}: ContainerProps<E>) {
   const sizeVars = resolveResponsive(size, "--_container-size", sizeToVar);
   const pxVars = resolveResponsive(px, "--_container-px", spaceToVar);
   // Caller style first, internal `--_*` vars win — see Text.tsx. Cast because
@@ -47,5 +64,13 @@ export function Container({ size, px, queryContainer, className, style, ...rest 
     queryContainer && "ps1ui-container--query-container",
     className,
   );
-  return <div {...rest} className={classes} style={mergedStyle} />;
+  const tag = as ?? "div";
+  return createElement(tag, {
+    // Placed before `...rest` so a caller-supplied role still wins — see
+    // utils/listSemantics.ts for why the <ul> / <ol> / <menu> targets need it.
+    role: listRoleFor(tag),
+    ...rest,
+    className: classes,
+    style: mergedStyle,
+  });
 }
