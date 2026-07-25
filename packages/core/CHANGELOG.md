@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://github.com/koki-develop/ps1ui/compare/core-v0.4.0...core-v0.5.0) (2026-07-25)
+
+
+### Features
+
+* Add `as` prop to Stack, Grid, Container, and GridItem ([#79](https://github.com/koki-develop/ps1ui/issues/79)) ([2f0e922](https://github.com/koki-develop/ps1ui/commit/2f0e9228f9402cd449c6700bc9ae970837be53ad))
+* Add `ghost` variant to Button ([#80](https://github.com/koki-develop/ps1ui/issues/80)) ([1fd1e2a](https://github.com/koki-develop/ps1ui/commit/1fd1e2ab134fa86c406c3fd295b5d89eff17b9ec))
+* Add `showMarkers` prop to List ([#75](https://github.com/koki-develop/ps1ui/issues/75)) ([d6c9c93](https://github.com/koki-develop/ps1ui/commit/d6c9c93d1a6c1c6a47c38117087e380b2d4297cd))
+* Add `size` prop to Anchor ([#76](https://github.com/koki-develop/ps1ui/issues/76)) ([e6c1bfd](https://github.com/koki-develop/ps1ui/commit/e6c1bfdffe6b3162a66fe5d8ca54b33997807d98))
+* Make container-query context opt-in via `queryContainer` prop ([d9a01e7](https://github.com/koki-develop/ps1ui/commit/d9a01e768610232b750df7a90d1c7abed390e523))
+
+
+### Bug Fixes
+
+* Drop opinionated declarations from the reset ([#82](https://github.com/koki-develop/ps1ui/issues/82)) ([5650f05](https://github.com/koki-develop/ps1ui/commit/5650f0506030e10cdcb8ac9697d655664d724034))
+
 ## [0.4.0](https://github.com/koki-develop/ps1ui/compare/core-v0.3.0...core-v0.4.0) (2026-07-24)
 
 
