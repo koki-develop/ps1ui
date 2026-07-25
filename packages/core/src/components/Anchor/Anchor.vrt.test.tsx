@@ -17,6 +17,7 @@ import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
 import { VrtFrame } from "../../testing/vrt";
 import { PS1Root } from "../PS1Root/PS1Root";
+import { Text } from "../Text/Text";
 import { Anchor, type AnchorSize, type AnchorVariant } from "./Anchor";
 
 const VARIANTS = ["primary", "subtle"] as const satisfies readonly AnchorVariant[];
@@ -83,6 +84,57 @@ const SIZE_CASES: readonly SizeCase[] = [
   })),
 ];
 
+// Adornment row. The pixel diff is doing real work here that no computed-style
+// assertion can: the underline has to stop at the label, leaving the icon and
+// the gap between them bare. A regression there paints one link as two
+// disconnected dashes — geometrically valid CSS, obviously wrong to a reader.
+// Hover is captured per variant because subtle's underline is decoupled from
+// its text colour at rest and only converges on hover.
+const ADORNED_STATE_CASES = VARIANTS.flatMap((variant) =>
+  (["default", "hover"] as const).map((state) => ({ variant, state })),
+);
+
+type ShapeCase = { name: string; node: () => ReactNode };
+
+const SHAPE_CASES: readonly ShapeCase[] = [
+  {
+    name: "adorned-leading",
+    node: () => (
+      <Anchor href="#" leading={<span aria-hidden="true">←</span>}>
+        back to all posts
+      </Anchor>
+    ),
+  },
+  {
+    name: "adorned-both",
+    node: () => (
+      <Anchor
+        href="#"
+        leading={<span aria-hidden="true">→</span>}
+        trailing={<span aria-hidden="true">↗</span>}
+      >
+        live
+      </Anchor>
+    ),
+  },
+  {
+    // An adorned link stays inline-level, so it must still flow inside a
+    // sentence — while never breaking between the word and its icon.
+    name: "adorned-in-running-text",
+    node: () => (
+      <div style={{ width: 280 }}>
+        <Text>
+          The demo is deployed at{" "}
+          <Anchor href="#" trailing={<span aria-hidden="true">↗</span>}>
+            example.com
+          </Anchor>{" "}
+          and the code is on GitHub.
+        </Text>
+      </div>
+    ),
+  },
+];
+
 describe("Anchor VRT", () => {
   test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ctx) => {
     // Same WebKit skip as Button/Button.contrast: macOS Safari's default
@@ -114,6 +166,34 @@ describe("Anchor VRT", () => {
 
   test.for(SIZE_CASES)("$name", async ({ name, stageWidth, node }) => {
     const screen = await render(<VrtFrame width={stageWidth}>{node()}</VrtFrame>);
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
+  });
+
+  test.for(ADORNED_STATE_CASES)(
+    "adorned-trailing / variant=$variant / state=$state",
+    async ({ variant, state }) => {
+      const screen = await render(
+        <VrtFrame>
+          <Anchor
+            href="#"
+            variant={variant}
+            trailing={<span aria-hidden="true">↗</span>}
+            data-testid="vrt-target"
+          >
+            live site
+          </Anchor>
+        </VrtFrame>,
+      );
+      await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
+        await expect
+          .element(screen.getByTestId("vrt-frame"))
+          .toMatchScreenshot(`adorned-trailing-${variant}-${state}`);
+      });
+    },
+  );
+
+  test.for(SHAPE_CASES)("$name", async ({ name, node }) => {
+    const screen = await render(<VrtFrame>{node()}</VrtFrame>);
     await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
   });
 });

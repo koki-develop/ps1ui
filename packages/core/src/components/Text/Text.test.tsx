@@ -727,6 +727,316 @@ describe("Text", () => {
     });
   });
 
+  // `leading` / `trailing` are the non-interactive answer to "icon + label on
+  // one line" — the case that previously forced consumers to hand-roll
+  // `display: inline-flex` because Badge brings a chip's chrome and Button
+  // brings a press affordance. The assertions below pin the three things that
+  // make it a primitive rather than a shortcut: it costs nothing when unused,
+  // the row is a real flex row with a stable gap, and it composes with
+  // `truncate` instead of fighting it.
+  describe("adornments (leading / trailing)", () => {
+    describe("DOM structure", () => {
+      test("leading renders in a __leading slot before the label", async () => {
+        const screen = await render(
+          <Text leading={<span data-testid="icon">★</span>} data-testid="t">
+            42
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        const [first, second] = Array.from(el.children);
+        expect(first?.classList.contains("ps1ui-text__leading")).toBe(true);
+        expect(first?.querySelector("[data-testid='icon']")).not.toBeNull();
+        expect(second?.classList.contains("ps1ui-text__label")).toBe(true);
+        expect(second?.textContent).toBe("42");
+      });
+
+      test("trailing renders in a __trailing slot after the label", async () => {
+        const screen = await render(
+          <Text trailing={<span data-testid="icon">↗</span>} data-testid="t">
+            open
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        const [first, second] = Array.from(el.children);
+        expect(first?.classList.contains("ps1ui-text__label")).toBe(true);
+        expect(first?.textContent).toBe("open");
+        expect(second?.classList.contains("ps1ui-text__trailing")).toBe(true);
+        expect(second?.querySelector("[data-testid='icon']")).not.toBeNull();
+      });
+
+      test("both slots render in leading → label → trailing order", async () => {
+        const screen = await render(
+          <Text leading="★" trailing="↗" data-testid="t">
+            stars
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(Array.from(el.children).map((child) => child.className)).toEqual([
+          "ps1ui-text__leading",
+          "ps1ui-text__label",
+          "ps1ui-text__trailing",
+        ]);
+      });
+
+      test("no adornment → no wrapper elements at all, children stay direct", async () => {
+        // The zero-cost guarantee: an unadorned Text renders exactly the tree
+        // it always has. A stray __label wrapper would silently change what
+        // `> *` selectors and text-node walks in consumer code see.
+        const screen = await render(
+          <Text data-testid="t">
+            plain <em data-testid="em">copy</em>
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.querySelector(".ps1ui-text__label")).toBeNull();
+        expect(el.querySelector(".ps1ui-text__leading")).toBeNull();
+        expect(el.querySelector(".ps1ui-text__trailing")).toBeNull();
+        expect(el.firstElementChild?.getAttribute("data-testid")).toBe("em");
+      });
+
+      test("multi-fragment children collapse into ONE label box, not one flex item each", async () => {
+        // The reason children are wrapped rather than passed through bare: a
+        // flex container promotes every contiguous text run and every element
+        // child to its own flex item, so the row `gap` would land between each
+        // word fragment of the sentence instead of only beside the icon.
+        const screen = await render(
+          <Text leading="★" data-testid="t">
+            read <em>this</em> now
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.children.length).toBe(2);
+        expect(el.querySelector(".ps1ui-text__label")?.textContent).toBe("read this now");
+      });
+
+      test("zero is an adornment, not an absent one", async () => {
+        // A count of 0 renders the digit, so a blanket falsiness check would be
+        // wrong here — see utils/slots.ts.
+        const screen = await render(
+          <Text leading={0} data-testid="t">
+            issues
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.querySelector(".ps1ui-text__leading")?.textContent).toBe("0");
+      });
+
+      test.for([
+        { label: "false (`cond && <Icon/>`)", node: false as const },
+        { label: "null (`cond ? <Icon/> : null`)", node: null },
+      ])("a $label adornment leaves Text completely unadorned", async ({ node }) => {
+        // The failure this guards is quiet and visible: an empty slot element
+        // plus the row's 4px gap before the label, conjured from a value that
+        // means "nothing here". React renders nothing for it; so must Text.
+        const screen = await render(
+          <Text leading={node} data-testid="t">
+            issues
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.classList.contains("ps1ui-text--adorned")).toBe(false);
+        expect(el.querySelector(".ps1ui-text__leading")).toBeNull();
+        expect(el.querySelector(".ps1ui-text__label")).toBeNull();
+        expect(getComputedStyle(el as HTMLElement).display).toBe("block");
+      });
+
+      test("one filled slot and one false slot renders only the filled one", async () => {
+        const screen = await render(
+          <Text leading="★" trailing={false} data-testid="t">
+            42
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(Array.from(el.children).map((child) => child.className)).toEqual([
+          "ps1ui-text__leading",
+          "ps1ui-text__label",
+        ]);
+      });
+    });
+
+    describe("class composition", () => {
+      test.for([
+        ...BLOCK_TAGS.map((tag) => ({ tag, expectInline: false })),
+        ...INLINE_TAGS.map((tag) => ({ tag, expectInline: true })),
+      ])(
+        "leading + as='$tag' → --adorned, --adorned-inline=$expectInline",
+        async ({ tag, expectInline }) => {
+          const screen = await render(
+            <Text as={tag} leading="★" data-testid="t">
+              {tag}
+            </Text>,
+          );
+          const el = screen.getByTestId("t").element();
+          expect(el.classList.contains("ps1ui-text--adorned")).toBe(true);
+          expect(el.classList.contains("ps1ui-text--adorned-inline")).toBe(expectInline);
+        },
+      );
+
+      test("trailing alone also emits --adorned", async () => {
+        const screen = await render(
+          <Text trailing="↗" data-testid="t">
+            x
+          </Text>,
+        );
+        await expect.element(screen.getByTestId("t")).toHaveClass("ps1ui-text--adorned");
+      });
+
+      test("no adornment → neither adorned class", async () => {
+        const screen = await render(<Text data-testid="t">x</Text>);
+        const el = screen.getByTestId("t").element();
+        expect(el.classList.contains("ps1ui-text--adorned")).toBe(false);
+        expect(el.classList.contains("ps1ui-text--adorned-inline")).toBe(false);
+      });
+
+      test("truncate + adornment on an inline tag → --adorned-inline supersedes --truncate-inline", async () => {
+        // Both modifiers set `display` at equal specificity, so exactly one is
+        // emitted — the choice lives in Text.tsx precisely so a reshuffle of
+        // Text.css cannot silently flip the winner to inline-block and drop
+        // the row layout.
+        const screen = await render(
+          <Text as="span" truncate leading="★" data-testid="t">
+            x
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.classList.contains("ps1ui-text--truncate")).toBe(true);
+        expect(el.classList.contains("ps1ui-text--truncate-inline")).toBe(false);
+        expect(el.classList.contains("ps1ui-text--adorned-inline")).toBe(true);
+      });
+
+      test("truncate + adornment on a block tag → truncate keeps its class, no inline modifiers", async () => {
+        const screen = await render(
+          <Text truncate leading="★" data-testid="t">
+            x
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        expect(el.classList.contains("ps1ui-text--truncate")).toBe(true);
+        expect(el.classList.contains("ps1ui-text--truncate-inline")).toBe(false);
+        expect(el.classList.contains("ps1ui-text--adorned")).toBe(true);
+        expect(el.classList.contains("ps1ui-text--adorned-inline")).toBe(false);
+      });
+    });
+
+    describe("computed styles", () => {
+      test.for([
+        ...BLOCK_TAGS.map((tag) => ({ tag, expected: "flex" })),
+        ...INLINE_TAGS.map((tag) => ({ tag, expected: "inline-flex" })),
+      ])("adorned as='$tag' → display: $expected", async ({ tag, expected }) => {
+        const screen = await render(
+          <Text as={tag} leading="★" data-testid="t">
+            {tag}
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element() as HTMLElement;
+        expect(getComputedStyle(el).display).toBe(expected);
+      });
+
+      test.for([
+        ...BLOCK_TAGS.map((tag) => ({ tag, expected: "block" })),
+        ...INLINE_TAGS.map((tag) => ({ tag, expected: "inline" })),
+      ])("unadorned as='$tag' → display stays $expected", async ({ tag, expected }) => {
+        const screen = await render(
+          <Text as={tag} data-testid="t">
+            {tag}
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element() as HTMLElement;
+        expect(getComputedStyle(el).display).toBe(expected);
+      });
+
+      test("the row uses space-xs (4px) gap and centres its items", async () => {
+        const screen = await render(
+          <Text leading="★" data-testid="t">
+            42
+          </Text>,
+        );
+        const cs = getComputedStyle(screen.getByTestId("t").element() as HTMLElement);
+        expect(cs.columnGap).toBe("4px");
+        expect(cs.alignItems).toBe("center");
+      });
+
+      test("slots never shrink; the label absorbs the squeeze", async () => {
+        const screen = await render(
+          <Text leading="★" trailing="↗" data-testid="t">
+            label
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element();
+        for (const selector of [".ps1ui-text__leading", ".ps1ui-text__trailing"]) {
+          const cs = getComputedStyle(el.querySelector(selector) as HTMLElement);
+          expect(cs.flexGrow).toBe("0");
+          expect(cs.flexShrink).toBe("0");
+          expect(cs.flexBasis).toBe("auto");
+        }
+        const label = getComputedStyle(el.querySelector(".ps1ui-text__label") as HTMLElement);
+        expect(label.minWidth).toBe("0px");
+      });
+
+      test("truncate + adornment: the ellipsis lives on the label, and actually clips", async () => {
+        // `text-overflow` only applies to a block container's own inline
+        // content, which an adorned root has none of. Asserting the computed
+        // property alone would pass even if the label were not the overflowing
+        // box, so the geometry is checked too.
+        const screen = await render(
+          <div style={{ width: 120 }}>
+            <Text truncate leading="★" data-testid="t">
+              a very long single line that cannot possibly fit in this narrow box
+            </Text>
+          </div>,
+        );
+        const el = screen.getByTestId("t").element();
+        const label = el.querySelector(".ps1ui-text__label") as HTMLElement;
+        const cs = getComputedStyle(label);
+        expect(cs.textOverflow).toBe("ellipsis");
+        expect(cs.overflowX).toBe("hidden");
+        expect(cs.whiteSpace).toBe("nowrap");
+        expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+        // The icon survived the squeeze at full width — that is what `flex: none` buys.
+        const icon = el.querySelector(".ps1ui-text__leading") as HTMLElement;
+        expect(icon.getBoundingClientRect().width).toBeGreaterThan(0);
+      });
+
+      test("an outer truncate does not reach into a nested Text's label", async () => {
+        // `.ps1ui-text--truncate > .ps1ui-text__label` uses a child combinator
+        // precisely for this shape: a descendant selector would hand the inner
+        // label an `overflow: hidden` / ellipsis it never asked for.
+        const screen = await render(
+          <Text truncate data-testid="outer">
+            copy with{" "}
+            <Text as="span" leading="▲" data-testid="inner">
+              24%
+            </Text>{" "}
+            inline
+          </Text>,
+        );
+        const innerLabel = (screen.getByTestId("inner").element() as HTMLElement).querySelector(
+          ".ps1ui-text__label",
+        ) as HTMLElement;
+        const cs = getComputedStyle(innerLabel);
+        expect(cs.overflowX).toBe("visible");
+        expect(cs.textOverflow).toBe("clip");
+      });
+
+      test("the label inherits the root's typography rather than resetting it", async () => {
+        // The wrapper is a layout box only — it must not become a second place
+        // where font-size / weight / colour can drift from the root's props.
+        const screen = await render(
+          <Text size="xl" weight="bold" variant="accent" leading="★" data-testid="t">
+            42
+          </Text>,
+        );
+        const el = screen.getByTestId("t").element() as HTMLElement;
+        const label = el.querySelector(".ps1ui-text__label") as HTMLElement;
+        const rootCs = getComputedStyle(el);
+        const labelCs = getComputedStyle(label);
+        expect(labelCs.fontSize).toBe(rootCs.fontSize);
+        expect(labelCs.fontWeight).toBe(rootCs.fontWeight);
+        expect(labelCs.color).toBe(VARIANT_COLOR.accent);
+      });
+    });
+  });
+
   describe("a11y", () => {
     type A11yCase = { name: string; node: () => ReactElement };
 
@@ -763,6 +1073,31 @@ describe("Text", () => {
       {
         name: "responsive weight",
         node: () => <Text weight={{ base: "regular", md: "bold" }}>responsive weight text</Text>,
+      },
+      {
+        name: "leading icon marked aria-hidden",
+        node: () => <Text leading={<span aria-hidden="true">★</span>}>1,204 stars</Text>,
+      },
+      {
+        name: "leading + trailing icons",
+        node: () => (
+          <Text
+            leading={<span aria-hidden="true">★</span>}
+            trailing={<span aria-hidden="true">↗</span>}
+          >
+            1,204 stars
+          </Text>
+        ),
+      },
+      {
+        name: "truncated adorned row",
+        node: () => (
+          <div style={{ maxWidth: 200 }}>
+            <Text truncate leading={<span aria-hidden="true">★</span>}>
+              a long adorned line that will be truncated
+            </Text>
+          </div>
+        ),
       },
     ];
 

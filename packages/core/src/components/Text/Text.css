@@ -137,6 +137,68 @@
   display: inline-block;
 }
 
+/* --------------------------------------------------------------------------
+   Adornment row — emitted only when `leading` / `trailing` is passed.
+
+   This is the non-interactive answer to "icon + label on one line": Badge
+   brings a chip's border and fill, Button brings a press affordance, and a
+   bare `display: inline-flex` in consumer CSS brings neither but has to be
+   rewritten in every codebase that needs it. Here the row costs one prop and
+   leaves Text's typography untouched.
+
+   `flex` for block tags, `inline-flex` for inline ones (Text.tsx picks between
+   them from the same INLINE_TEXT_ELEMENTS table `truncate` uses). A block-level
+   flex container keeps `<p>` filling its line, so adding an icon does not
+   suddenly shrink-wrap a paragraph; `inline-flex` keeps `<Text as="span">`
+   inline-level so it can still sit inside running text.
+
+   `align-items: center` matches Badge and Button, and is right for the
+   single-line row this exists for. It is NOT right for a paragraph that wraps
+   to several lines — the adornment centres against the whole block rather than
+   the first line. Adorned Text is a row primitive; keep the label to one line
+   (pair with `truncate`) and put multi-line copy in a plain Text.
+
+   The slots never shrink (`flex: none`) so a narrowing container eats into the
+   label, not the icon. The label carries `min-width: 0` to opt out of a flex
+   item's automatic minimum size — without it the label refuses to go below its
+   min-content width and bursts the row instead of truncating. */
+.ps1ui-text--adorned {
+  display: flex;
+  align-items: center;
+  gap: var(--ps1ui-space-xs);
+}
+
+.ps1ui-text--adorned-inline {
+  display: inline-flex;
+}
+
+.ps1ui-text__leading,
+.ps1ui-text__trailing {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+
+.ps1ui-text__label {
+  min-width: 0;
+}
+
+/* `truncate` + an adornment: the root keeps `overflow: hidden` /
+   `white-space: nowrap` (both still do their job, the latter by inheritance),
+   but `text-overflow` only ever applies to a block container's own inline
+   content — and an adorned root has none, every child being a flex item. So
+   the ellipsis moves to the box that actually holds the text.
+
+   Child combinator, not a descendant one: Text nests (`<Text truncate>…<Text
+   as="span" leading="▲">24%</Text>…</Text>` is ordinary usage), and a
+   descendant selector would reach through and hand the INNER Text's label an
+   `overflow: hidden` it never asked for. The label is always a direct child,
+   so `>` costs nothing and closes the reach. */
+.ps1ui-text--truncate > .ps1ui-text__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .ps1ui-text--body {
   color: var(--ps1ui-color-fg);
 }

@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import type { ComponentProps, ElementType, ReactNode } from "react";
 import { cx } from "../../utils/cx";
+import { isSlotFilled } from "../../utils/slots";
 
 export type BadgeVariant = "solid" | "outline" | "subtle";
 export type BadgeColor = "primary" | "accent" | "danger" | "muted";
@@ -32,14 +33,17 @@ export function Badge<E extends ElementType = "span">({
 }: BadgeProps<E>) {
   const tag: ElementType = as ?? "span";
   const classes = cx("ps1ui-badge", `ps1ui-badge--${variant}`, `ps1ui-badge--${color}`, className);
-  const content =
-    leading !== undefined ? (
-      <>
-        <span className="ps1ui-badge__leading">{leading}</span>
-        {children}
-      </>
-    ) : (
-      children
-    );
+  // `isSlotFilled`, not `!== undefined`: the badge root carries a permanent
+  // flex `gap`, so a slot opened for the false branch of
+  // `leading={hasIcon && <Icon/>}` shows up as visible space before the label
+  // with nothing in it. See utils/slots.ts for the full set of excluded values.
+  const content = isSlotFilled(leading) ? (
+    <>
+      <span className="ps1ui-badge__leading">{leading}</span>
+      {children}
+    </>
+  ) : (
+    children
+  );
   return createElement(tag, { ...rest, className: classes }, content);
 }

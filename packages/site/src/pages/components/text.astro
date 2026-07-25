@@ -21,6 +21,21 @@ const truncate = `<div style={{ maxWidth: "16rem" }}>
     A single line that is far too long for its box gets an ellipsis.
   </Text>
 </div>`;
+
+const adornments = `<Text leading="★">1,204</Text>
+<Text variant="muted" leading="⎇">main</Text>
+<Text variant="primary" trailing="↗">opens in a new tab</Text>
+<Text variant="accent" leading="▲" trailing="%">24</Text>`;
+
+const adornmentNode = `import { IconStar } from "your-icon-library";
+
+<Text leading={<IconStar aria-hidden />}>1,204</Text>`;
+
+const adornedTruncate = `<div style={{ maxWidth: "14rem" }}>
+  <Text truncate leading="▤">
+    a-very-long-file-name-that-will-not-fit.tsx
+  </Text>
+</div>`;
 ---
 
 <ComponentPage slug="text">
@@ -52,4 +67,37 @@ const truncate = `<div style={{ maxWidth: "16rem" }}>
       </Text>
     </div>
   </Demo>
+
+  <Demo title="Leading / trailing slots" code={adornments}>
+    <Stack direction="column" gap="sm" align="start">
+      <Text leading="★">1,204</Text>
+      <Text variant="muted" leading="⎇">main</Text>
+      <Text variant="primary" trailing="↗">opens in a new tab</Text>
+      <Text variant="accent" leading="▲" trailing="%">24</Text>
+    </Stack>
+  </Demo>
+
+  <Demo title="Leading / trailing slots (icon component)" code={adornmentNode}>
+    <Text variant="muted">
+      Both slots accept any <code>ReactNode</code>, so an icon component drops in the same
+      way — this docs page cannot render the JSX form directly (Astro cannot serialise React
+      children passed as a prop), but the pattern above is how consumers use it in real{" "}
+      <code>.tsx</code> code. Decorative icons should carry <code>aria-hidden</code> so the
+      accessible name stays the label text alone.
+    </Text>
+  </Demo>
+
+  <Demo title="Adorned + truncate" code={adornedTruncate}>
+    <div style="max-width: 14rem">
+      <Text truncate leading="▤">a-very-long-file-name-that-will-not-fit.tsx</Text>
+    </div>
+  </Demo>
+
+  <Text variant="muted">
+    Passing <code>leading</code> or <code>trailing</code> turns the Text into a flex row and
+    wraps its children in a label box; without either prop nothing changes, so an ordinary
+    paragraph keeps rendering exactly as before. The row is meant for a single line — pair it
+    with <code>truncate</code> rather than letting a multi-line paragraph centre its icon
+    against the whole block.
+  </Text>
 </ComponentPage>

@@ -80,6 +80,33 @@ describe("Badge", () => {
       const badge = screen.getByTestId("badge").element();
       expect(badge.querySelector(".ps1ui-badge__leading")).toBeNull();
     });
+
+    test.for([
+      { label: "false (`hasIcon && <Icon/>`)", node: false as const },
+      { label: "null (`hasIcon ? <Icon/> : null`)", node: null },
+    ])("omits the leading wrapper for a $label adornment", async ({ node }) => {
+      // The badge root carries a permanent flex gap, so a wrapper opened here
+      // would render as blank space before the label — a visible artifact
+      // produced by a value React itself renders as nothing.
+      const screen = await render(
+        <Badge leading={node} data-testid="badge">
+          only
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge").element();
+      expect(badge.querySelector(".ps1ui-badge__leading")).toBeNull();
+      expect(badge.textContent).toBe("only");
+    });
+
+    test("zero is a leading adornment, not an absent one", async () => {
+      const screen = await render(
+        <Badge leading={0} data-testid="badge">
+          open
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge").element();
+      expect(badge.querySelector(".ps1ui-badge__leading")?.textContent).toBe("0");
+    });
   });
 
   describe("class composition", () => {
