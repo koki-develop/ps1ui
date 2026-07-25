@@ -1,8 +1,11 @@
-// Visual regression baseline for List. Four cases pin the visually-distinct
+// Visual regression baseline for List. Five cases pin the visually-distinct
 // axes: the unordered marker (`-`), the ordered numeric counter with
-// tabular-num alignment, the wrapped-item hanging indent (marker column
-// stays fixed while content wraps), and a nested ordered list (independent
-// counter + stacked indent). List has no interactive states, so no
+// tabular-num alignment, the markerless mode (no glyph, no reserved column),
+// the wrapped-item hanging indent (marker column stays fixed while content
+// wraps), and a nested ordered list (independent counter + stacked indent).
+// Markerless is captured once, not per flavour — with the marker gone both
+// flavours rasterise identically, and the per-flavour column geometry is
+// pinned by the unit tests instead. List has no interactive states, so no
 // pseudo-state matrix.
 
 import "../../styles/styles.css";
@@ -50,6 +53,19 @@ describe("List VRT", () => {
       </VrtFrame>,
     );
     await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("ordered");
+  });
+
+  test("markerless", async () => {
+    const screen = await render(
+      <VrtFrame width={FRAME_WIDTH}>
+        <List showMarkers={false}>
+          <ListItem>install the package</ListItem>
+          <ListItem>import the styles entry</ListItem>
+          <ListItem>wrap your tree in PS1Root</ListItem>
+        </List>
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("markerless");
   });
 
   test("wrapping items keep the hanging indent", async () => {

@@ -2,7 +2,8 @@
 
    The `.ps1ui-listitem` class (naming parallels `.ps1ui-griditem`) is a
    stable API hook for consumers. All marker / padding / hanging-indent
-   rules live on `.ps1ui-list > li` in List.css so a bare `<li>` inside
-   `<List>` continues to render identically to `<ListItem>`. Keeping this
+   rules live in List.css on the list's own `> li` selectors so a bare
+   `<li>` inside `<List>` continues to render identically to
+   `<ListItem>` (and so `showMarkers={false}` reaches both). Keeping this
    file present (and imported from components.css) matches the
    per-component file layout the `new-component` skill enforces. */

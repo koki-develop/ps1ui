@@ -23,7 +23,7 @@
    All rules target `.ps1ui-table <element>` selectors, not the
    ps1ui-thead/tbody/tr/th/td wrapper classes: a bare <thead>/<tr>/<th>/<td>
    inside <Table> must render identically to the wrapper components (same
-   contract as `.ps1ui-list > li` vs ListItem). The wrapper classes are
+   contract as List's `> li` marker rules vs ListItem). The wrapper classes are
    stable hooks only.
 
    Self-sufficiency: `border-collapse` and the <th> font-weight/text-align

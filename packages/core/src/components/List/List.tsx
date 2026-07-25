@@ -2,17 +2,25 @@ import { createElement } from "react";
 import type { ComponentProps, ReactElement } from "react";
 import { cx } from "../../utils/cx";
 
+// Props both flavours share. Declared once — unlike the `ordered`
+// discriminant, which has to be re-declared per branch — so the JSDoc the
+// site's props table and IDE hovers read has a single source of truth.
+type ListBaseProps = {
+  /** Draw the plain-text marker (`-` / `1.`) on each item and reserve its hanging-indent column. Turn it off for lists whose design carries its own separators — the `<ul>`/`<ol>` semantics and the "list, N items" announcement stay either way. */
+  showMarkers?: boolean;
+};
+
 // Discriminated union: an unordered <List> shouldn't typecheck with <ol>-only
 // attributes (start / reversed) and shouldn't type its ref as HTMLOListElement.
 // `type` is dropped from the ordered variant because the visible marker is
 // drawn by `::before`, not the browser's `::marker`, so `type="a"` would
 // silently not affect the visible numbering.
 export type ListProps =
-  | ({
+  | (ListBaseProps & {
       /** Render an <ol> with numbered markers instead of an <ul>. */
       ordered?: false;
     } & ComponentProps<"ul">)
-  | ({
+  | (ListBaseProps & {
       /** Render an <ol> with numbered markers instead of an <ul>. */
       ordered: true;
     } & Omit<ComponentProps<"ol">, "type">);
@@ -21,7 +29,7 @@ export type ListProps =
 // instead of the wide DetailedReactHTMLElement createElement infers for a
 // `"ol" | "ul"` tag union.
 export function List(props: ListProps): ReactElement {
-  const { ordered = false, className, ...rest } = props;
+  const { ordered = false, showMarkers = true, className, ...rest } = props;
   const tag = ordered ? "ol" : "ul";
   return createElement(tag, {
     // Safari's a11y tree drops list semantics ("list, N items") when the
@@ -33,6 +41,9 @@ export function List(props: ListProps): ReactElement {
     className: cx(
       "ps1ui-list",
       ordered ? "ps1ui-list--ordered" : "ps1ui-list--unordered",
+      // Additive marker axis: every marker rule hangs off this class, so a
+      // markerless List simply matches none of them (see List.css).
+      showMarkers && "ps1ui-list--markers",
       className,
     ),
   });
