@@ -10,7 +10,10 @@ const fontsourceRoot = path.dirname(
 
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
-  stories: ["../src/**/*.stories.@(ts|tsx|mdx)"],
+  // Docs-only MDX pages live next to this config, not under src/ — they document
+  // the library rather than being part of it. Listed first because sidebar order
+  // follows this array, which is what puts Introduction above Components.
+  stories: ["./*.mdx", "../src/**/*.stories.@(ts|tsx|mdx)"],
   addons: ["@storybook/addon-docs", "@storybook/addon-vitest", "@storybook/addon-a11y"],
   staticDirs: [{ from: fontsourceRoot, to: "/fonts/jetbrains-mono" }],
   typescript: {

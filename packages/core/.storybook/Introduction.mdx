@@ -1,0 +1,54 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+import { Button, Card, Heading, PS1Root, Stack, Text } from "../src/index";
+
+{/*
+  Docs-only page: a `Meta` carrying nothing but `title` (no `of`) is what marks
+  this as unattached documentation, so it lands in the sidebar as a standalone
+  page instead of a component's Docs tab. Sidebar order follows the `stories`
+  array in main.ts — this file's glob is listed first so Introduction sits above
+  Components.
+
+  Deliberately thin: this is a landing card, not documentation. Install steps,
+  guides, and per-component pages live in @ps1ui/site — anything written twice
+  would drift.
+
+  This file is exempt from oxfmt (see `ignorePatterns` in .oxfmtrc.json): oxfmt
+  formats .mdx as Markdown, which rewrites emphasis `*` to `_` and turns these
+  JSX comment delimiters into `{/_ ... _/}` — a syntax error that fails the
+  Storybook build.
+*/}
+
+<Meta title="Introduction" />
+
+{/*
+  Real components, not a screenshot — preview.tsx already imports styles.css, so
+  the library renders here exactly as it does in a consumer app. PS1Root is
+  present for the same reason it is in a consumer app: it is the query container
+  responsive props resolve against.
+
+  `sb-unstyled` is Storybook's own opt-out — its docs stylesheet targets
+  `:where(a:not(.sb-anchor, .sb-unstyled, .sb-unstyled a))` and lands on the
+  same specificity as ps1ui's component classes, so without it `<Button as="a">`
+  renders green-on-green with an underline.
+*/}
+
+<PS1Root className="sb-unstyled">
+  <Card>
+    <Stack direction="column" gap="lg" align="start">
+      <Stack direction="column" gap="sm" align="start">
+        <Heading level={1} size="2xl">ps1ui</Heading>
+        <Text variant="muted">For engineers who think in monospace.</Text>
+      </Stack>
+      <Stack direction="row" gap="sm" wrap>
+        <Button as="a" href="https://koki-develop.github.io/ps1ui/">Documentation</Button>
+        <Button as="a" variant="secondary" href="https://github.com/koki-develop/ps1ui">
+          GitHub
+        </Button>
+        <Button as="a" variant="secondary" href="https://www.npmjs.com/package/@ps1ui/core">
+          npm
+        </Button>
+      </Stack>
+    </Stack>
+  </Card>
+</PS1Root>
