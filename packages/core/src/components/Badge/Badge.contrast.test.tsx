@@ -1,8 +1,12 @@
-// Contrast regression tests for Badge. Unlike Badge.test.tsx (semantic
-// a11y only, no CSS loaded), this file imports the real component CSS and
-// wraps each (variant × color) combination against both the page canvas
-// (--ps1ui-color-bg) and a Card surface (--ps1ui-color-surface) so axe's
-// color-contrast rule sees the resolved colors of each pair.
+// Contrast regression tests for Badge, plus the handful of other a11y
+// properties that can only be checked with real CSS loaded. Unlike
+// Badge.test.tsx (semantic a11y only, no CSS loaded), this file imports the
+// real component CSS and wraps each (variant × color) combination against
+// both the page canvas (--ps1ui-color-bg) and a Card surface
+// (--ps1ui-color-surface) so axe's color-contrast rule sees the resolved
+// colors of each pair. The two size-axis blocks at the bottom ride along
+// here for the same reason — they need resolved computed styles, and
+// spinning up a fourth Badge test file for two assertions would buy nothing.
 //
 // Text.contrast.test.tsx already covers the raw fg colors on canvas and
 // surface (variants: body/muted/subtle/primary/accent/danger). Badge
@@ -45,6 +49,11 @@ const SIZES = ["sm", "md", "lg"] as const satisfies readonly BadgeSize[];
 const LARGE_TEXT_PX = 24;
 const LARGE_TEXT_BOLD_PX = 18.66;
 const BOLD_WEIGHT = 700;
+
+// WCAG 2.2 SC 2.5.8 Target Size (Minimum). Badge deliberately does not pad
+// out its hit area at any size — the reasoning is on the size block in
+// Badge.css — so sm and md sit under this and lg is expected to meet it.
+const MIN_TARGET_PX = 24;
 
 const CASES = VARIANTS.flatMap((variant) => COLORS.map((color) => ({ variant, color })));
 
@@ -111,5 +120,33 @@ describe("Badge contrast", () => {
         expect(fontSize).toBeLessThan(LARGE_TEXT_BOLD_PX);
       },
     );
+  });
+
+  // WCAG 2.2 SC 2.5.8. Badge doesn't expand its hit area, so an interactive
+  // chip is exactly as big as it renders — and the docs page tells consumers
+  // that lg is the size to reach for when they need a guaranteed target.
+  // That sentence is only true while lg actually clears 24px, so the claim is
+  // pinned here rather than left to drift: a future tune of the padding
+  // ladder that dropped lg to 22px would otherwise turn published a11y
+  // guidance into a quiet lie. sm/md are asserted in the other direction so
+  // the CSS comment's account of which sizes fall short stays honest too.
+  describe("interactive target size (SC 2.5.8)", () => {
+    test.for([
+      { size: "sm" as const, meets: false },
+      { size: "md" as const, meets: false },
+      { size: "lg" as const, meets: true },
+    ])("size=$size meets the 24px minimum: $meets", async ({ size, meets }) => {
+      const screen = await render(
+        <Badge as="button" size={size} data-testid="badge">
+          filter
+        </Badge>,
+      );
+      const { height } = screen.getByTestId("badge").element().getBoundingClientRect();
+      if (meets) {
+        expect(height).toBeGreaterThanOrEqual(MIN_TARGET_PX);
+      } else {
+        expect(height).toBeLessThan(MIN_TARGET_PX);
+      }
+    });
   });
 });

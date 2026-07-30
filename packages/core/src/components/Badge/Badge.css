@@ -51,7 +51,22 @@
    The gap applies unconditionally rather than only when a leading slot is
    present — Badge.tsx omits the .ps1ui-badge__leading wrapper entirely for an
    empty slot precisely because this gap would otherwise open visible space
-   before the label. */
+   before the label.
+
+   No size expands its hit area when the badge is interactive (as="button" /
+   as="a"), which puts sm and md under the 24×24 CSS px minimum of WCAG 2.2
+   SC 2.5.8. That is deliberate, for two reasons. First, whether the SC is
+   even engaged depends on the consumer's layout, not on us: its inline
+   exception covers the chip-in-a-sentence case this component is built for
+   (hence vertical-align: baseline), and its spacing exception clears a chip
+   row whose gaps keep the 24px circles from intersecting — a row of sm chips
+   passes at a gap of --ps1ui-space-sm or wider. Second, the obvious fix makes
+   things worse where it is actually needed: a padded pseudo-element sized to
+   24px would overlap its neighbours in exactly the dense rows that fail the
+   spacing exception, trading an undersized target for an ambiguous one.
+   Consumers who need a guaranteed target size should reach for lg (which
+   meets it) or space the row out. This matches Checkbox / Radio, which ship
+   at 16×16 for the same reason. */
 .ps1ui-badge--size-sm {
   font-size: var(--ps1ui-font-size-2xs);
   padding: 2px 4px;

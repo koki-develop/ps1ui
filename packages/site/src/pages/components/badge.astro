@@ -125,4 +125,13 @@ const disabled = `<Badge as="button" variant="solid" disabled>
     interactive — the same variant / color styling is preserved, and hover, active, focus-visible,
     and disabled treatments activate automatically.
   </Text>
+
+  <Text variant="muted">
+    One caveat when combining the two: badges do not pad out their hit area, so an interactive
+    chip is only as large as it looks. At size sm and md that lands under the 24×24 CSS pixel
+    minimum of WCAG 2.2 SC 2.5.8 (sm renders about 16px tall, md about 20px, lg about 24px).
+    That is fine for a chip sitting inline in a sentence, which the success criterion excepts, and
+    for a row whose gaps are wide enough to satisfy its spacing exception — but if you need a
+    guaranteed target size, use size="lg" or give the row more room.
+  </Text>
 </ComponentPage>
