@@ -53,6 +53,17 @@ const BOLD_WEIGHT = 700;
 // WCAG 2.2 SC 2.5.8 Target Size (Minimum). Badge deliberately does not pad
 // out its hit area at any size — the reasoning is on the size block in
 // Badge.css — so sm and md sit under this and lg is expected to meet it.
+//
+// Both this and the large-text thresholds above are px constants compared
+// against rem-derived sizes, so every assertion in the two blocks below is
+// implicitly "at the tester's root font size", which is the browser-default
+// 16px. That is a statement about the default rendering, not a universal
+// one: a reader running a larger root scales every badge up (lg keeps
+// clearing 24px, and sm/md eventually would too), a smaller one scales them
+// down past the point where lg still qualifies. Testing the default is the
+// right call — it is what the docs page documents and what the size ladder
+// was designed around — but a failure here after a root-size change in the
+// test setup would mean the setup moved, not that the CSS regressed.
 const MIN_TARGET_PX = 24;
 
 const CASES = VARIANTS.flatMap((variant) => COLORS.map((color) => ({ variant, color })));
