@@ -1,0 +1,192 @@
+/* Select — the native <select> restyled onto the same control surface as Input
+   and Textarea (same border, radius, padding rhythm and focus ring).
+
+   ── Why the disclosure marker is a background, not an element ─────────────
+   Dropping the UA's platform drop-down chrome requires `appearance: none`:
+   without it Chromium, Gecko and WebKit each paint their own arrow and their
+   own inline padding, none of which reads a --ps1ui-* token, so the control
+   would render three different ways across the three engines this library
+   tests. `appearance: none` also removes the disclosure arrow, and <select>
+   gives us nowhere to put a replacement — no engine renders ::before /
+   ::after on it. The two remaining options are a wrapper element that owns a
+   glyph, or painting the marker onto the control's own background.
+
+   The wrapper loses on the property that matters most: a glyph positioned
+   against a WRAPPER's box only lands on the control's inline end while the
+   control fills that box, so `width` / `max-width` on the Select would tear
+   the marker away from it and sizing would have to be pushed onto a container.
+   That is a real constraint on a form control — `<Select style={{ width: 200 }}>`
+   is an ordinary thing to write — and no CSS can lift it, because nothing lets
+   a parent track a child's used width. Painting the marker on the control
+   makes it move with the control at any width, by construction.
+
+   The marker is therefore two linear-gradients forming a solid ▾ triangle,
+   matching the glyph Details uses for the same job. Gradients (not an SVG
+   data URI) because a data URI has to bake its colour into the URL, which
+   would freeze the marker against --ps1ui-* theming and need a duplicate copy
+   for the disabled tint; a gradient reads --_select-marker below like any
+   other token consumer. Half-pixel colour-stop bands keep the diagonals
+   anti-aliased instead of stair-stepping.
+
+   `--_select-marker` is a plain custom property, deliberately not @property
+   registered: the registration rule in .claude/rules/responsive.md exists to
+   stop per-breakpoint responsive INPUT vars from leaking across nested
+   instances of one primitive, and `check:responsive-property-coverage` flags
+   registrations that no resolveResponsive call produces. Neither concern
+   applies here — <select> cannot nest, and the only descendants that inherit
+   the value are <option> / <optgroup>, which never read it.
+
+   ── forced-colors ────────────────────────────────────────────────────────
+   Author backgrounds are force-replaced in forced-colors mode, so the
+   gradient marker would vanish there and leave a control with no disclosure
+   affordance. The block at the bottom of this file hands the element back to
+   the platform (`appearance: auto`), which repaints the native arrow in system
+   ink — the correct answer in a mode whose whole purpose is to let the OS
+   decide. The focus-ring half of the forced-colors story is the grouped rule
+   in styles/components.css.
+
+   ── option / optgroup ────────────────────────────────────────────────────
+   The opened drop-down popup is an OS-level widget on macOS (Chromium and
+   WebKit alike) and ignores author styling there — that's a platform limit,
+   not something to work around. The rules below still earn their keep on every
+   engine that renders the list in-page (Chromium / Firefox on Linux and
+   Windows, and list-box mode everywhere), and they are load-bearing for the
+   components.css entry, which ships WITHOUT base.css's reset: UA optgroup
+   defaults and platform option colours would otherwise leak straight through
+   onto a dark canvas. Same self-sufficiency argument as Table's <th>
+   neutralizations. */
+
+.ps1ui-select {
+  /* Muted, so the marker reads as chrome rather than content — same call
+     Details makes for its ▸/▾. Indirected through a variable so `:disabled`
+     retints the marker by redeclaring one value instead of restating the
+     whole two-gradient stack. */
+  --_select-marker: var(--ps1ui-color-fg-muted);
+
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  /* The default, not a constraint: an unstyled Select fills its container like
+     Input, and a caller is free to override `width` / `max-width` on the
+     control itself — the marker is part of its background and follows. */
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--ps1ui-font-mono);
+  font-size: var(--ps1ui-font-size-sm);
+  line-height: 1.4;
+  color: var(--ps1ui-color-fg);
+  background-color: var(--ps1ui-color-bg);
+  border: 1px solid var(--ps1ui-color-border-strong);
+  border-radius: var(--ps1ui-radius-md);
+  /* Block padding matches Input exactly. Inline end covers the 8px marker plus
+     the space-md inset it sits at, leaving a space-sm gutter before the text. */
+  padding: var(--ps1ui-control-padding-y) calc(var(--ps1ui-space-md) + 8px + var(--ps1ui-space-sm))
+    var(--ps1ui-control-padding-y) var(--ps1ui-space-md);
+  cursor: pointer;
+  transition:
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+
+  /* Two 4×4 tiles that abut into one 8×4 down-pointing triangle: the left tile
+     keeps the half containing its top-right corner, the right tile the half
+     containing its top-left corner. `background-position` places the right
+     tile at the space-md inset and the left tile one tile-width further in. */
+  background-image:
+    linear-gradient(45deg, transparent calc(50% - 0.5px), var(--_select-marker) calc(50% + 0.5px)),
+    linear-gradient(135deg, var(--_select-marker) calc(50% - 0.5px), transparent calc(50% + 0.5px));
+  background-size:
+    4px 4px,
+    4px 4px;
+  background-position:
+    right calc(var(--ps1ui-space-md) + 4px) center,
+    right var(--ps1ui-space-md) center;
+  background-repeat: no-repeat;
+}
+
+/* List box (`multiple`, or `size` > 1): nothing to disclose, so no marker, and
+   the inline space reserved for it goes back to the options — symmetric
+   padding, like Input. */
+.ps1ui-select--listbox {
+  background-image: none;
+  padding-right: var(--ps1ui-space-md);
+}
+
+.ps1ui-select:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+}
+
+/* `:focus`, not `:focus-visible` — a select is focused by click as well as by
+   Tab and the ring should show either way, matching Input / Textarea.
+   `.ps1ui-select:focus` is registered in the grouped forced-colors rule in
+   styles/components.css, where box-shadow is force-stripped. */
+.ps1ui-select:focus {
+  outline: none;
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+/* `background-color`, never the `background` shorthand — the shorthand would
+   reset background-image and silently erase the marker. */
+.ps1ui-select:disabled {
+  --_select-marker: var(--ps1ui-color-fg-subtle);
+
+  cursor: not-allowed;
+  color: var(--ps1ui-color-fg-subtle);
+  border-color: var(--ps1ui-color-border);
+  background-color: var(--ps1ui-color-surface);
+}
+
+.ps1ui-select option,
+.ps1ui-select optgroup {
+  font-family: var(--ps1ui-font-mono);
+  color: var(--ps1ui-color-fg);
+  background-color: var(--ps1ui-color-bg);
+}
+
+/* Group labels stay heavier than their options — the same 600 the Table header
+   uses, rather than the UA's `bolder`, which resolves unpredictably against a
+   variable-weight font. The explicit 400 on options stops that weight from
+   inheriting down into the group's members. */
+.ps1ui-select optgroup {
+  font-weight: 600;
+}
+
+.ps1ui-select option {
+  font-weight: 400;
+}
+
+/* Taking over the option background means taking over the state the UA used
+   that background to express. `:checked` is load-bearing: the rule above is a
+   class-rooted selector and outranks the UA's selection highlight, so without
+   this block the selected row in a list box is pixel-identical to its
+   neighbours and selection becomes invisible — the user clicks and nothing
+   changes. Verified broken on Chromium and Firefox; WebKit paints its list box
+   from the platform and overrides both rules, the same class of limitation as
+   the macOS popup described in this file's header.
+
+   primary / primary-fg is the solid-fill pair Button and Badge already use, so
+   the contrast is covered by their contrast tests. It does not leak into the
+   closed drop-down, which paints its own value text rather than the option. */
+.ps1ui-select option:checked {
+  background-color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-fg);
+}
+
+/* See the forced-colors note in this file's header: the gradient marker is
+   force-stripped along with every other author background, so the control is
+   handed back to the platform, which paints its own arrow in system ink.
+
+   The reserved inline-end padding deliberately stays. The native arrow is
+   painted INSIDE the control's inline end, over the author padding box — not
+   in space of its own — so zeroing the reservation runs the value text
+   straight into the glyph (verified on Chromium with a long option label;
+   Firefox pins its own internal layout either way, so keeping the padding is
+   neutral there and strictly better on Chromium).
+
+   Tested in src/styles/forced-colors.test.tsx. */
+@media (forced-colors: active) {
+  .ps1ui-select:not(.ps1ui-select--listbox) {
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+}

@@ -21,6 +21,9 @@ export type { RadioProps } from "./components/Radio/Radio";
 export { RadioGroup } from "./components/RadioGroup/RadioGroup";
 export type { RadioGroupProps } from "./components/RadioGroup/RadioGroup";
 
+export { Select } from "./components/Select/Select";
+export type { SelectProps } from "./components/Select/Select";
+
 export { Image } from "./components/Image/Image";
 export type { ImageProps, ImageVariant } from "./components/Image/Image";
 

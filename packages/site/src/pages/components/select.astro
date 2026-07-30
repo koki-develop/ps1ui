@@ -1,0 +1,105 @@
+---
+import { Label, Select, Stack } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const basic = `<Select aria-label="shell">
+  <option value="bash">bash</option>
+  <option value="zsh">zsh</option>
+  <option value="fish">fish</option>
+</Select>`;
+
+const grouped = `<Select aria-label="language">
+  <optgroup label="systems">
+    <option value="rust">Rust</option>
+    <option value="zig">Zig</option>
+  </optgroup>
+  <optgroup label="scripting">
+    <option value="ts">TypeScript</option>
+    <option value="rb">Ruby</option>
+  </optgroup>
+</Select>`;
+
+const listBox = `{/* multiple — or any size above 1 — renders an in-page list
+    box instead of a drop-down, so the ▾ disclosure glyph is dropped. */}
+<Select aria-label="shells" multiple size={4}>
+  <option value="bash">bash</option>
+  <option value="zsh">zsh</option>
+  <option value="fish">fish</option>
+  <option value="nu">nushell</option>
+</Select>`;
+
+const width = `{/* The disclosure marker is painted on the control itself, so
+    width / max-width are ordinary props — no wrapping element needed. */}
+<Select aria-label="shell" style={{ width: 160 }}>
+  <option value="bash">bash</option>
+  <option value="zsh">zsh</option>
+</Select>`;
+
+const disabled = `<Select aria-label="shell" disabled>
+  <option value="bash">bash</option>
+  <option value="zsh">zsh</option>
+</Select>`;
+
+const withLabel = `<Label htmlFor="shell">Login shell</Label>
+<Select id="shell">
+  <option value="bash">bash</option>
+  <option value="zsh">zsh</option>
+</Select>`;
+---
+
+<ComponentPage slug="select">
+  <Demo title="Basic" code={basic}>
+    <Select aria-label="shell">
+      <option value="bash">bash</option>
+      <option value="zsh">zsh</option>
+      <option value="fish">fish</option>
+    </Select>
+  </Demo>
+
+  <Demo title="Grouped options" code={grouped}>
+    <Select aria-label="language">
+      <optgroup label="systems">
+        <option value="rust">Rust</option>
+        <option value="zig">Zig</option>
+      </optgroup>
+      <optgroup label="scripting">
+        <option value="ts">TypeScript</option>
+        <option value="rb">Ruby</option>
+      </optgroup>
+    </Select>
+  </Demo>
+
+  <Demo title="List box" code={listBox}>
+    <Select aria-label="shells" multiple size={4}>
+      <option value="bash">bash</option>
+      <option value="zsh">zsh</option>
+      <option value="fish">fish</option>
+      <option value="nu">nushell</option>
+    </Select>
+  </Demo>
+
+  <Demo title="Custom width" code={width}>
+    <Select aria-label="shell" style={{ width: 160 }}>
+      <option value="bash">bash</option>
+      <option value="zsh">zsh</option>
+    </Select>
+  </Demo>
+
+  <Demo title="Disabled" code={disabled}>
+    <Select aria-label="shell" disabled>
+      <option value="bash">bash</option>
+      <option value="zsh">zsh</option>
+    </Select>
+  </Demo>
+
+  <Demo title="With a label" code={withLabel}>
+    <Stack direction="column" gap="sm" align="start">
+      <Label htmlFor="shell">Login shell</Label>
+      <Select id="shell">
+        <option value="bash">bash</option>
+        <option value="zsh">zsh</option>
+      </Select>
+    </Stack>
+  </Demo>
+</ComponentPage>

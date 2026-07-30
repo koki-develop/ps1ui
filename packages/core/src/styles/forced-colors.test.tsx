@@ -30,6 +30,7 @@ import { ContributionGraph } from "../components/ContributionGraph/ContributionG
 import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
 import { Radio } from "../components/Radio/Radio";
+import { Select } from "../components/Select/Select";
 import { Tab } from "../components/Tab/Tab";
 import { TabList } from "../components/TabList/TabList";
 import { TabPanel } from "../components/TabPanel/TabPanel";
@@ -78,6 +79,52 @@ describe("forced-colors adjustments", () => {
     expect(s.borderTopStyle).toBe("solid");
     expect(s.width).toBe("8px");
     expect(s.height).toBe("8px");
+  });
+
+  // Select's disclosure marker is painted as a background gradient (Select.css
+  // explains why it can't be an element), and forced-colors force-replaces
+  // author backgrounds — so the marker would vanish and leave a control with
+  // no disclosure affordance. The repair is to hand the element back to the
+  // platform, which paints its own arrow in system ink. Assert the handover,
+  // not the arrow: `appearance` is the mechanism, and the native glyph itself
+  // is neither styleable nor observable from script.
+  test("Select drops back to the platform control (its gradient marker is force-stripped)", async (ctx) => {
+    const screen = await render(
+      <Select aria-label="language" data-testid="fc-target">
+        <option value="go">Go</option>
+      </Select>,
+    );
+    const s = getComputedStyle(screen.getByTestId("fc-target").element());
+    expect(s.appearance).not.toBe("none");
+
+    // The reserved inline-end padding STAYS. The platform arrow paints inside
+    // the control's inline end, over the author padding box rather than in
+    // space of its own, so zeroing the reservation runs the value text into
+    // the glyph — verified on Chromium with a long option label. See
+    // Select.css's forced-colors block.
+    //
+    // WebKit's native menulist owns its metrics outright: under
+    // `appearance: auto` it discards author padding on BOTH sides (each
+    // computes to 0px), so there is no reservation left to assert. That's the
+    // engine taking over, which is exactly what this rule asks it to do — no
+    // CSS.supports query expresses it, so this is one of the verified
+    // rendering quirks `server.browser` is reserved for.
+    ctx.skip(
+      server.browser === "webkit",
+      "WebKit's native menulist discards author padding under appearance: auto",
+    );
+    expect(parseFloat(s.paddingRight)).toBeGreaterThan(parseFloat(s.paddingLeft));
+  });
+
+  // The counterpart: a list box never had a marker to lose, so it keeps our
+  // styling instead of reverting to platform chrome.
+  test("Select in list-box mode keeps the authored appearance (it has no marker to lose)", async () => {
+    const screen = await render(
+      <Select aria-label="languages" multiple data-testid="fc-target">
+        <option value="go">Go</option>
+      </Select>,
+    );
+    expect(getComputedStyle(screen.getByTestId("fc-target").element()).appearance).toBe("none");
   });
 
   test("ContributionGraph focus ring survives as a stroke distinct from the cell fill", async () => {
@@ -154,6 +201,18 @@ describe("forced-colors adjustments", () => {
       pseudo: "focus",
       webkitSkip: false,
       ui: <Textarea aria-label="notes" data-testid="fc-target" />,
+    },
+    {
+      // Like Input / Textarea, Select's ring is keyed on `:focus`, which
+      // programmatic focus reaches on every engine — no Tab, so no WebKit skip.
+      name: "Select",
+      pseudo: "focus",
+      webkitSkip: false,
+      ui: (
+        <Select aria-label="language" data-testid="fc-target">
+          <option value="go">Go</option>
+        </Select>
+      ),
     },
     {
       name: "CodeBlock",

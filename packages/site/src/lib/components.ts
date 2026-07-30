@@ -92,6 +92,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         description: "Multi-line text input.",
       },
       {
+        slug: "select",
+        name: "Select",
+        description: "Single or multiple choice from a list of options.",
+      },
+      {
         slug: "checkbox",
         name: "Checkbox",
         description: "Checkbox input with indeterminate support.",
