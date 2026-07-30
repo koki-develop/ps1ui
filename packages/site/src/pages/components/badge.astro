@@ -12,6 +12,10 @@ const colors = `<Badge color="primary">primary</Badge>
 <Badge color="danger">danger</Badge>
 <Badge color="muted">muted</Badge>`;
 
+const sizes = `<Badge size="sm">sm</Badge>
+<Badge size="md">md</Badge>
+<Badge size="lg">lg</Badge>`;
+
 const solids = `<Badge variant="solid" color="primary">released</Badge>
 <Badge variant="solid" color="accent">featured</Badge>
 <Badge variant="solid" color="danger">breaking</Badge>
@@ -60,6 +64,14 @@ const disabled = `<Badge as="button" variant="solid" disabled>
       <Badge color="accent">accent</Badge>
       <Badge color="danger">danger</Badge>
       <Badge color="muted">muted</Badge>
+    </Stack>
+  </Demo>
+
+  <Demo title="Sizes" code={sizes}>
+    <Stack direction="row" gap="md" align="center" wrap>
+      <Badge size="sm">sm</Badge>
+      <Badge size="md">md</Badge>
+      <Badge size="lg">lg</Badge>
     </Stack>
   </Demo>
 

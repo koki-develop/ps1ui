@@ -7,7 +7,7 @@ export { Anchor } from "./components/Anchor/Anchor";
 export type { AnchorProps, AnchorSize, AnchorVariant } from "./components/Anchor/Anchor";
 
 export { Badge } from "./components/Badge/Badge";
-export type { BadgeColor, BadgeProps, BadgeVariant } from "./components/Badge/Badge";
+export type { BadgeColor, BadgeProps, BadgeSize, BadgeVariant } from "./components/Badge/Badge";
 
 export { Button } from "./components/Button/Button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button/Button";

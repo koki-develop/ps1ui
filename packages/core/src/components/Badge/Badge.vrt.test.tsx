@@ -16,10 +16,11 @@ import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
 import { VrtFrame } from "../../testing/vrt";
-import { Badge, type BadgeColor, type BadgeVariant } from "./Badge";
+import { Badge, type BadgeColor, type BadgeSize, type BadgeVariant } from "./Badge";
 
 const VARIANTS = ["solid", "outline", "subtle"] as const satisfies readonly BadgeVariant[];
 const COLORS = ["primary", "accent", "danger", "muted"] as const satisfies readonly BadgeColor[];
+const SIZES = ["sm", "md", "lg"] as const satisfies readonly BadgeSize[];
 const INTERACTIVE_STATES = ["default", "hover", "focus-visible", "active", "disabled"] as const;
 const PSEUDO_STATES = [
   "hover",
@@ -145,5 +146,60 @@ describe("Badge VRT", () => {
       </VrtFrame>,
     );
     await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("leading");
+  });
+
+  // Size axis — captured against subtle/primary (the prop defaults) only.
+  // Size alters font-size / padding / gap and no colour at all, so a
+  // per-size × per-variant × per-colour expansion would add ~30 baselines
+  // whose only signal repeats what this row already carries; the matrix
+  // above owns the colour surface. This is the only pixel-level check on
+  // the size CSS — the unit tests can assert the emitted class but not the
+  // dimensions it resolves to, since they run without stylesheets.
+  test.for(SIZES.map((size) => ({ size })))("size=$size / default state", async ({ size }) => {
+    const screen = await render(
+      <VrtFrame>
+        <Badge size={size} data-testid="vrt-target">
+          {`size-${size}`}
+        </Badge>
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`size-${size}`);
+  });
+
+  // The three sizes side-by-side — locks their relative proportions and
+  // baseline alignment, which per-size captures can't show. Badges use
+  // `vertical-align: baseline`, so a size step that broke the shared text
+  // baseline would only be visible with the sizes rendered together.
+  test("sizes side-by-side keep aligned baselines and proportional dimensions", async () => {
+    const screen = await render(
+      <VrtFrame>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {SIZES.map((size) => (
+            <Badge key={size} size={size}>
+              {size}
+            </Badge>
+          ))}
+        </div>
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("sizes-row");
+  });
+
+  // The leading slot at every size — the gap steps with the padding ladder
+  // (2 / 4 / 6px), so the icon-to-label distance is size-specific geometry
+  // that the single md leading capture above doesn't cover.
+  test("leading slot spacing scales with size", async () => {
+    const screen = await render(
+      <VrtFrame>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {SIZES.map((size) => (
+            <Badge key={size} size={size} leading={<span aria-hidden="true">↑</span>}>
+              {size}
+            </Badge>
+          ))}
+        </div>
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("sizes-leading-row");
   });
 });

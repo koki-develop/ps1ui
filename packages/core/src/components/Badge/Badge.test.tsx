@@ -3,12 +3,13 @@ import { describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
-import { Badge, type BadgeColor, type BadgeVariant } from "./Badge";
+import { Badge, type BadgeColor, type BadgeSize, type BadgeVariant } from "./Badge";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 
 const VARIANTS = ["solid", "outline", "subtle"] as const satisfies readonly BadgeVariant[];
 const COLORS = ["primary", "accent", "danger", "muted"] as const satisfies readonly BadgeColor[];
+const SIZES = ["sm", "md", "lg"] as const satisfies readonly BadgeSize[];
 
 describe("Badge", () => {
   describe("rendering", () => {
@@ -138,6 +139,20 @@ describe("Badge", () => {
       await expect.element(badge).toHaveClass(`ps1ui-badge--${applied}`);
     });
 
+    test.for([
+      { size: undefined, applied: "md" as const, label: "(default)" },
+      ...SIZES.map((s) => ({ size: s, applied: s, label: s })),
+    ])("size=$size → ps1ui-badge--size-$applied", async ({ size, applied, label }) => {
+      const screen = await render(
+        <Badge size={size} data-testid="badge">
+          {label}
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge");
+      await expect.element(badge).toHaveClass("ps1ui-badge");
+      await expect.element(badge).toHaveClass(`ps1ui-badge--size-${applied}`);
+    });
+
     test("emits exactly one ps1ui-badge--<variant> class per render", async () => {
       // Guards against a future refactor that appends multiple variant classes
       // (e.g. an unremoved default alongside an explicit override) — the CSS
@@ -167,6 +182,38 @@ describe("Badge", () => {
       expect(colorClasses).toEqual(["ps1ui-badge--danger"]);
     });
 
+    test("emits exactly one ps1ui-badge--size-* class per render", async () => {
+      const screen = await render(
+        <Badge size="lg" data-testid="badge">
+          x
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge").element();
+      const sizeClasses = Array.from(badge.classList).filter((c) =>
+        c.startsWith("ps1ui-badge--size-"),
+      );
+      expect(sizeClasses).toEqual(["ps1ui-badge--size-lg"]);
+    });
+
+    // The size and variant/color namespaces must stay disjoint: the size
+    // modifier is `--size-<size>` rather than a bare `--<size>` precisely so a
+    // future `color="sm"`-shaped addition can't collide with it. A regression
+    // that dropped the `size-` infix would make this fail on the variant list.
+    test("the size class does not land in the variant or color namespace", async () => {
+      const screen = await render(
+        <Badge variant="outline" color="muted" size="sm" data-testid="badge">
+          x
+        </Badge>,
+      );
+      const badge = screen.getByTestId("badge").element();
+      expect(Array.from(badge.classList).sort()).toEqual([
+        "ps1ui-badge",
+        "ps1ui-badge--muted",
+        "ps1ui-badge--outline",
+        "ps1ui-badge--size-sm",
+      ]);
+    });
+
     test("merges caller-supplied className without dropping the base classes", async () => {
       const screen = await render(
         <Badge className="extra" data-testid="badge">
@@ -177,12 +224,13 @@ describe("Badge", () => {
       await expect.element(badge).toHaveClass("ps1ui-badge");
       await expect.element(badge).toHaveClass("ps1ui-badge--subtle");
       await expect.element(badge).toHaveClass("ps1ui-badge--primary");
+      await expect.element(badge).toHaveClass("ps1ui-badge--size-md");
       await expect.element(badge).toHaveClass("extra");
     });
 
-    test("applies the same variant and color classes when rendered as a button", async () => {
+    test("applies the same variant, color, and size classes when rendered as a button", async () => {
       const screen = await render(
-        <Badge as="button" variant="solid" color="danger">
+        <Badge as="button" variant="solid" color="danger" size="lg">
           delete
         </Badge>,
       );
@@ -190,6 +238,7 @@ describe("Badge", () => {
       await expect.element(btn).toHaveClass("ps1ui-badge");
       await expect.element(btn).toHaveClass("ps1ui-badge--solid");
       await expect.element(btn).toHaveClass("ps1ui-badge--danger");
+      await expect.element(btn).toHaveClass("ps1ui-badge--size-lg");
     });
   });
 
@@ -349,6 +398,18 @@ describe("Badge", () => {
             </Badge>
           ),
         })),
+      ),
+      // Size axis — role, name, and ARIA state must all survive a size
+      // change. Variant/color are left at their defaults: size only drives
+      // font-size / padding / gap, so crossing it with the colour matrix
+      // would run 12 axe passes with no distinct failure mode. Whether the
+      // smaller type still clears WCAG contrast is a CSS question, and axe
+      // here has no CSS loaded — Badge.contrast.test.tsx owns that surface.
+      ...SIZES.map(
+        (size): A11yCase => ({
+          name: `size=${size}`,
+          node: () => <Badge size={size}>label</Badge>,
+        }),
       ),
       // Interactive badges — role/name/ARIA-state coverage across the
       // polymorphic switch. Color is fixed to primary because axe here has

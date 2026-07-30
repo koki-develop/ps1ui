@@ -12,6 +12,13 @@
 // "xl" | "2xl" | "3xl"). Each component narrows the union in its own
 // component-local size type; `fontSizeToVar` accepts the widest union so it
 // can serve both without a cast.
+//
+// This is narrower than the --ps1ui-font-size-* token set on purpose:
+// tokens.css also declares `2xs`, which is deliberately absent here. It is a
+// chip-only step (Badge size="sm") that reads at 10px on a default root —
+// below what prose should ever be set in — and Badge reaches for it straight
+// from CSS rather than through this union. Adding it here would offer it to
+// Text and Heading, which is exactly what the token's own comment rules out.
 export type FontSizeToken = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 
 // FontWeight is the shared weight scale — every ps1ui typography component
