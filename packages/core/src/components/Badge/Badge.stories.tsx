@@ -118,7 +118,12 @@ export const Matrix: Story = {
 // much a chip recedes or asserts itself next to its siblings.
 export const Sizes: Story = {
   render: () => (
-    <Stack direction="row" gap="sm" wrap>
+    // `align="center"` is load-bearing, not cosmetic: Stack's default align is
+    // `normal`, which in a flex context resolves to `stretch` — every badge
+    // would be pulled to the tallest one's height and the whole size ladder
+    // would render as three equal-height chips. Same reason Button's Sizes
+    // story sets it.
+    <Stack direction="row" gap="sm" align="center" wrap>
       <Badge size="sm">sm</Badge>
       <Badge size="md">md</Badge>
       <Badge size="lg">lg</Badge>
@@ -130,7 +135,8 @@ export const Sizes: Story = {
 // so the icon stays proportionally spaced from the label at every size.
 export const SizesWithLeading: Story = {
   render: () => (
-    <Stack direction="row" gap="sm" wrap>
+    // align="center" for the same reason as Sizes above.
+    <Stack direction="row" gap="sm" align="center" wrap>
       <Badge size="sm" leading={<span aria-hidden="true">↑</span>}>
         sm
       </Badge>
