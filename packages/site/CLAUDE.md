@@ -14,7 +14,7 @@ Astro 7 landing page for `@ps1ui/core`. Deployed to https://koki-develop.github.
 
 - **Build core first**: Astro imports `@ps1ui/core`'s `dist/` exports — run `pnpm --filter @ps1ui/core build` before dev/build.
 - **Base path**: `astro.config.mjs` sets `base: "/ps1ui"`. Astro auto-prefixes asset URLs but NOT `<a href>` — route every internal link through `href()` (`src/lib/url.ts`; base-relative, no leading slash, trailing slash required).
-- **No `client:*` unless proven needed** — every core component renders statically (CodeBlock's SSR output is complete); hydration ships ~40KB of React runtime.
+- **No `client:*` unless proven needed** — almost every core component renders statically (CodeBlock's SSR output is complete); hydration ships ~40KB of React runtime. The proven-needed exceptions are Tooltip (`client:load`) and ContributionGraph (`client:visible`), whose demos are React islands under `src/demos/` — each page's header comment records why.
 - **Reset-aware markup**: core's `base.css` un-styles bare `<a>` / `<h*>` / `<button>` / `<ul>` / `<img>` — route through `<Anchor>` / `<Heading>` / `<Button>` / `<CodeBlock>`.
 - `.astro` files are unlinted (oxlint doesn't support them; lefthook is scoped to `packages/core/`).
 
