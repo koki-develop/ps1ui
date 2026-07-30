@@ -125,15 +125,4 @@ const disabled = `<Badge as="button" variant="solid" disabled>
     interactive — the same variant / color styling is preserved, and hover, active, focus-visible,
     and disabled treatments activate automatically.
   </Text>
-
-  <Text variant="muted">
-    One caveat when combining the two: badges do not pad out their hit area, so an interactive
-    chip is only as large as it looks. At the browser-default 16px root, sm renders about 16px
-    tall, md about 20px, and lg about 24px — so sm and md sit under the 24×24 CSS pixel minimum
-    of WCAG 2.2 SC 2.5.8. That is fine for a chip sitting inline in a sentence, which the success
-    criterion excepts, and for a row whose gaps are wide enough to satisfy its spacing exception.
-    If you need a guaranteed target, reach for size="lg" or give the row more room. Note that
-    every size is rem-based, so these heights track the reader's root font size instead of being
-    fixed — they scale up with a larger root, and lg stops clearing 24px under a smaller one.
-  </Text>
 </ComponentPage>

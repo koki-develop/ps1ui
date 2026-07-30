@@ -54,16 +54,12 @@ const BOLD_WEIGHT = 700;
 // out its hit area at any size — the reasoning is on the size block in
 // Badge.css — so sm and md sit under this and lg is expected to meet it.
 //
-// Both this and the large-text thresholds above are px constants compared
-// against rem-derived sizes, so every assertion in the two blocks below is
-// implicitly "at the tester's root font size", which is the browser-default
-// 16px. That is a statement about the default rendering, not a universal
-// one: a reader running a larger root scales every badge up (lg keeps
-// clearing 24px, and sm/md eventually would too), a smaller one scales them
-// down past the point where lg still qualifies. Testing the default is the
-// right call — it is what the docs page documents and what the size ladder
-// was designed around — but a failure here after a root-size change in the
-// test setup would mean the setup moved, not that the CSS regressed.
+// This and the large-text thresholds above are px constants compared against
+// rem-derived sizes, so both blocks below assert "at the tester's root font
+// size", i.e. the browser default of 16px. A larger root scales every badge
+// up, a smaller one down past the point where lg still qualifies — so a
+// failure here after a root-size change in the setup means the setup moved,
+// not that the CSS regressed.
 const MIN_TARGET_PX = 24;
 
 const CASES = VARIANTS.flatMap((variant) => COLORS.map((color) => ({ variant, color })));
@@ -134,13 +130,10 @@ describe("Badge contrast", () => {
   });
 
   // WCAG 2.2 SC 2.5.8. Badge doesn't expand its hit area, so an interactive
-  // chip is exactly as big as it renders — and the docs page tells consumers
-  // that lg is the size to reach for when they need a guaranteed target.
-  // That sentence is only true while lg actually clears 24px, so the claim is
-  // pinned here rather than left to drift: a future tune of the padding
-  // ladder that dropped lg to 22px would otherwise turn published a11y
-  // guidance into a quiet lie. sm/md are asserted in the other direction so
-  // the CSS comment's account of which sizes fall short stays honest too.
+  // chip is exactly as big as it renders. Badge.css records which sizes clear
+  // the 24px minimum and sends consumers to lg when they need one; asserting
+  // both directions keeps that account from drifting if the padding ladder is
+  // ever retuned.
   describe("interactive target size (SC 2.5.8)", () => {
     test.for([
       { size: "sm" as const, meets: false },
