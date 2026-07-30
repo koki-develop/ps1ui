@@ -4,11 +4,12 @@
    activates interactive styling (cursor, hover/active feedback, focus ring)
    automatically — static badges get none of it.
 
-   Vertical padding is 3px (not on the space scale) on purpose: badges
-   need a compact vertical rhythm distinct from Button's 7px so a chip
-   sitting inline with body text does not visually dominate its line box.
-   Horizontal padding is 6px (~2× the vertical) to preserve the same
-   proportional relationship Button uses at every size.
+   Vertical padding runs off the space scale on purpose: badges need a
+   compact vertical rhythm distinct from Button's 7px so a chip sitting
+   inline with body text does not visually dominate its line box.
+   Horizontal padding is 2× the vertical at every size, the same
+   proportional relationship Button uses. See the size block below for the
+   full ladder.
 
    The colour surface is defined through internal --_badge-* vars: each
    color (primary/accent/danger/muted) publishes a small palette of
@@ -23,15 +24,48 @@
 .ps1ui-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--ps1ui-space-xs);
   font-family: var(--ps1ui-font-mono);
-  font-size: var(--ps1ui-font-size-xs);
   font-weight: 600;
   line-height: 1;
-  padding: 3px 6px;
   border-radius: var(--ps1ui-radius-md);
   border: 1px solid transparent;
   vertical-align: baseline;
+}
+
+/* Size modifiers — font-size / padding / gap are size-driven; everything else
+   (colour, border, radius, weight, line-height) stays uniform across sizes,
+   so a chip keeps its identity when a layout swaps its size.
+
+   md reproduces the pre-size-prop badge exactly (font-size-xs text, 3px/6px
+   padding, space-xs gap) so existing consumer layouts don't shift; sm and lg
+   step down/up from there.
+
+   Vertical padding steps 2 / 3 / 4px with horizontal held at 2× (4 / 6 / 8px),
+   which keeps the documented chip proportion at every size. Only md's 4px gap
+   lands on the space scale (--ps1ui-space-xs); sm's 2px and lg's 6px are
+   off-scale steps of the same 2px ladder the padding uses — the space scale's
+   4px granularity is too coarse for a surface this small, which is the same
+   reason md's 3px vertical padding was never a token. Approximate rendered
+   heights at the default 16px root: sm ≈ 16px, md ≈ 20px, lg ≈ 24px.
+
+   The gap applies unconditionally rather than only when a leading slot is
+   present — Badge.tsx omits the .ps1ui-badge__leading wrapper entirely for an
+   empty slot precisely because this gap would otherwise open visible space
+   before the label. */
+.ps1ui-badge--size-sm {
+  font-size: var(--ps1ui-font-size-2xs);
+  padding: 2px 4px;
+  gap: 2px;
+}
+.ps1ui-badge--size-md {
+  font-size: var(--ps1ui-font-size-xs);
+  padding: 3px 6px;
+  gap: var(--ps1ui-space-xs);
+}
+.ps1ui-badge--size-lg {
+  font-size: var(--ps1ui-font-size-sm);
+  padding: 4px 8px;
+  gap: 6px;
 }
 
 /* Interactive treatment applies only when the badge renders as button or a.

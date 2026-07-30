@@ -139,7 +139,14 @@
   /* Type scale, in rem so text tracks the user's browser font-size preference
      (same rationale as the container/breakpoint tokens above). All values sit
      on the 0.125rem (2px) grid; px equivalents at the default 16px root:
-     12 / 14 / 16 / 18 / 22 / 26 / 32. */
+     10 / 12 / 14 / 16 / 18 / 22 / 26 / 32.
+
+     2xs is a chip-only step: it exists for compact label surfaces (Badge
+     size="sm") that must read as subordinate to the xs body/caption text
+     they sit next to. It is deliberately not used for prose — at the
+     browser-default root it renders 10px, below what a paragraph should
+     ever be set in. */
+  --ps1ui-font-size-2xs: 0.625rem;
   --ps1ui-font-size-xs: 0.75rem;
   --ps1ui-font-size-sm: 0.875rem;
   --ps1ui-font-size-md: 1rem;

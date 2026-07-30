@@ -16,6 +16,10 @@ const meta = {
       control: { type: "inline-radio" },
       options: ["primary", "accent", "danger", "muted"],
     },
+    size: {
+      control: { type: "inline-radio" },
+      options: ["sm", "md", "lg"],
+    },
   },
 } satisfies Meta<typeof Badge>;
 
@@ -105,6 +109,38 @@ export const Matrix: Story = {
         </Fragment>
       ))}
     </div>
+  ),
+};
+
+// The three sizes together — `md` is the default and reproduces the badge's
+// original dimensions exactly, so a layout only opts into a shift by asking
+// for one. Rendered side by side because the useful signal is relative: how
+// much a chip recedes or asserts itself next to its siblings.
+export const Sizes: Story = {
+  render: () => (
+    <Stack direction="row" gap="sm" wrap>
+      <Badge size="sm">sm</Badge>
+      <Badge size="md">md</Badge>
+      <Badge size="lg">lg</Badge>
+    </Stack>
+  ),
+};
+
+// The size ladder with a leading adornment — the gap steps with the padding,
+// so the icon stays proportionally spaced from the label at every size.
+export const SizesWithLeading: Story = {
+  render: () => (
+    <Stack direction="row" gap="sm" wrap>
+      <Badge size="sm" leading={<span aria-hidden="true">↑</span>}>
+        sm
+      </Badge>
+      <Badge size="md" leading={<span aria-hidden="true">↑</span>}>
+        md
+      </Badge>
+      <Badge size="lg" leading={<span aria-hidden="true">↑</span>}>
+        lg
+      </Badge>
+    </Stack>
   ),
 };
 

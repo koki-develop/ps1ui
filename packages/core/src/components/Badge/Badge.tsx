@@ -5,6 +5,7 @@ import { isSlotFilled } from "../../utils/slots";
 
 export type BadgeVariant = "solid" | "outline" | "subtle";
 export type BadgeColor = "primary" | "accent" | "danger" | "muted";
+export type BadgeSize = "sm" | "md" | "lg";
 
 type BadgeOwnProps<E extends ElementType> = {
   /** Element or component to render instead of the native <span> — pass "button" or "a" to make the badge interactive. */
@@ -13,6 +14,8 @@ type BadgeOwnProps<E extends ElementType> = {
   variant?: BadgeVariant;
   /** Semantic color: "primary", "accent", "danger", or neutral "muted". */
   color?: BadgeColor;
+  /** Chip size — affects font size, padding, and the leading-slot gap. */
+  size?: BadgeSize;
   /** Leading element (typically an icon) rendered before children with a shared inline gap. */
   leading?: ReactNode;
 };
@@ -26,13 +29,20 @@ export function Badge<E extends ElementType = "span">({
   as,
   variant = "subtle",
   color = "primary",
+  size = "md",
   leading,
   children,
   className,
   ...rest
 }: BadgeProps<E>) {
   const tag: ElementType = as ?? "span";
-  const classes = cx("ps1ui-badge", `ps1ui-badge--${variant}`, `ps1ui-badge--${color}`, className);
+  const classes = cx(
+    "ps1ui-badge",
+    `ps1ui-badge--${variant}`,
+    `ps1ui-badge--${color}`,
+    `ps1ui-badge--size-${size}`,
+    className,
+  );
   // `isSlotFilled`, not `!== undefined`: the badge root carries a permanent
   // flex `gap`, so a slot opened for the false branch of
   // `leading={hasIcon && <Icon/>}` shows up as visible space before the label
