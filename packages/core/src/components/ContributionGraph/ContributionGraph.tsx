@@ -52,14 +52,25 @@ export type ContributionGraphProps = ComponentProps<"div"> & {
 // SVG label metrics — chosen so ~12px text at font-size:xs never clips.
 const MONTH_LABEL_HEIGHT = 16;
 const WEEKDAY_LABEL_WIDTH = 28;
-// Rendered width of a 3-letter month abbreviation at font-size-xs
-// (JetBrains Mono ~7px per glyph → ~21px, rounded up for safety). Used as
-// the pixel-clip threshold: a month label whose text would spill past the
-// SVG's right edge is suppressed — with one exception, the leftmost label
-// always emits since users need the starting month context. Under the old
-// week-count heuristic (MIN_COLS_FOR_MONTH_LABEL=3) short graphs rendered
-// an empty month row even when their first month clearly fit.
+// Ink box a month label occupies, measured from its (left-anchored) origin.
+// Font metrics don't scale with cellSize, so this is a constant on purpose.
+// 24 is an upper bound on the real thing: a 3-letter abbreviation at
+// font-size-xs measures 21.60–22.25px across chromium/firefox/webkit, both
+// with the bundled JetBrains Mono and on every rung of the fallback stack
+// `--ps1ui-font-mono` degrades to (a consumer importing only components.css
+// never loads the fontsource face, so the fallback path is a real one).
+// Used for the right-edge clip: a label may touch the SVG's edge, so the box
+// alone is the whole test there.
 const MONTH_LABEL_APPROX_WIDTH = 24;
+// Minimum distance between two label origins. Clearing the ink box is enough
+// to stop overprinting but not enough to READ as two labels — the tightest
+// spacing the box alone permits is 24px (labels land on column multiples), and
+// against a 22.25px worst case that is 1.75px of whitespace, well under a
+// space glyph. The extra 4px buys a legible gap; it is also the largest addend
+// that leaves every existing story / VRT fixture byte-identical (at +6 the
+// full-year capture, whose months sit exactly 28px apart at cellSize=5, starts
+// dropping alternate labels).
+const MONTH_LABEL_MIN_ADVANCE = MONTH_LABEL_APPROX_WIDTH + 4;
 
 const WEEKDAY_NAMES_SUN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 const WEEKDAY_NAMES_MON = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -277,14 +288,13 @@ export function ContributionGraph({
 
   const weekdayNames = weekStartsOn === "monday" ? WEEKDAY_NAMES_MON : WEEKDAY_NAMES_SUN;
 
-  // Month labels — walk the sorted data, and every time we enter a new
-  // column, check if that column's topmost day (the first one we see, since
-  // dates ascend) is in a new month. The leftmost emitted label always
-  // renders so the caller's `showMonthLabels` intent is honored even on
-  // narrow ranges; later labels are suppressed only if their text would
-  // clip past the SVG's right edge in pixels.
+  // Month labels — collected, then laid out.
+  //
+  // Collection walks the sorted data, and every time we enter a new column,
+  // checks if that column's topmost day (the first one we see, since dates
+  // ascend) is in a new month.
   type MonthLabel = { key: string; x: number; text: string };
-  const monthLabels: MonthLabel[] = [];
+  const monthCandidates: MonthLabel[] = [];
   let currentCol = -1;
   let lastMonth = -1;
   for (let i = 0; i < data.length; i++) {
@@ -294,17 +304,60 @@ export function ContributionGraph({
     currentCol = col;
     const month = parseISODate(data[i]!.date).getMonth();
     if (month === lastMonth) continue;
-    const x = padLeft + col * step;
-    const isLeftmost = monthLabels.length === 0;
-    const fits = x + MONTH_LABEL_APPROX_WIDTH <= svgWidth;
-    if (isLeftmost || fits) {
-      monthLabels.push({
-        key: `${col}-${month}`,
-        x,
-        text: SHORT_MONTH_NAMES[month]!,
-      });
-    }
+    monthCandidates.push({
+      key: `${col}-${month}`,
+      x: padLeft + col * step,
+      text: SHORT_MONTH_NAMES[month]!,
+    });
     lastMonth = month;
+  }
+
+  // Layout runs RIGHT TO LEFT, placing a label only if it clears the nearest
+  // obstacle to its right. That obstacle is the SVG's right edge until a label
+  // has been placed, and the placed label's origin after — two thresholds,
+  // because the two obstacles are different in kind: touching the viewBox edge
+  // is fine, touching the next label is not (see the constants above).
+  //
+  // The direction is what decides who loses a collision, and it has to be the
+  // EARLIER label. Two full months sit ~4+ columns apart and rarely collide;
+  // the pair that reliably does is a leading partial month against the
+  // transition that follows it, one column over — data starting mid-month puts
+  // e.g. "Jul" over a 2-day sliver and "Aug" 14px to its right, and they
+  // overprint. Of those two the sliver is the less informative, and dropping it
+  // also keeps the remaining labels where they were rather than shifting the
+  // whole ruler left.
+  const monthLabels: MonthLabel[] = [];
+  let rightBoundary = svgWidth;
+  let clearance = MONTH_LABEL_APPROX_WIDTH;
+  for (let i = monthCandidates.length - 1; i >= 0; i--) {
+    const label = monthCandidates[i]!;
+    if (label.x + clearance > rightBoundary) continue;
+    monthLabels.push(label);
+    rightBoundary = label.x;
+    clearance = MONTH_LABEL_MIN_ADVANCE;
+  }
+  monthLabels.reverse();
+  // Fallback: with every candidate rejected the month row would render empty
+  // despite `showMonthLabels` being opted in — the regression the old
+  // MIN_COLS_FOR_MONTH_LABEL=3 heuristic caused. Since the leftmost candidate
+  // always sits at x=padLeft, "every candidate rejected" reduces exactly to
+  // `gridWidth < MONTH_LABEL_APPROX_WIDTH`: one column at the default cell
+  // size, but also several columns of very small ones, and never a single
+  // column of cellSize >= 24.
+  //
+  // Two knowing trades here, both scoped to that sub-24px-wide graph:
+  //   - The label is wider than the grid it annotates. With the legend on (the
+  //     default) the wrapper hugs the legend row instead, which is wider still,
+  //     so the text is fully visible; with `showLegend={false}` the scroller
+  //     clips it mid-glyph. A cut-off month still beats a blank row, and
+  //     widening the SVG to fit a label would make the graph's intrinsic size
+  //     stop meaning "the grid".
+  //   - The starting month is preferred even though it may be the same leading
+  //     sliver the pass above would have dropped. That rule fires because a
+  //     BETTER label was visible beside it; here nothing else renders, and the
+  //     leftmost column is the one a reader anchors on.
+  if (monthLabels.length === 0 && monthCandidates.length > 0) {
+    monthLabels.push(monthCandidates[0]!);
   }
 
   const legendSwatchesWidth = LEVELS.length * step - cellGap;

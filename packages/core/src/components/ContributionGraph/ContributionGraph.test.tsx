@@ -410,15 +410,34 @@ describe("ContributionGraph", () => {
       expect(labels).toContain("Feb");
     });
 
-    test("emits the leftmost month label even in very short graphs (finding-1 regression)", async () => {
+    test("emits the leftmost month label in very short graphs (finding-1 regression)", async () => {
       // 14 days = 2 columns. Under the previous week-count heuristic
       // (MIN_COLS_FOR_MONTH_LABEL=3) `col=0 + 3 <= 2` failed, and the
       // graph rendered an empty month row despite showMonthLabels being
-      // opted-in. The leftmost-always-emits rule guarantees users always
-      // see the starting month.
+      // opted-in. Here Jan's box (x=28 + 24 = 52) clears the SVG's right
+      // edge (svgWidth = 28 + 2*14 - 3 = 53), so it emits through the normal
+      // layout pass — no fallback involved.
       const screen = await render(
         <ContributionGraph
           data={contiguousDays(new Date(2025, 0, 5), 14)}
+          data-testid="g"
+          showLegend={false}
+        />,
+      );
+      const labels = Array.from(
+        screen.getByTestId("g").element().querySelectorAll(".ps1ui-contribution-graph__month"),
+      ).map((n) => n.textContent);
+      expect(labels).toEqual(["Jan"]);
+    });
+
+    test("falls back to the starting month when the range is too narrow for any label", async () => {
+      // 7 days = 1 column → svgWidth = padLeft(28) + step(14) - gap(3) = 39.
+      // Jan's box ends at 28 + 24 = 52 > 39, so nothing survives the layout
+      // pass. The fallback still emits it rather than leaving an empty month
+      // row behind an opted-in `showMonthLabels`.
+      const screen = await render(
+        <ContributionGraph
+          data={contiguousDays(new Date(2025, 0, 5), 7)}
           data-testid="g"
           showLegend={false}
         />,
@@ -434,8 +453,8 @@ describe("ContributionGraph", () => {
       // svgWidth = padLeft(28) + 2*step(14) - gap(3) = 53. Col 1's topmost
       // day is Feb 2 (Sun); its label would render at x=42 with ~24px of
       // rendered text (`MONTH_LABEL_APPROX_WIDTH`), right edge ≈ 66 > 53 —
-      // non-leftmost + doesn't fit → suppressed. Jan (leftmost) always
-      // emits regardless.
+      // doesn't clear the SVG's edge, so it drops. Jan then measures against
+      // that same edge (nothing was placed to its right), fits, and emits.
       const screen = await render(
         <ContributionGraph
           data={contiguousDays(new Date(2025, 0, 26), 14)}
@@ -447,6 +466,99 @@ describe("ContributionGraph", () => {
         screen.getByTestId("g").element().querySelectorAll(".ps1ui-contribution-graph__month"),
       ).map((n) => n.textContent);
       expect(labels).toEqual(["Jan"]);
+    });
+
+    test("drops a leading partial month whose label would overprint the next one", async () => {
+      // 90 days from Wed Jul 30 2025: only Jul 30/31 land in column 0, so
+      // "Jul" would render at x=28 and "Aug" (col 1, topmost day Aug 3) at
+      // x=42 — 14px apart against ~24px of text, i.e. overprinted. Laying out
+      // right-to-left drops the earlier, less informative label.
+      const screen = await render(
+        <ContributionGraph
+          data={contiguousDays(new Date(2025, 6, 30), 90)}
+          data-testid="g"
+          showLegend={false}
+        />,
+      );
+      const labels = Array.from(
+        screen.getByTestId("g").element().querySelectorAll(".ps1ui-contribution-graph__month"),
+      ).map((n) => n.textContent);
+      expect(labels).toEqual(["Aug", "Sep", "Oct"]);
+    });
+
+    test("keeps every label separated by the minimum advance", async () => {
+      // Same 90-day span started 8 days earlier (Tue Jul 22 2025), so Jul owns
+      // two columns: "Jul" at x=28, "Aug" at x=56 — exactly
+      // MONTH_LABEL_MIN_ADVANCE (28) apart, the tightest spacing that still
+      // renders. Nothing is dropped; the collision rule only fires below it.
+      const screen = await render(
+        <ContributionGraph
+          data={contiguousDays(new Date(2025, 6, 22), 90)}
+          data-testid="g"
+          showLegend={false}
+        />,
+      );
+      const cells = screen.getByTestId("g").element();
+      const labels = Array.from(cells.querySelectorAll(".ps1ui-contribution-graph__month")).map(
+        (n) => [n.textContent, n.getAttribute("x")],
+      );
+      expect(labels.slice(0, 2)).toEqual([
+        ["Jul", "28"],
+        ["Aug", "56"],
+      ]);
+    });
+
+    test("drops a label that clears the ink box but not the readable gap", async () => {
+      // The same two-column July as above at cellSize=9 (step 12): "Jul" at
+      // x=28 and "Aug" at x=52 sit 24px apart. That clears the ~22px the text
+      // actually inks — no overprint — but leaves under 2px of whitespace,
+      // which reads as one run-together word. MONTH_LABEL_MIN_ADVANCE is what
+      // separates this case from the one above; against the ink box alone both
+      // would render.
+      const screen = await render(
+        <ContributionGraph
+          data={contiguousDays(new Date(2025, 6, 22), 90)}
+          cellSize={9}
+          cellGap={3}
+          data-testid="g"
+          showLegend={false}
+        />,
+      );
+      const labels = Array.from(
+        screen.getByTestId("g").element().querySelectorAll(".ps1ui-contribution-graph__month"),
+      ).map((n) => n.textContent);
+      expect(labels).toEqual(["Aug", "Sep", "Oct"]);
+    });
+
+    test("every rendered label clears the next by at least its measured ink width", async () => {
+      // The layout rule is stated in approximated pixels; this asserts against
+      // what the browser actually rasterises, so a font/token change that
+      // invalidates MONTH_LABEL_APPROX_WIDTH fails here rather than shipping
+      // overlapping labels. Small cells put the labels as close together as
+      // the rule ever allows.
+      const screen = await render(
+        <ContributionGraph
+          data={contiguousDays(new Date(2025, 0, 1), 365)}
+          cellSize={3}
+          cellGap={1}
+          data-testid="g"
+          showLegend={false}
+        />,
+      );
+      const texts = Array.from(
+        screen
+          .getByTestId("g")
+          .element()
+          .querySelectorAll<SVGTextElement>(".ps1ui-contribution-graph__month"),
+      );
+      expect(texts.length).toBeGreaterThan(1);
+      for (let i = 1; i < texts.length; i++) {
+        const prev = texts[i - 1]!;
+        const gap =
+          Number(texts[i]!.getAttribute("x")) -
+          (Number(prev.getAttribute("x")) + prev.getComputedTextLength());
+        expect(gap).toBeGreaterThan(0);
+      }
     });
 
     test("showMonthLabels=false removes the month row", async () => {
