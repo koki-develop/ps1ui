@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/koki-develop/ps1ui/compare/core-v0.6.0...core-v0.7.0) (2026-07-31)
+
+
+### Features
+
+* Add `size` prop to Badge ([#88](https://github.com/koki-develop/ps1ui/issues/88)) ([90e0b82](https://github.com/koki-develop/ps1ui/commit/90e0b8244d769d05789b42ada05a830855c61d74))
+* Add Select component ([#89](https://github.com/koki-develop/ps1ui/issues/89)) ([f81cb23](https://github.com/koki-develop/ps1ui/commit/f81cb232879801e0fcb8c945104b4702d1122d07))
+
+
+### Bug Fixes
+
+* Suppress overlapping month labels in ContributionGraph ([9ecb876](https://github.com/koki-develop/ps1ui/commit/9ecb8766d002c7fec052554f632c2f7604c434c1))
+
 ## [0.6.0](https://github.com/koki-develop/ps1ui/compare/core-v0.5.0...core-v0.6.0) (2026-07-25)
 
 
