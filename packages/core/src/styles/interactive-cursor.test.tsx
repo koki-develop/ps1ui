@@ -24,6 +24,7 @@ import { Button } from "../components/Button/Button";
 import { Checkbox } from "../components/Checkbox/Checkbox";
 import { Details } from "../components/Details/Details";
 import { Radio } from "../components/Radio/Radio";
+import { Switch } from "../components/Switch/Switch";
 import { Tab } from "../components/Tab/Tab";
 import { TabList } from "../components/TabList/TabList";
 import { Tabs } from "../components/Tabs/Tabs";
@@ -52,6 +53,7 @@ const CASES = [
   },
   { name: "Checkbox", selector: ".ps1ui-checkbox", ui: <Checkbox aria-label="agree" /> },
   { name: "Radio", selector: ".ps1ui-radio", ui: <Radio aria-label="pick" /> },
+  { name: "Switch", selector: ".ps1ui-switch", ui: <Switch aria-label="notifications" /> },
 ] as const satisfies ReadonlyArray<{ name: string; selector: string; ui: ReactElement }>;
 
 describe("interactive components own their pointer cursor", () => {

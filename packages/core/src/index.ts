@@ -24,6 +24,9 @@ export type { RadioGroupProps } from "./components/RadioGroup/RadioGroup";
 export { Select } from "./components/Select/Select";
 export type { SelectProps } from "./components/Select/Select";
 
+export { Switch } from "./components/Switch/Switch";
+export type { SwitchProps } from "./components/Switch/Switch";
+
 export { Image } from "./components/Image/Image";
 export type { ImageProps, ImageVariant } from "./components/Image/Image";
 

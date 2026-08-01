@@ -1,0 +1,135 @@
+/* Switch — an <input type="checkbox" role="switch"> restyled as a track with a
+   sliding thumb. Same construction as Checkbox and Radio: `appearance: none`
+   turns the control into a plain box we own, and the single ::after pseudo
+   draws the mark. The Switch component's header explains why the underlying
+   element is a checkbox at all.
+
+   ── Geometry ─────────────────────────────────────────────────────────────
+   The track is 28×16 border-box: 16px tall so a Switch lines up with the
+   16×16 Checkbox / Radio when the three sit in one form, 28px wide so the
+   thumb has visible travel. The thumb is absolutely positioned against the
+   track's PADDING box (26×14, inset 1px by the border), so its 2px offsets
+   read as 3px of visible gutter on every side:
+
+     off:  |·[■]      ·|      thumb at padding-box x = 2 … 12
+     on:   |·      [■]·|      thumb at padding-box x = 14 … 24  (+12px)
+
+   12px of travel is what keeps both end gutters at 3px, which is why the
+   translate below is not a round 50%: the thumb has to stop one gutter short
+   of the far edge, not at it. Rendered geometry is locked in by
+   Switch.thumb-geometry.test.tsx, so a future width/height edit that breaks
+   the symmetry fails a specific assertion instead of drifting.
+
+   The thumb moves with `transform`, not `left`, so the animation stays on the
+   compositor and the resting position lives in exactly one place.
+
+   ── Colour ───────────────────────────────────────────────────────────────
+   `--_switch-thumb` is indirected the way Select indirects its disclosure
+   marker: the thumb needs a DIFFERENT foreground per state (it has to stay
+   legible on the dark off-track, on the primary on-track, and on the muted
+   disabled track), and a variable lets each state redeclare one value instead
+   of restating the whole pseudo-element rule. Like Select's marker it is a
+   plain custom property, deliberately not @property registered — that
+   registration rule exists for per-breakpoint responsive INPUT vars, and
+   `check:responsive-property-coverage` flags registrations no resolveResponsive
+   call produces. Neither applies here. */
+
+.ps1ui-switch {
+  --_switch-thumb: var(--ps1ui-color-fg-muted);
+
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+  background: var(--ps1ui-color-bg);
+  border: 1px solid var(--ps1ui-color-border-strong);
+  border-radius: var(--ps1ui-radius-md);
+  cursor: pointer;
+  transition:
+    background var(--ps1ui-transition-fast),
+    border-color var(--ps1ui-transition-fast),
+    box-shadow var(--ps1ui-transition-fast);
+}
+
+.ps1ui-switch::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--ps1ui-radius-md);
+  background: var(--_switch-thumb);
+  transition:
+    transform var(--ps1ui-transition-fast),
+    background var(--ps1ui-transition-fast);
+}
+
+.ps1ui-switch:hover:not(:disabled) {
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-switch:focus-visible {
+  outline: none;
+  border-color: var(--ps1ui-color-primary);
+  box-shadow: var(--ps1ui-shadow-focus-ring);
+}
+
+.ps1ui-switch:checked {
+  --_switch-thumb: var(--ps1ui-color-primary-fg);
+
+  background: var(--ps1ui-color-primary);
+  border-color: var(--ps1ui-color-primary);
+}
+
+.ps1ui-switch:checked::after {
+  transform: translateX(12px);
+}
+
+.ps1ui-switch:checked:hover:not(:disabled) {
+  background: var(--ps1ui-color-primary-hover);
+  border-color: var(--ps1ui-color-primary-hover);
+}
+
+.ps1ui-switch:checked:active:not(:disabled) {
+  background: var(--ps1ui-color-primary-active);
+  border-color: var(--ps1ui-color-primary-active);
+}
+
+/* forced-colors force-replaces author backgrounds, so the background-drawn
+   thumb would vanish — redraw it as a border ring, which survives as system
+   ink (same repair Radio's inner dot makes). 6px content + 2px borders keeps
+   the ring's outer box at the same 10px the filled thumb occupies, so the
+   12px travel above still lands both end gutters at 3px. That travel is the
+   load-bearing part here: with both track fills force-replaced, the thumb's
+   POSITION is the only remaining on/off signal. The focus-outline counterpart
+   lives in the grouped forced-colors rule in styles/components.css. Tested in
+   src/styles/forced-colors.test.tsx. */
+@media (forced-colors: active) {
+  .ps1ui-switch::after {
+    background: none;
+    width: 6px;
+    height: 6px;
+    border: 2px solid currentColor;
+  }
+}
+
+.ps1ui-switch:disabled {
+  --_switch-thumb: var(--ps1ui-color-fg-subtle);
+
+  cursor: not-allowed;
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}
+
+.ps1ui-switch:disabled:checked {
+  background: var(--ps1ui-color-surface);
+  border-color: var(--ps1ui-color-border);
+}
