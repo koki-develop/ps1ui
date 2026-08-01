@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/koki-develop/ps1ui/compare/core-v0.7.0...core-v0.8.0) (2026-08-01)
+
+
+### Features
+
+* Add Switch component ([#94](https://github.com/koki-develop/ps1ui/issues/94)) ([696ba4b](https://github.com/koki-develop/ps1ui/commit/696ba4b240a7b3a360a39a85829d5d6e3ab47191))
+
 ## [0.7.0](https://github.com/koki-develop/ps1ui/compare/core-v0.6.0...core-v0.7.0) (2026-07-31)
 
 
