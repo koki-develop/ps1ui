@@ -1,0 +1,33 @@
+---
+import { Label, Stack, Switch } from "@ps1ui/core";
+import ComponentPage from "../../layouts/ComponentPage.astro";
+import Demo from "../../components/Demo.astro";
+
+const states = `<Switch aria-label="Off" />
+<Switch aria-label="On" defaultChecked />
+<Switch aria-label="Disabled" disabled />
+<Switch aria-label="Disabled on" disabled defaultChecked />`;
+
+const withLabel = `<Stack direction="row" gap="sm" align="center">
+  <Switch id="notifications" defaultChecked />
+  <Label htmlFor="notifications">Enable notifications</Label>
+</Stack>`;
+---
+
+<ComponentPage slug="switch">
+  <Demo title="States" code={states}>
+    <Stack direction="row" gap="md" align="center" wrap>
+      <Switch aria-label="Off" />
+      <Switch aria-label="On" defaultChecked />
+      <Switch aria-label="Disabled" disabled />
+      <Switch aria-label="Disabled on" disabled defaultChecked />
+    </Stack>
+  </Demo>
+
+  <Demo title="With a label" code={withLabel}>
+    <Stack direction="row" gap="sm" align="center">
+      <Switch id="notifications" defaultChecked />
+      <Label htmlFor="notifications">Enable notifications</Label>
+    </Stack>
+  </Demo>
+</ComponentPage>

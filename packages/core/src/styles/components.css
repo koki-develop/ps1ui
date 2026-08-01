@@ -38,6 +38,7 @@
 @import "../components/Radio/Radio.css";
 @import "../components/RadioGroup/RadioGroup.css";
 @import "../components/Select/Select.css";
+@import "../components/Switch/Switch.css";
 @import "../components/Tab/Tab.css";
 @import "../components/TabList/TabList.css";
 @import "../components/TabPanel/TabPanel.css";
@@ -139,6 +140,7 @@
   .ps1ui-input:focus,
   .ps1ui-radio:focus-visible,
   .ps1ui-select:focus,
+  .ps1ui-switch:focus-visible,
   .ps1ui-tab:focus-visible,
   .ps1ui-tab-panel:focus-visible,
   .ps1ui-table__scroller:focus-visible,

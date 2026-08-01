@@ -31,6 +31,7 @@ import { Details } from "../components/Details/Details";
 import { Input } from "../components/Input/Input";
 import { Radio } from "../components/Radio/Radio";
 import { Select } from "../components/Select/Select";
+import { Switch } from "../components/Switch/Switch";
 import { Tab } from "../components/Tab/Tab";
 import { TabList } from "../components/TabList/TabList";
 import { TabPanel } from "../components/TabPanel/TabPanel";
@@ -79,6 +80,33 @@ describe("forced-colors adjustments", () => {
     expect(s.borderTopStyle).toBe("solid");
     expect(s.width).toBe("8px");
     expect(s.height).toBe("8px");
+  });
+
+  test("Switch thumb is border-drawn (background would be force-stripped)", async () => {
+    // Same repair as Radio's inner dot: `background: var(--_switch-thumb)` is
+    // force-stripped, so the thumb is redrawn as a 2px ring that survives as
+    // system ink. 6px content + 2px borders keeps its outer box at the 10px
+    // the filled thumb occupies — load-bearing, because the travel distance
+    // in the next test is calibrated against exactly that footprint.
+    const screen = await render(<Switch aria-label="notifications" data-testid="fc-target" />);
+    const s = getComputedStyle(screen.getByTestId("fc-target").element(), "::after");
+    expect(s.borderTopWidth).toBe("2px");
+    expect(s.borderTopStyle).toBe("solid");
+    expect(s.width).toBe("6px");
+    expect(s.height).toBe("6px");
+  });
+
+  test("Switch on/off stays distinguishable by thumb position (both track fills are force-stripped)", async () => {
+    // The accessibility claim this file exists to protect, for Switch: with
+    // author backgrounds force-replaced, the on-track and the off-track paint
+    // in the same system ink, so the ONLY surviving signal that a switch is on
+    // is where its thumb sits. `transform` is not a colour and is not stripped
+    // — assert it still moves.
+    const screen = await render(
+      <Switch aria-label="notifications" defaultChecked data-testid="fc-target" />,
+    );
+    const s = getComputedStyle(screen.getByTestId("fc-target").element(), "::after");
+    expect(s.transform).toBe("matrix(1, 0, 0, 1, 12, 0)");
   });
 
   // Select's disclosure marker is painted as a background gradient (Select.css
@@ -183,6 +211,12 @@ describe("forced-colors adjustments", () => {
       pseudo: "focus-visible",
       webkitSkip: true,
       ui: <Radio aria-label="pick" data-testid="fc-target" />,
+    },
+    {
+      name: "Switch",
+      pseudo: "focus-visible",
+      webkitSkip: true,
+      ui: <Switch aria-label="notifications" data-testid="fc-target" />,
     },
     {
       name: "Button",

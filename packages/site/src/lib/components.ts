@@ -108,6 +108,11 @@ export const COMPONENT_GROUPS: ComponentGroup[] = [
         childComponents: ["Radio"],
       },
       {
+        slug: "switch",
+        name: "Switch",
+        description: "On/off toggle for a setting that applies immediately.",
+      },
+      {
         slug: "label",
         name: "Label",
         description: "Form label for associating text with controls.",
