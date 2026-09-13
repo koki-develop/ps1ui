@@ -20,6 +20,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { withPseudoState } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { CodeBlock } from "./CodeBlock";
 
@@ -39,7 +40,7 @@ const LONG_LINE = `const veryLongIdentifier = { field: "value that keeps going p
 const NARROW = 360;
 const WIDE = 480;
 
-const CASES: readonly {
+const BASE_CASES: readonly {
   name: string;
   language: string | undefined;
   children: string;
@@ -61,31 +62,38 @@ const CASES: readonly {
   },
 ];
 
+const CASES = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
+
 describe("CodeBlock VRT", () => {
-  test.for(CASES)("$name", async ({ name, language, children, width, focus }, ctx) => {
-    // CodeBlock's `:focus-visible` fires when the <pre> gains keyboard
-    // focus via Tab. macOS Safari's default Full Keyboard Access excludes
-    // <pre tabindex=0> the same way it excludes <button>/<a>/checkbox —
-    // the WebKit Playwright build matches that default.
-    ctx.skip(
-      !!focus && server.browser === "webkit",
-      "macOS Safari Full Keyboard Access excludes <pre tabindex=0> from Tab",
-    );
+  test.for(CASES)(
+    "theme=$theme / $name",
+    async ({ theme, name, language, children, width, focus }, ctx) => {
+      // CodeBlock's `:focus-visible` fires when the <pre> gains keyboard
+      // focus via Tab. macOS Safari's default Full Keyboard Access excludes
+      // <pre tabindex=0> the same way it excludes <button>/<a>/checkbox —
+      // the WebKit Playwright build matches that default.
+      ctx.skip(
+        !!focus && server.browser === "webkit",
+        "macOS Safari Full Keyboard Access excludes <pre tabindex=0> from Tab",
+      );
 
-    const screen = await render(
-      <VrtFrame width={width}>
-        <CodeBlock language={language} data-testid="vrt-target">
-          {children}
-        </CodeBlock>
-      </VrtFrame>,
-    );
+      const screen = await render(
+        <VrtFrame theme={theme} width={width}>
+          <CodeBlock language={language} data-testid="vrt-target">
+            {children}
+          </CodeBlock>
+        </VrtFrame>,
+      );
 
-    await withPseudoState(
-      '[data-testid="vrt-target"]',
-      focus ? ["focus-visible"] : [],
-      async () => {
-        await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
-      },
-    );
-  });
+      await withPseudoState(
+        '[data-testid="vrt-target"]',
+        focus ? ["focus-visible"] : [],
+        async () => {
+          await expect
+            .element(screen.getByTestId("vrt-frame"))
+            .toMatchScreenshot(`${theme}-${name}`);
+        },
+      );
+    },
+  );
 });

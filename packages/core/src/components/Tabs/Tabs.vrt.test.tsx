@@ -8,6 +8,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Tab } from "../Tab/Tab";
 import { TabList } from "../TabList/TabList";
@@ -20,17 +21,19 @@ type Selection = "first" | "middle";
 const ORIENTATIONS = ["horizontal", "vertical"] as const satisfies readonly Orientation[];
 const SELECTIONS = ["first", "middle"] as const satisfies readonly Selection[];
 
-const CASES = ORIENTATIONS.flatMap((orientation) =>
-  SELECTIONS.map((selection) => ({ orientation, selection })),
+const CASES = THEMES.flatMap((theme) =>
+  ORIENTATIONS.flatMap((orientation) =>
+    SELECTIONS.map((selection) => ({ theme, orientation, selection })),
+  ),
 );
 
 describe("Tabs VRT", () => {
   test.for(CASES)(
-    "orientation=$orientation / selection=$selection",
-    async ({ orientation, selection }) => {
+    "theme=$theme / orientation=$orientation / selection=$selection",
+    async ({ theme, orientation, selection }) => {
       const selected = selection === "first" ? "overview" : "install";
       const screen = await render(
-        <VrtFrame width={340}>
+        <VrtFrame theme={theme} width={340}>
           <Tabs defaultValue={selected} orientation={orientation} data-testid="vrt-target">
             <TabList aria-label="doc sections">
               <Tab value="overview">Overview</Tab>
@@ -46,7 +49,7 @@ describe("Tabs VRT", () => {
 
       await expect
         .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${orientation}-${selection}`);
+        .toMatchScreenshot(`${theme}-${orientation}-${selection}`);
     },
   );
 });

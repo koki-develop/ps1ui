@@ -7,16 +7,17 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Label } from "./Label";
 
 describe("Label VRT", () => {
-  test("default", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / default", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame>
+      <VrtFrame theme={theme}>
         <Label htmlFor="vrt-target">email address</Label>
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("default");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-default`);
   });
 });

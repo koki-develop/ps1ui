@@ -7,6 +7,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Label } from "../Label/Label";
 import { Radio } from "../Radio/Radio";
@@ -18,38 +19,41 @@ type Disabled = "enabled" | "disabled";
 const SELECTIONS = ["none", "first"] as const satisfies readonly Selection[];
 const DISABLED = ["enabled", "disabled"] as const satisfies readonly Disabled[];
 
-const CASES = SELECTIONS.flatMap((selection) =>
-  DISABLED.map((disabled) => ({ selection, disabled })),
+const CASES = THEMES.flatMap((theme) =>
+  SELECTIONS.flatMap((selection) => DISABLED.map((disabled) => ({ theme, selection, disabled }))),
 );
 
 describe("RadioGroup VRT", () => {
-  test.for(CASES)("selection=$selection / $disabled", async ({ selection, disabled }) => {
-    const screen = await render(
-      <VrtFrame width={220}>
-        <RadioGroup
-          aria-label="fruit"
-          data-testid="vrt-target"
-          defaultValue={selection === "first" ? "apple" : undefined}
-          disabled={disabled === "disabled"}
-        >
-          <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Radio value="apple" />
-            apple
-          </Label>
-          <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Radio value="banana" />
-            banana
-          </Label>
-          <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <Radio value="cherry" />
-            cherry
-          </Label>
-        </RadioGroup>
-      </VrtFrame>,
-    );
+  test.for(CASES)(
+    "theme=$theme / selection=$selection / $disabled",
+    async ({ theme, selection, disabled }) => {
+      const screen = await render(
+        <VrtFrame theme={theme} width={220}>
+          <RadioGroup
+            aria-label="fruit"
+            data-testid="vrt-target"
+            defaultValue={selection === "first" ? "apple" : undefined}
+            disabled={disabled === "disabled"}
+          >
+            <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Radio value="apple" />
+              apple
+            </Label>
+            <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Radio value="banana" />
+              banana
+            </Label>
+            <Label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <Radio value="cherry" />
+              cherry
+            </Label>
+          </RadioGroup>
+        </VrtFrame>,
+      );
 
-    await expect
-      .element(screen.getByTestId("vrt-frame"))
-      .toMatchScreenshot(`${selection}-${disabled}`);
-  });
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-${selection}-${disabled}`);
+    },
+  );
 });

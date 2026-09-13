@@ -9,6 +9,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Table } from "../Table/Table";
 import { Tbody } from "../Tbody/Tbody";
@@ -22,29 +23,34 @@ import { Th } from "./Th";
 const FRAME_WIDTH = 360;
 
 describe("Th VRT", () => {
-  test("column and row headers inside a Table", async () => {
-    const screen = await render(
-      <VrtFrame width={FRAME_WIDTH}>
-        <Table>
-          <Thead>
-            <Tr>
-              <Th scope="col">Component</Th>
-              <Th scope="col">Element</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            <Tr>
-              <Th scope="row">Button</Th>
-              <Td>button</Td>
-            </Tr>
-            <Tr>
-              <Th scope="row">Anchor</Th>
-              <Td>a</Td>
-            </Tr>
-          </Tbody>
-        </Table>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("inside-table");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / column and row headers inside a Table",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme} width={FRAME_WIDTH}>
+          <Table>
+            <Thead>
+              <Tr>
+                <Th scope="col">Component</Th>
+                <Th scope="col">Element</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              <Tr>
+                <Th scope="row">Button</Th>
+                <Td>button</Td>
+              </Tr>
+              <Tr>
+                <Th scope="row">Anchor</Th>
+                <Td>a</Td>
+              </Tr>
+            </Tbody>
+          </Table>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-inside-table`);
+    },
+  );
 });

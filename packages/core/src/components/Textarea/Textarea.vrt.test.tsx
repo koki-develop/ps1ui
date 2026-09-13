@@ -14,6 +14,7 @@ import "../../styles/styles.css";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Textarea } from "./Textarea";
 
@@ -31,7 +32,7 @@ const PSEUDO_STATES = ["hover", "focus"] as const satisfies readonly PseudoClass
 const FRAME_WIDTH = 220;
 const ROWS = 3;
 
-const CASES: readonly { content: Content; interaction: Interaction }[] = [
+const BASE_CASES: readonly { content: Content; interaction: Interaction }[] = [
   // Interaction matrix on empty + placeholder to catch base border /
   // placeholder-color / resize-handle drift.
   { content: "empty", interaction: "default" },
@@ -50,10 +51,12 @@ const CASES: readonly { content: Content; interaction: Interaction }[] = [
   { content: "multiline", interaction: "focus" },
 ];
 
+const CASES = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
+
 describe("Textarea VRT", () => {
   test.for(CASES)(
-    "content=$content / interaction=$interaction",
-    async ({ content, interaction }) => {
+    "theme=$theme / content=$content / interaction=$interaction",
+    async ({ theme, content, interaction }) => {
       const value =
         content === "filled"
           ? "hello world"
@@ -63,7 +66,7 @@ describe("Textarea VRT", () => {
       const placeholder = content === "placeholder" ? "write your thoughts…" : undefined;
 
       const screen = await render(
-        <VrtFrame width={FRAME_WIDTH}>
+        <VrtFrame theme={theme} width={FRAME_WIDTH}>
           <Textarea
             aria-label="notes"
             data-testid="vrt-target"
@@ -82,7 +85,7 @@ describe("Textarea VRT", () => {
         async () => {
           await expect
             .element(screen.getByTestId("vrt-frame"))
-            .toMatchScreenshot(`${content}-${interaction}`);
+            .toMatchScreenshot(`${theme}-${content}-${interaction}`);
         },
       );
     },

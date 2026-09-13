@@ -10,6 +10,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Tooltip, type TooltipPlacement } from "./Tooltip";
 
@@ -20,52 +21,49 @@ const PLACEMENTS = [
   "right",
 ] as const satisfies readonly TooltipPlacement[];
 
+const CASES = THEMES.flatMap((theme) => PLACEMENTS.map((placement) => ({ theme, placement })));
+
 describe("Tooltip VRT", () => {
-  test.for(PLACEMENTS.map((placement) => ({ placement })))(
-    "placement=$placement",
-    async ({ placement }) => {
-      const screen = await render(
-        <VrtFrame>
-          <div
-            style={{
-              width: 240,
-              height: 140,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Tooltip content="Delete" open placement={placement}>
-              <button
-                type="button"
-                data-testid="vrt-target"
-                style={{
-                  background: "var(--ps1ui-color-surface)",
-                  color: "var(--ps1ui-color-fg)",
-                  border: "1px solid var(--ps1ui-color-border)",
-                  fontFamily: "var(--ps1ui-font-mono)",
-                  fontSize: "var(--ps1ui-font-size-sm)",
-                  padding: "4px 12px",
-                }}
-              >
-                trigger
-              </button>
-            </Tooltip>
-          </div>
-        </VrtFrame>,
-      );
+  test.for(CASES)("theme=$theme / placement=$placement", async ({ theme, placement }) => {
+    const screen = await render(
+      <VrtFrame theme={theme}>
+        <div
+          style={{
+            width: 240,
+            height: 140,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Tooltip content="Delete" open placement={placement}>
+            <button
+              type="button"
+              data-testid="vrt-target"
+              style={{
+                background: "var(--ps1ui-color-surface)",
+                color: "var(--ps1ui-color-fg)",
+                border: "1px solid var(--ps1ui-color-border)",
+                fontFamily: "var(--ps1ui-font-mono)",
+                fontSize: "var(--ps1ui-font-size-sm)",
+                padding: "4px 12px",
+              }}
+            >
+              trigger
+            </button>
+          </Tooltip>
+        </div>
+      </VrtFrame>,
+    );
 
-      // Wait for the panel to be positioned (visibility flips to visible only
-      // after the post-mount measurement completes).
-      await expect
-        .poll(
-          () => document.querySelector<HTMLElement>('[role="tooltip"]')?.style.visibility ?? null,
-        )
-        .toBe("visible");
+    // Wait for the panel to be positioned (visibility flips to visible only
+    // after the post-mount measurement completes).
+    await expect
+      .poll(() => document.querySelector<HTMLElement>('[role="tooltip"]')?.style.visibility ?? null)
+      .toBe("visible");
 
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`placement-${placement}`);
-    },
-  );
+    await expect
+      .element(screen.getByTestId("vrt-frame"))
+      .toMatchScreenshot(`${theme}-placement-${placement}`);
+  });
 });

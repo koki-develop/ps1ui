@@ -6,18 +6,19 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { TabPanel } from "./TabPanel";
 
 describe("TabPanel VRT", () => {
-  test("default", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / default", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame width={340}>
+      <VrtFrame theme={theme} width={340}>
         <TabPanel value="a" aria-label="apple" data-testid="vrt-target">
           Panel content sits on the same monospace grid as the rest of the toolkit.
         </TabPanel>
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("default");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-default`);
   });
 });

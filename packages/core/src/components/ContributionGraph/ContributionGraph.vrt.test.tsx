@@ -25,6 +25,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { makeSampleDays, mulberry32 } from "../../testing/contribution-graph-sample";
 import { withPseudoState } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { ContributionGraph, type ContributionDay } from "./ContributionGraph";
 
@@ -35,136 +36,155 @@ const QUARTER = makeSampleDays("2025-12-31", 7 * 12, 42);
 const TWO_MONTHS = makeSampleDays("2025-12-31", 7 * 8, 42);
 
 describe("ContributionGraph VRT", () => {
-  test("full-year (fits at compact cell size)", async () => {
-    // A true 53-week year is wider than the 374px VRT frame at default sizes,
-    // so this fits into the frame by shrinking cellSize/cellGap. Still 365
-    // days end-to-end — the point is to see labels flow across all 12 months.
-    const year = makeSampleDays("2025-12-31", 365, 7);
-    const screen = await render(
-      <VrtFrame>
-        <ContributionGraph data={year} cellSize={5} cellGap={2} cellRadius={1} />
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("full-year");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / full-year (fits at compact cell size)",
+    async ({ theme }) => {
+      // A true 53-week year is wider than the 374px VRT frame at default sizes,
+      // so this fits into the frame by shrinking cellSize/cellGap. Still 365
+      // days end-to-end — the point is to see labels flow across all 12 months.
+      const year = makeSampleDays("2025-12-31", 365, 7);
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <ContributionGraph data={year} cellSize={5} cellGap={2} cellRadius={1} />
+        </VrtFrame>,
+      );
+      await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-full-year`);
+    },
+  );
 
-  test("monday-start", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / monday-start", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame>
+      <VrtFrame theme={theme}>
         <ContributionGraph data={QUARTER} weekStartsOn="monday" />
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("monday-start");
-  });
-
-  test("minimal (no labels, no legend)", async () => {
-    const screen = await render(
-      <VrtFrame>
-        <ContributionGraph
-          data={QUARTER}
-          showMonthLabels={false}
-          showWeekdayLabels={false}
-          showLegend={false}
-        />
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("minimal");
-  });
-
-  test("larger-cells", async () => {
-    const screen = await render(
-      <VrtFrame>
-        <ContributionGraph data={TWO_MONTHS} cellSize={16} cellGap={4} cellRadius={3} />
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("larger-cells");
-  });
-
-  test("wide-parent-hugs-graph", async () => {
-    // Small 4-week graph (svgWidth ≈ 81px at default cellSize) inside a 360px
-    // parent. Before the width-var fix, the wrapper stretched to 360px and
-    // the align-self:flex-end legend flew to the far right, detached from
-    // the grid. This capture pins the wrapper hugging the SVG so the legend
-    // right-aligns to the graph itself.
-    const start = new Date(2025, 0, 5); // Sun Jan 5 2025
-    const days: ContributionDay[] = [];
-    for (let i = 0; i < 28; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      const r = mulberry32(3 + i)();
-      days.push({ date: iso, count: r < 0.4 ? 0 : Math.floor(r * 10) });
-    }
-    const screen = await render(
-      <VrtFrame width={360}>
-        <ContributionGraph data={days} />
-      </VrtFrame>,
-    );
     await expect
       .element(screen.getByTestId("vrt-frame"))
-      .toMatchScreenshot("wide-parent-hugs-graph");
+      .toMatchScreenshot(`${theme}-monday-start`);
   });
 
-  test("focused-cell-with-tooltip", async () => {
-    // The Tooltip panel is portaled to <body>, so like Tooltip's own VRT this
-    // relies on the element screenshot capturing whatever viewport pixels fall
-    // inside VrtFrame's box, regardless of DOM ancestry. The fixed 240×160
-    // centring box is what guarantees that: one bare week (11px wide, 95px
-    // tall, no labels or legend) lands mid-frame, so the panel above the
-    // top-left cell has room on all sides. `labelForDay` is overridden to a
-    // short constant purely to keep the panel's width — and therefore the
-    // capture's framing — independent of the default sentence's length.
-    const week: ContributionDay[] = makeSampleDays("2025-01-11", 7, 9);
-    const screen = await render(
-      <VrtFrame>
-        <div
-          style={{
-            width: 240,
-            height: 160,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / minimal (no labels, no legend)",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme}>
           <ContributionGraph
-            data={week}
+            data={QUARTER}
             showMonthLabels={false}
             showWeekdayLabels={false}
             showLegend={false}
-            labelForDay={() => "3 commits"}
           />
-        </div>
-      </VrtFrame>,
-    );
-    // Focusing the first cell draws the ring and opens the tooltip in one
-    // motion. `focus` rather than `focus-visible`: the ring is keyed on
-    // `:focus` so pointer focus is indicated too (see ContributionGraph.css),
-    // which also keeps this capture reachable on WebKit.
-    await withPseudoState(".ps1ui-contribution-graph__cell", ["focus"], async () => {
-      await expect
-        .poll(
-          () => document.querySelector<HTMLElement>('[role="tooltip"]')?.style.visibility ?? null,
-        )
-        .toBe("visible");
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot("focused-cell-with-tooltip");
-    });
-  });
+        </VrtFrame>,
+      );
+      await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-minimal`);
+    },
+  );
 
-  test("narrow-viewport-scrolls", async () => {
-    // Full year at default cellSize would need ~742px; the frame's content is
-    // pinned to 300px so the internal scroller crops the SVG at the parent's
-    // width instead of pushing it wider. Baseline captures the clipped left
-    // portion — the SVG stops at the scroller's right edge.
-    const year = makeSampleDays("2025-12-31", 365, 7);
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / larger-cells", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame width={300}>
-        <ContributionGraph data={year} />
+      <VrtFrame theme={theme}>
+        <ContributionGraph data={TWO_MONTHS} cellSize={16} cellGap={4} cellRadius={3} />
       </VrtFrame>,
     );
     await expect
       .element(screen.getByTestId("vrt-frame"))
-      .toMatchScreenshot("narrow-viewport-scrolls");
+      .toMatchScreenshot(`${theme}-larger-cells`);
   });
+
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / wide-parent-hugs-graph",
+    async ({ theme }) => {
+      // Small 4-week graph (svgWidth ≈ 81px at default cellSize) inside a 360px
+      // parent. Before the width-var fix, the wrapper stretched to 360px and
+      // the align-self:flex-end legend flew to the far right, detached from
+      // the grid. This capture pins the wrapper hugging the SVG so the legend
+      // right-aligns to the graph itself.
+      const start = new Date(2025, 0, 5); // Sun Jan 5 2025
+      const days: ContributionDay[] = [];
+      for (let i = 0; i < 28; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const r = mulberry32(3 + i)();
+        days.push({ date: iso, count: r < 0.4 ? 0 : Math.floor(r * 10) });
+      }
+      const screen = await render(
+        <VrtFrame theme={theme} width={360}>
+          <ContributionGraph data={days} />
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-wide-parent-hugs-graph`);
+    },
+  );
+
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / focused-cell-with-tooltip",
+    async ({ theme }) => {
+      // The Tooltip panel is portaled to <body>, so like Tooltip's own VRT this
+      // relies on the element screenshot capturing whatever viewport pixels fall
+      // inside VrtFrame's box, regardless of DOM ancestry. The fixed 240×160
+      // centring box is what guarantees that: one bare week (11px wide, 95px
+      // tall, no labels or legend) lands mid-frame, so the panel above the
+      // top-left cell has room on all sides. `labelForDay` is overridden to a
+      // short constant purely to keep the panel's width — and therefore the
+      // capture's framing — independent of the default sentence's length.
+      const week: ContributionDay[] = makeSampleDays("2025-01-11", 7, 9);
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <div
+            style={{
+              width: 240,
+              height: 160,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ContributionGraph
+              data={week}
+              showMonthLabels={false}
+              showWeekdayLabels={false}
+              showLegend={false}
+              labelForDay={() => "3 commits"}
+            />
+          </div>
+        </VrtFrame>,
+      );
+      // Focusing the first cell draws the ring and opens the tooltip in one
+      // motion. `focus` rather than `focus-visible`: the ring is keyed on
+      // `:focus` so pointer focus is indicated too (see ContributionGraph.css),
+      // which also keeps this capture reachable on WebKit.
+      await withPseudoState(".ps1ui-contribution-graph__cell", ["focus"], async () => {
+        await expect
+          .poll(
+            () => document.querySelector<HTMLElement>('[role="tooltip"]')?.style.visibility ?? null,
+          )
+          .toBe("visible");
+        await expect
+          .element(screen.getByTestId("vrt-frame"))
+          .toMatchScreenshot(`${theme}-focused-cell-with-tooltip`);
+      });
+    },
+  );
+
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / narrow-viewport-scrolls",
+    async ({ theme }) => {
+      // Full year at default cellSize would need ~742px; the frame's content is
+      // pinned to 300px so the internal scroller crops the SVG at the parent's
+      // width instead of pushing it wider. Baseline captures the clipped left
+      // portion — the SVG stops at the scroller's right edge.
+      const year = makeSampleDays("2025-12-31", 365, 7);
+      const screen = await render(
+        <VrtFrame theme={theme} width={300}>
+          <ContributionGraph data={year} />
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-narrow-viewport-scrolls`);
+    },
+  );
 });

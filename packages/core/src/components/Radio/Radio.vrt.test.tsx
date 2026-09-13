@@ -9,6 +9,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Radio } from "./Radio";
 
@@ -24,14 +25,16 @@ const INTERACTIONS = [
 ] as const satisfies readonly Interaction[];
 const PSEUDO_STATES = ["hover", "focus-visible"] as const satisfies readonly PseudoClass[];
 
-const CASES = CHECKED_STATES.flatMap((checked) =>
-  INTERACTIONS.map((interaction) => ({ checked, interaction })),
+const CASES = THEMES.flatMap((theme) =>
+  CHECKED_STATES.flatMap((checked) =>
+    INTERACTIONS.map((interaction) => ({ theme, checked, interaction })),
+  ),
 );
 
 describe("Radio VRT", () => {
   test.for(CASES)(
-    "checked=$checked / interaction=$interaction",
-    async ({ checked, interaction }, ctx) => {
+    "theme=$theme / checked=$checked / interaction=$interaction",
+    async ({ theme, checked, interaction }, ctx) => {
       // Same WebKit skip as Checkbox/Button/Anchor: macOS Safari's default
       // "Full Keyboard Access" excludes non-text form controls (radio
       // included) from the Tab sequence, so :focus-visible can't be
@@ -42,7 +45,7 @@ describe("Radio VRT", () => {
       );
 
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Radio
             aria-label="pick"
             data-testid="vrt-target"
@@ -59,7 +62,7 @@ describe("Radio VRT", () => {
         async () => {
           await expect
             .element(screen.getByTestId("vrt-frame"))
-            .toMatchScreenshot(`${checked}-${interaction}`);
+            .toMatchScreenshot(`${theme}-${checked}-${interaction}`);
         },
       );
     },

@@ -6,6 +6,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Image } from "./Image";
 
@@ -20,21 +21,21 @@ const SAMPLE_SRC =
 </svg>`);
 
 describe("Image VRT", () => {
-  test("plain", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / plain", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame>
+      <VrtFrame theme={theme}>
         <Image src={SAMPLE_SRC} alt="" width={320} height={180} />
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("plain");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-plain`);
   });
 
-  test("bordered", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / bordered", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame>
+      <VrtFrame theme={theme}>
         <Image src={SAMPLE_SRC} alt="" variant="bordered" width={320} height={180} />
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("bordered");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-bordered`);
   });
 });

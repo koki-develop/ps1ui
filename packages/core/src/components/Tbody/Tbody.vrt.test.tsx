@@ -8,6 +8,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Table } from "../Table/Table";
 import { Td } from "../Td/Td";
@@ -21,29 +22,34 @@ import { Tbody } from "./Tbody";
 const FRAME_WIDTH = 360;
 
 describe("Tbody VRT", () => {
-  test("renders identically to a bare <tbody> inside a Table", async () => {
-    const screen = await render(
-      <VrtFrame width={FRAME_WIDTH}>
-        <Table>
-          <Thead>
-            <Tr>
-              <Th scope="col">Prop</Th>
-              <Th scope="col">Type</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            <Tr>
-              <Td>ordered</Td>
-              <Td>boolean</Td>
-            </Tr>
-            <Tr>
-              <Td>className</Td>
-              <Td>string</Td>
-            </Tr>
-          </Tbody>
-        </Table>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("inside-table");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / renders identically to a bare <tbody> inside a Table",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme} width={FRAME_WIDTH}>
+          <Table>
+            <Thead>
+              <Tr>
+                <Th scope="col">Prop</Th>
+                <Th scope="col">Type</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              <Tr>
+                <Td>ordered</Td>
+                <Td>boolean</Td>
+              </Tr>
+              <Tr>
+                <Td>className</Td>
+                <Td>string</Td>
+              </Tr>
+            </Tbody>
+          </Table>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-inside-table`);
+    },
+  );
 });

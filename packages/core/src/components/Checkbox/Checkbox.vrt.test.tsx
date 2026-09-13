@@ -11,6 +11,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Checkbox } from "./Checkbox";
 
@@ -30,14 +31,16 @@ const INTERACTIONS = [
 ] as const satisfies readonly Interaction[];
 const PSEUDO_STATES = ["hover", "focus-visible"] as const satisfies readonly PseudoClass[];
 
-const CASES = CHECKED_STATES.flatMap((checked) =>
-  INTERACTIONS.map((interaction) => ({ checked, interaction })),
+const CASES = THEMES.flatMap((theme) =>
+  CHECKED_STATES.flatMap((checked) =>
+    INTERACTIONS.map((interaction) => ({ theme, checked, interaction })),
+  ),
 );
 
 describe("Checkbox VRT", () => {
   test.for(CASES)(
-    "checked=$checked / interaction=$interaction",
-    async ({ checked, interaction }, ctx) => {
+    "theme=$theme / checked=$checked / interaction=$interaction",
+    async ({ theme, checked, interaction }, ctx) => {
       // Same WebKit skip as Button/Anchor: macOS Safari's default "Full
       // Keyboard Access" excludes non-text form controls (checkbox included)
       // from the Tab sequence, so :focus-visible can't be authentically
@@ -48,7 +51,7 @@ describe("Checkbox VRT", () => {
       );
 
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Checkbox
             aria-label="agree"
             data-testid="vrt-target"
@@ -66,7 +69,7 @@ describe("Checkbox VRT", () => {
         async () => {
           await expect
             .element(screen.getByTestId("vrt-frame"))
-            .toMatchScreenshot(`${checked}-${interaction}`);
+            .toMatchScreenshot(`${theme}-${checked}-${interaction}`);
         },
       );
     },

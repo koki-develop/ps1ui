@@ -19,6 +19,7 @@ import "../../styles/styles.css";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Select } from "./Select";
 
@@ -50,7 +51,7 @@ const GROUPED = (
   </>
 );
 
-const CASES: readonly { mode: Mode; interaction: Interaction }[] = [
+const BASE_CASES: readonly { mode: Mode; interaction: Interaction }[] = [
   // Interaction matrix on the drop-down: the glyph tint, the reserved padding
   // and the border/ring treatment all live here.
   { mode: "dropdown", interaction: "default" },
@@ -69,30 +70,40 @@ const CASES: readonly { mode: Mode; interaction: Interaction }[] = [
   { mode: "grouped", interaction: "default" },
 ];
 
-describe("Select VRT", () => {
-  test.for(CASES)("mode=$mode / interaction=$interaction", async ({ mode, interaction }) => {
-    const listbox = mode === "grouped" || mode === "listbox";
-    const screen = await render(
-      <VrtFrame width={FRAME_WIDTH}>
-        <Select
-          aria-label="language"
-          data-testid="vrt-target"
-          defaultValue="rust"
-          size={listbox ? 4 : undefined}
-          disabled={interaction === "disabled"}
-          // Half the frame, so the gap between the control's inline end and the
-          // frame edge makes any drift of the marker unmissable.
-          style={mode === "narrow" ? { width: FRAME_WIDTH / 2 } : undefined}
-        >
-          {mode === "grouped" ? GROUPED : OPTIONS}
-        </Select>
-      </VrtFrame>,
-    );
+const CASES = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
 
-    await withPseudoStateFor('[data-testid="vrt-target"]', interaction, PSEUDO_STATES, async () => {
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${mode}-${interaction}`);
-    });
-  });
+describe("Select VRT", () => {
+  test.for(CASES)(
+    "theme=$theme / mode=$mode / interaction=$interaction",
+    async ({ theme, mode, interaction }) => {
+      const listbox = mode === "grouped" || mode === "listbox";
+      const screen = await render(
+        <VrtFrame theme={theme} width={FRAME_WIDTH}>
+          <Select
+            aria-label="language"
+            data-testid="vrt-target"
+            defaultValue="rust"
+            size={listbox ? 4 : undefined}
+            disabled={interaction === "disabled"}
+            // Half the frame, so the gap between the control's inline end and the
+            // frame edge makes any drift of the marker unmissable.
+            style={mode === "narrow" ? { width: FRAME_WIDTH / 2 } : undefined}
+          >
+            {mode === "grouped" ? GROUPED : OPTIONS}
+          </Select>
+        </VrtFrame>,
+      );
+
+      await withPseudoStateFor(
+        '[data-testid="vrt-target"]',
+        interaction,
+        PSEUDO_STATES,
+        async () => {
+          await expect
+            .element(screen.getByTestId("vrt-frame"))
+            .toMatchScreenshot(`${theme}-${mode}-${interaction}`);
+        },
+      );
+    },
+  );
 });

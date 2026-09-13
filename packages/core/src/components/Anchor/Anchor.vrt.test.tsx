@@ -15,6 +15,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES, type Theme } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { PS1Root } from "../PS1Root/PS1Root";
 import { Text } from "../Text/Text";
@@ -27,7 +28,9 @@ const PSEUDO_STATES = [
   "focus-visible",
   "active",
 ] as const satisfies readonly PseudoClass[];
-const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
+const CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) => STATES.map((state) => ({ theme, variant, state }))),
+);
 
 const SIZES = ["xs", "sm", "md", "lg", "xl"] as const satisfies readonly AnchorSize[];
 
@@ -48,9 +51,9 @@ const RESPONSIVE_SIZE = {
   xl: "xl",
 } as const satisfies Record<"base" | "sm" | "md" | "lg" | "xl", AnchorSize>;
 
-type SizeCase = { name: string; stageWidth: number; node: () => ReactNode };
+type SizeCase = { theme: Theme; name: string; stageWidth: number; node: () => ReactNode };
 
-const SIZE_CASES: readonly SizeCase[] = [
+const BASE_SIZE_CASES: readonly Omit<SizeCase, "theme">[] = [
   ...SIZES.map((size) => ({
     name: `size-${size}`,
     stageWidth: FRAME_WIDTH,
@@ -84,19 +87,25 @@ const SIZE_CASES: readonly SizeCase[] = [
   })),
 ];
 
+const SIZE_CASES: readonly SizeCase[] = THEMES.flatMap((theme) =>
+  BASE_SIZE_CASES.map((c) => ({ theme, ...c })),
+);
+
 // Adornment row. The pixel diff is doing real work here that no computed-style
 // assertion can: the underline has to stop at the label, leaving the icon and
 // the gap between them bare. A regression there paints one link as two
 // disconnected dashes — geometrically valid CSS, obviously wrong to a reader.
 // Hover is captured per variant because subtle's underline is decoupled from
 // its text colour at rest and only converges on hover.
-const ADORNED_STATE_CASES = VARIANTS.flatMap((variant) =>
-  (["default", "hover"] as const).map((state) => ({ variant, state })),
+const ADORNED_STATE_CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) =>
+    (["default", "hover"] as const).map((state) => ({ theme, variant, state })),
+  ),
 );
 
-type ShapeCase = { name: string; node: () => ReactNode };
+type ShapeCase = { theme: Theme; name: string; node: () => ReactNode };
 
-const SHAPE_CASES: readonly ShapeCase[] = [
+const BASE_SHAPE_CASES: readonly Omit<ShapeCase, "theme">[] = [
   {
     name: "adorned-leading",
     node: () => (
@@ -135,45 +144,56 @@ const SHAPE_CASES: readonly ShapeCase[] = [
   },
 ];
 
+const SHAPE_CASES: readonly ShapeCase[] = THEMES.flatMap((theme) =>
+  BASE_SHAPE_CASES.map((c) => ({ theme, ...c })),
+);
+
 describe("Anchor VRT", () => {
-  test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ctx) => {
-    // Same WebKit skip as Button/Button.contrast: macOS Safari's default
-    // "Full Keyboard Access" excludes <a href> from the Tab sequence too,
-    // so :focus-visible can't be authentically reached on WebKit.
-    ctx.skip(
-      state === "focus-visible" && server.browser === "webkit",
-      "macOS Safari Full Keyboard Access excludes <a href> from Tab",
-    );
-    // href="#" — no navigation is ever attempted: the `active` state's
-    // synthesized mouse-down + release would fire a real click on an
-    // <a href>, but pseudo-state.ts's `suppressClick` intercepts it. Any
-    // href would work; "#" keeps the fixture minimal without pretending
-    // to point at a real page.
+  test.for(CASES)(
+    "theme=$theme / variant=$variant / state=$state",
+    async ({ theme, variant, state }, ctx) => {
+      // Same WebKit skip as Button/Button.contrast: macOS Safari's default
+      // "Full Keyboard Access" excludes <a href> from the Tab sequence too,
+      // so :focus-visible can't be authentically reached on WebKit.
+      ctx.skip(
+        state === "focus-visible" && server.browser === "webkit",
+        "macOS Safari Full Keyboard Access excludes <a href> from Tab",
+      );
+      // href="#" — no navigation is ever attempted: the `active` state's
+      // synthesized mouse-down + release would fire a real click on an
+      // <a href>, but pseudo-state.ts's `suppressClick` intercepts it. Any
+      // href would work; "#" keeps the fixture minimal without pretending
+      // to point at a real page.
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <Anchor href="#" variant={variant} data-testid="vrt-target">
+            read the getting-started guide
+          </Anchor>
+        </VrtFrame>,
+      );
+
+      await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
+        await expect
+          .element(screen.getByTestId("vrt-frame"))
+          .toMatchScreenshot(`${theme}-${variant}-${state}`);
+      });
+    },
+  );
+
+  test.for(SIZE_CASES)("theme=$theme / $name", async ({ theme, name, stageWidth, node }) => {
     const screen = await render(
-      <VrtFrame>
-        <Anchor href="#" variant={variant} data-testid="vrt-target">
-          read the getting-started guide
-        </Anchor>
+      <VrtFrame theme={theme} width={stageWidth}>
+        {node()}
       </VrtFrame>,
     );
-
-    await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${variant}-${state}`);
-    });
-  });
-
-  test.for(SIZE_CASES)("$name", async ({ name, stageWidth, node }) => {
-    const screen = await render(<VrtFrame width={stageWidth}>{node()}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-${name}`);
   });
 
   test.for(ADORNED_STATE_CASES)(
-    "adorned-trailing / variant=$variant / state=$state",
-    async ({ variant, state }) => {
+    "theme=$theme / adorned-trailing / variant=$variant / state=$state",
+    async ({ theme, variant, state }) => {
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Anchor
             href="#"
             variant={variant}
@@ -187,13 +207,13 @@ describe("Anchor VRT", () => {
       await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
         await expect
           .element(screen.getByTestId("vrt-frame"))
-          .toMatchScreenshot(`adorned-trailing-${variant}-${state}`);
+          .toMatchScreenshot(`${theme}-adorned-trailing-${variant}-${state}`);
       });
     },
   );
 
-  test.for(SHAPE_CASES)("$name", async ({ name, node }) => {
-    const screen = await render(<VrtFrame>{node()}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
+  test.for(SHAPE_CASES)("theme=$theme / $name", async ({ theme, name, node }) => {
+    const screen = await render(<VrtFrame theme={theme}>{node()}</VrtFrame>);
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-${name}`);
   });
 });

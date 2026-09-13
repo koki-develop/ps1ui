@@ -17,6 +17,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { withPseudoState } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Tbody } from "../Tbody/Tbody";
 import { Td } from "../Td/Td";
@@ -74,14 +75,18 @@ const SCROLLABLE = (
 );
 
 describe("Table VRT", () => {
-  test("basic", async () => {
-    const screen = await render(<VrtFrame width={WIDE}>{BASIC}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("basic");
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / basic", async ({ theme }) => {
+    const screen = await render(
+      <VrtFrame theme={theme} width={WIDE}>
+        {BASIC}
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-basic`);
   });
 
-  test("row headers", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / row headers", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame width={WIDE}>
+      <VrtFrame theme={theme} width={WIDE}>
         <Table>
           <Thead>
             <Tr>
@@ -102,28 +107,39 @@ describe("Table VRT", () => {
         </Table>
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("row-headers");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-row-headers`);
   });
 
-  test("scrollable", async () => {
-    const screen = await render(<VrtFrame width={NARROW}>{SCROLLABLE}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("scrollable");
-  });
-
-  test("scroller focus-visible", async (ctx) => {
-    // The scroller is a div with tabindex=0 — macOS Safari's default Full
-    // Keyboard Access excludes it from Tab, same as <pre tabindex=0>.
-    ctx.skip(
-      server.browser === "webkit",
-      "macOS Safari Full Keyboard Access excludes tabindex=0 divs from Tab",
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / scrollable", async ({ theme }) => {
+    const screen = await render(
+      <VrtFrame theme={theme} width={NARROW}>
+        {SCROLLABLE}
+      </VrtFrame>,
     );
-    const screen = await render(<VrtFrame width={NARROW}>{SCROLLABLE}</VrtFrame>);
-    // The pseudo-state target is the internal scroll wrapper, which caller
-    // props (data-testid) can't reach — target its stable class instead.
-    await withPseudoState(".ps1ui-table__scroller", ["focus-visible"], async () => {
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot("scroller-focus-visible");
-    });
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-scrollable`);
   });
+
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / scroller focus-visible",
+    async ({ theme }, ctx) => {
+      // The scroller is a div with tabindex=0 — macOS Safari's default Full
+      // Keyboard Access excludes it from Tab, same as <pre tabindex=0>.
+      ctx.skip(
+        server.browser === "webkit",
+        "macOS Safari Full Keyboard Access excludes tabindex=0 divs from Tab",
+      );
+      const screen = await render(
+        <VrtFrame theme={theme} width={NARROW}>
+          {SCROLLABLE}
+        </VrtFrame>,
+      );
+      // The pseudo-state target is the internal scroll wrapper, which caller
+      // props (data-testid) can't reach — target its stable class instead.
+      await withPseudoState(".ps1ui-table__scroller", ["focus-visible"], async () => {
+        await expect
+          .element(screen.getByTestId("vrt-frame"))
+          .toMatchScreenshot(`${theme}-scroller-focus-visible`);
+      });
+    },
+  );
 });

@@ -9,6 +9,7 @@ import "../../styles/styles.css";
 import type { ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES, type Theme } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Card } from "../Card/Card";
 import { Grid } from "../Grid/Grid";
@@ -29,7 +30,7 @@ const cell = (label: string): ReactNode => (
   </Card>
 );
 
-type Case = { name: string; stageWidth: number; node: () => ReactNode };
+type Case = { theme: Theme; name: string; stageWidth: number; node: () => ReactNode };
 
 // Responsive colSpan object used for the per-band VRT cases. Distinct
 // span per breakpoint so the captured baseline reflects an unambiguous
@@ -42,9 +43,9 @@ const RESPONSIVE_COL_SPAN = {
   xl: 6,
 } as const satisfies Record<"base" | "sm" | "md" | "lg" | "xl", number>;
 
-const CASES: readonly Case[] = [
+const BASE_CASES: readonly Omit<Case, "theme">[] = [
   ...COL_SPANS.map(
-    (n): Case => ({
+    (n): Omit<Case, "theme"> => ({
       name: `col-span-${n}`,
       stageWidth: FRAME_WIDTH,
       // Wrap in a fixed 6-column Grid so the effective span reads
@@ -140,9 +141,15 @@ const CASES: readonly Case[] = [
   },
 ];
 
+const CASES: readonly Case[] = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
+
 describe("GridItem VRT", () => {
-  test.for(CASES)("$name", async ({ name, stageWidth, node }) => {
-    const screen = await render(<VrtFrame width={stageWidth}>{node()}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
+  test.for(CASES)("theme=$theme / $name", async ({ theme, name, stageWidth, node }) => {
+    const screen = await render(
+      <VrtFrame theme={theme} width={stageWidth}>
+        {node()}
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-${name}`);
   });
 });

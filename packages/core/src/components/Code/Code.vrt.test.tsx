@@ -9,28 +9,29 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Text } from "../Text/Text";
 import { Code } from "./Code";
 
 describe("Code VRT", () => {
-  test("default", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / default", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame>
+      <VrtFrame theme={theme}>
         <Code data-testid="vrt-target">useState()</Code>
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("default");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-default`);
   });
 
-  test("in-text", async () => {
+  test.for(THEMES.map((theme) => ({ theme })))("theme=$theme / in-text", async ({ theme }) => {
     const screen = await render(
-      <VrtFrame width={420}>
+      <VrtFrame theme={theme} width={420}>
         <Text>
           Call <Code>useState()</Code> to add local state.
         </Text>
       </VrtFrame>,
     );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("in-text");
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-in-text`);
   });
 });

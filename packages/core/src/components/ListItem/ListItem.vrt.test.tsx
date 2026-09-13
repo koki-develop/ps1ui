@@ -8,6 +8,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { List } from "../List/List";
 import { ListItem } from "./ListItem";
@@ -15,16 +16,21 @@ import { ListItem } from "./ListItem";
 const FRAME_WIDTH = 320;
 
 describe("ListItem VRT", () => {
-  test("renders identically to a bare <li> inside a List", async () => {
-    const screen = await render(
-      <VrtFrame width={FRAME_WIDTH}>
-        <List>
-          <ListItem>install the package</ListItem>
-          <ListItem>import the styles entry</ListItem>
-          <ListItem>wrap your tree in PS1Root</ListItem>
-        </List>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("inside-list");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / renders identically to a bare <li> inside a List",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme} width={FRAME_WIDTH}>
+          <List>
+            <ListItem>install the package</ListItem>
+            <ListItem>import the styles entry</ListItem>
+            <ListItem>wrap your tree in PS1Root</ListItem>
+          </List>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-inside-list`);
+    },
+  );
 });

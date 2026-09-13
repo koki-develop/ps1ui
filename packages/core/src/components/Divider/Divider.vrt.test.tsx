@@ -8,14 +8,17 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Divider, type DividerOrientation, type DividerVariant } from "./Divider";
 
 const ORIENTATIONS = ["horizontal", "vertical"] as const satisfies readonly DividerOrientation[];
 const VARIANTS = ["solid", "dashed", "dotted"] as const satisfies readonly DividerVariant[];
 
-const CASES = ORIENTATIONS.flatMap((orientation) =>
-  VARIANTS.map((variant) => ({ orientation, variant })),
+const CASES = THEMES.flatMap((theme) =>
+  ORIENTATIONS.flatMap((orientation) =>
+    VARIANTS.map((variant) => ({ theme, orientation, variant })),
+  ),
 );
 
 describe("Divider VRT", () => {
@@ -25,10 +28,10 @@ describe("Divider VRT", () => {
   // stretch against — a bare vertical rule would collapse to 0 px and the
   // baseline would carry no signal.
   test.for(CASES)(
-    "orientation=$orientation / variant=$variant",
-    async ({ orientation, variant }) => {
+    "theme=$theme / orientation=$orientation / variant=$variant",
+    async ({ theme, orientation, variant }) => {
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           {orientation === "horizontal" ? (
             <div style={{ width: 240 }}>
               <Divider orientation={orientation} variant={variant} data-testid="vrt-target" />
@@ -42,7 +45,7 @@ describe("Divider VRT", () => {
       );
       await expect
         .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${orientation}-${variant}`);
+        .toMatchScreenshot(`${theme}-${orientation}-${variant}`);
     },
   );
 
@@ -50,42 +53,52 @@ describe("Divider VRT", () => {
   // for a horizontal rule. Locks in the vertical rhythm around the rule
   // (base.css's default margin plus consumer-side spacing) so a change to
   // Divider's own margin reset shows here.
-  test("horizontal between two text blocks", async () => {
-    const screen = await render(
-      <VrtFrame>
-        <div style={{ width: 240, color: "var(--ps1ui-color-fg)" }}>
-          <div>Section one.</div>
-          <Divider data-testid="vrt-target" />
-          <div>Section two.</div>
-        </div>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("between-blocks");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / horizontal between two text blocks",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <div style={{ width: 240, color: "var(--ps1ui-color-fg)" }}>
+            <div>Section one.</div>
+            <Divider data-testid="vrt-target" />
+            <div>Section two.</div>
+          </div>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-between-blocks`);
+    },
+  );
 
   // The vertical-in-flex-row composition — the primary consumer story for a
   // vertical rule. The row's cross-axis height is what the rule stretches
   // against; a broken `align-self: stretch` would produce a 0 px rule that
   // shows as a missing gap between the labels.
-  test("vertical inside a horizontal flex row", async () => {
-    const screen = await render(
-      <VrtFrame>
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            color: "var(--ps1ui-color-fg)",
-          }}
-        >
-          <span>File</span>
-          <Divider orientation="vertical" data-testid="vrt-target" />
-          <span>Edit</span>
-          <Divider orientation="vertical" />
-          <span>View</span>
-        </div>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("vertical-in-row");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / vertical inside a horizontal flex row",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              color: "var(--ps1ui-color-fg)",
+            }}
+          >
+            <span>File</span>
+            <Divider orientation="vertical" data-testid="vrt-target" />
+            <span>Edit</span>
+            <Divider orientation="vertical" />
+            <span>View</span>
+          </div>
+        </VrtFrame>,
+      );
+      await expect
+        .element(screen.getByTestId("vrt-frame"))
+        .toMatchScreenshot(`${theme}-vertical-in-row`);
+    },
+  );
 });

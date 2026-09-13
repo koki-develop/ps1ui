@@ -9,6 +9,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Details } from "./Details";
 
@@ -21,8 +22,10 @@ const PSEUDO_STATES = ["hover", "focus-visible"] as const satisfies readonly Pse
 // summary text.
 const FRAME_WIDTH = 320;
 
+const CASES = THEMES.flatMap((theme) => STATES.map((state) => ({ theme, state })));
+
 describe("Details VRT", () => {
-  test.for(STATES.map((state) => ({ state })))("state=$state", async ({ state }, ctx) => {
+  test.for(CASES)("theme=$theme / state=$state", async ({ theme, state }, ctx) => {
     // Same reasoning as Anchor / Button VRT: macOS Safari's default
     // "Full Keyboard Access" narrows Tab to text form controls, and the
     // Playwright WebKit build matches that default — :focus-visible on a
@@ -33,7 +36,7 @@ describe("Details VRT", () => {
     );
 
     const screen = await render(
-      <VrtFrame width={FRAME_WIDTH}>
+      <VrtFrame theme={theme} width={FRAME_WIDTH}>
         <Details summary="Components" open={state === "open"}>
           Button, Anchor, Card, Checkbox
         </Details>
@@ -45,7 +48,7 @@ describe("Details VRT", () => {
     // (rather than a data-testid) is used because the summary is created
     // internally by the component; the class is a stable ps1ui contract.
     await withPseudoStateFor(".ps1ui-details__summary", state, PSEUDO_STATES, async () => {
-      await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(state);
+      await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-${state}`);
     });
   });
 });

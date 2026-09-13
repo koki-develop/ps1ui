@@ -14,6 +14,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Button, type ButtonSize, type ButtonVariant } from "./Button";
 
@@ -30,31 +31,36 @@ const PSEUDO_STATES = [
   "focus-visible",
   "active",
 ] as const satisfies readonly PseudoClass[];
-const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
+const CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) => STATES.map((state) => ({ theme, variant, state }))),
+);
 
 describe("Button VRT", () => {
-  test.for(CASES)("variant=$variant / state=$state", async ({ variant, state }, ctx) => {
-    // Same WebKit skip as Button.contrast.test.tsx: macOS Safari's default
-    // "Full Keyboard Access" excludes <button> from the Tab sequence, so
-    // :focus-visible can't be authentically reached on the WebKit provider.
-    ctx.skip(
-      state === "focus-visible" && server.browser === "webkit",
-      "macOS Safari Full Keyboard Access excludes <button> from Tab",
-    );
-    const screen = await render(
-      <VrtFrame>
-        <Button variant={variant} disabled={state === "disabled"} data-testid="vrt-target">
-          save changes
-        </Button>
-      </VrtFrame>,
-    );
+  test.for(CASES)(
+    "theme=$theme / variant=$variant / state=$state",
+    async ({ theme, variant, state }, ctx) => {
+      // Same WebKit skip as Button.contrast.test.tsx: macOS Safari's default
+      // "Full Keyboard Access" excludes <button> from the Tab sequence, so
+      // :focus-visible can't be authentically reached on the WebKit provider.
+      ctx.skip(
+        state === "focus-visible" && server.browser === "webkit",
+        "macOS Safari Full Keyboard Access excludes <button> from Tab",
+      );
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <Button variant={variant} disabled={state === "disabled"} data-testid="vrt-target">
+            save changes
+          </Button>
+        </VrtFrame>,
+      );
 
-    await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
-      await expect
-        .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${variant}-${state}`);
-    });
-  });
+      await withPseudoStateFor('[data-testid="vrt-target"]', state, PSEUDO_STATES, async () => {
+        await expect
+          .element(screen.getByTestId("vrt-frame"))
+          .toMatchScreenshot(`${theme}-${variant}-${state}`);
+      });
+    },
+  );
 
   // Regression net for the polymorphic `as` prop: a Button rendered as an <a> must
   // look visually identical to a native <button>. Guards against accidental
@@ -62,11 +68,11 @@ describe("Button VRT", () => {
   // silently break the link-as-button use case. One baseline per variant is
   // enough — the pseudo-state matrix above is already covered by the <button>
   // baselines, and any tag-conditional CSS would show up in the default paint.
-  test.for(VARIANTS.map((variant) => ({ variant })))(
-    "as='a' / variant=$variant matches the button baseline",
-    async ({ variant }) => {
+  test.for(THEMES.flatMap((theme) => VARIANTS.map((variant) => ({ theme, variant }))))(
+    "theme=$theme / as='a' / variant=$variant matches the button baseline",
+    async ({ theme, variant }) => {
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Button as="a" href="#" variant={variant} data-testid="vrt-target">
             save changes
           </Button>
@@ -74,7 +80,7 @@ describe("Button VRT", () => {
       );
       await expect
         .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`${variant}-as-a-default`);
+        .toMatchScreenshot(`${theme}-${variant}-as-a-default`);
     },
   );
 
@@ -84,11 +90,11 @@ describe("Button VRT", () => {
   // add ~30 near-duplicate baselines whose only signal repeats what the
   // primary size row already carries. Any regression in the size CSS is
   // strictly geometric and shows up on the primary row.
-  test.for(SIZES.map((size) => ({ size })))(
-    "variant=primary / size=$size / default state",
-    async ({ size }) => {
+  test.for(THEMES.flatMap((theme) => SIZES.map((size) => ({ theme, size }))))(
+    "theme=$theme / variant=primary / size=$size / default state",
+    async ({ theme, size }) => {
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Button variant="primary" size={size} data-testid="vrt-target">
             save changes
           </Button>
@@ -96,7 +102,7 @@ describe("Button VRT", () => {
       );
       await expect
         .element(screen.getByTestId("vrt-frame"))
-        .toMatchScreenshot(`primary-size-${size}-default`);
+        .toMatchScreenshot(`${theme}-primary-size-${size}-default`);
     },
   );
 
@@ -104,22 +110,25 @@ describe("Button VRT", () => {
   // proportions (font/padding ratios) beyond what per-size captures alone
   // catch, since baseline vertical alignment across sizes is visible only
   // when they render together.
-  test("sizes side-by-side keep aligned baselines and proportional dimensions", async () => {
-    const screen = await render(
-      <VrtFrame>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Button variant="primary" size="sm">
-            small
-          </Button>
-          <Button variant="primary" size="md">
-            medium
-          </Button>
-          <Button variant="primary" size="lg">
-            large
-          </Button>
-        </div>
-      </VrtFrame>,
-    );
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot("sizes-row");
-  });
+  test.for(THEMES.map((theme) => ({ theme })))(
+    "theme=$theme / sizes side-by-side keep aligned baselines and proportional dimensions",
+    async ({ theme }) => {
+      const screen = await render(
+        <VrtFrame theme={theme}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button variant="primary" size="sm">
+              small
+            </Button>
+            <Button variant="primary" size="md">
+              medium
+            </Button>
+            <Button variant="primary" size="lg">
+              large
+            </Button>
+          </div>
+        </VrtFrame>,
+      );
+      await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-sizes-row`);
+    },
+  );
 });

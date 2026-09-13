@@ -5,6 +5,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { Tab } from "../Tab/Tab";
 import { Tabs } from "../Tabs/Tabs";
@@ -14,10 +15,14 @@ type Orientation = "horizontal" | "vertical";
 
 const ORIENTATIONS = ["horizontal", "vertical"] as const satisfies readonly Orientation[];
 
+const CASES = THEMES.flatMap((theme) =>
+  ORIENTATIONS.map((orientation) => ({ theme, orientation })),
+);
+
 describe("TabList VRT", () => {
-  test.for(ORIENTATIONS)("orientation=%s", async (orientation) => {
+  test.for(CASES)("theme=$theme / orientation=$orientation", async ({ theme, orientation }) => {
     const screen = await render(
-      <VrtFrame width={340}>
+      <VrtFrame theme={theme} width={340}>
         <Tabs defaultValue="a" orientation={orientation}>
           <TabList aria-label="fruit" data-testid="vrt-target">
             <Tab value="a">Apple</Tab>
@@ -28,6 +33,8 @@ describe("TabList VRT", () => {
       </VrtFrame>,
     );
 
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(orientation);
+    await expect
+      .element(screen.getByTestId("vrt-frame"))
+      .toMatchScreenshot(`${theme}-${orientation}`);
   });
 });

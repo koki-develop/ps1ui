@@ -13,6 +13,7 @@ import "../../styles/styles.css";
 import type { ReactNode } from "react";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { THEMES, type Theme } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { PS1Root } from "../PS1Root/PS1Root";
 import {
@@ -46,7 +47,7 @@ const FRAME_WIDTH = 480;
 
 const LABEL = "the quick brown fox";
 
-type Case = { name: string; stageWidth: number; node: () => ReactNode };
+type Case = { theme: Theme; name: string; stageWidth: number; node: () => ReactNode };
 
 // Responsive size cascade — one baseline per breakpoint band. Level 1
 // bakes in as the base default via withResponsiveBase, so the base case
@@ -59,7 +60,7 @@ const RESPONSIVE_SIZE = {
   xl: "3xl",
 } as const satisfies Record<"base" | "sm" | "md" | "lg" | "xl", HeadingSize>;
 
-const CASES: readonly Case[] = [
+const BASE_CASES: readonly Omit<Case, "theme">[] = [
   // Level cases test both the h1..h6 tag choice AND the LEVEL_DEFAULTS
   // size/weight mapping in one shot — a drift in either surfaces here.
   ...LEVELS.map((level) => ({
@@ -159,9 +160,15 @@ const CASES: readonly Case[] = [
   },
 ];
 
+const CASES: readonly Case[] = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
+
 describe("Heading VRT", () => {
-  test.for(CASES)("$name", async ({ name, stageWidth, node }) => {
-    const screen = await render(<VrtFrame width={stageWidth}>{node()}</VrtFrame>);
-    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(name);
+  test.for(CASES)("theme=$theme / $name", async ({ theme, name, stageWidth, node }) => {
+    const screen = await render(
+      <VrtFrame theme={theme} width={stageWidth}>
+        {node()}
+      </VrtFrame>,
+    );
+    await expect.element(screen.getByTestId("vrt-frame")).toMatchScreenshot(`${theme}-${name}`);
   });
 });

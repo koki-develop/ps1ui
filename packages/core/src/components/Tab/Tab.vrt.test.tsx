@@ -8,6 +8,7 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { type PseudoClass, withPseudoStateFor } from "../../testing/pseudo-state";
+import { THEMES } from "../../testing/theme";
 import { VrtFrame } from "../../testing/vrt";
 import { TabList } from "../TabList/TabList";
 import { Tabs } from "../Tabs/Tabs";
@@ -25,14 +26,16 @@ const INTERACTIONS = [
 ] as const satisfies readonly Interaction[];
 const PSEUDO_STATES = ["hover", "focus-visible"] as const satisfies readonly PseudoClass[];
 
-const CASES = SELECTED_STATES.flatMap((selected) =>
-  INTERACTIONS.map((interaction) => ({ selected, interaction })),
+const CASES = THEMES.flatMap((theme) =>
+  SELECTED_STATES.flatMap((selected) =>
+    INTERACTIONS.map((interaction) => ({ theme, selected, interaction })),
+  ),
 );
 
 describe("Tab VRT", () => {
   test.for(CASES)(
-    "selected=$selected / interaction=$interaction",
-    async ({ selected, interaction }, ctx) => {
+    "theme=$theme / selected=$selected / interaction=$interaction",
+    async ({ theme, selected, interaction }, ctx) => {
       // Same WebKit skip as Button / Checkbox / Radio: macOS Safari's default
       // "Full Keyboard Access" excludes non-text form controls (including
       // <button>) from the Tab sequence, so :focus-visible can't be
@@ -59,7 +62,7 @@ describe("Tab VRT", () => {
       );
 
       const screen = await render(
-        <VrtFrame>
+        <VrtFrame theme={theme}>
           <Tabs defaultValue={selected === "selected" ? "target" : "other"}>
             <TabList aria-label="x">
               <Tab value="target" data-testid="vrt-target" disabled={interaction === "disabled"}>
@@ -77,7 +80,7 @@ describe("Tab VRT", () => {
         async () => {
           await expect
             .element(screen.getByTestId("vrt-frame"))
-            .toMatchScreenshot(`${selected}-${interaction}`);
+            .toMatchScreenshot(`${theme}-${selected}-${interaction}`);
         },
       );
     },
