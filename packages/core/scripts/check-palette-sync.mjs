@@ -40,4 +40,6 @@ if (orphaned.length > 0) {
   process.exit(1);
 }
 
-console.log("theme hex subset check ok (semantic slot mapping is not verified)");
+console.log(
+  "theme hex subset check ok (dark + light palettes; semantic slot mapping is not verified)",
+);

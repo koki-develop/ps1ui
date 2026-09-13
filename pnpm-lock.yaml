@@ -26,6 +26,9 @@ importers:
       '@storybook/addon-docs':
         specifier: 10.5.0
         version: 10.5.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(esbuild@0.28.1)(storybook@10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(yaml@2.9.0))
+      '@storybook/addon-themes':
+        specifier: 10.5.0
+        version: 10.5.0(storybook@10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))
       '@storybook/addon-vitest':
         specifier: 10.5.0
         version: 10.5.0(@vitest/browser-playwright@4.1.10)(@vitest/browser@4.1.10)(@vitest/runner@4.1.10)(react@19.2.7)(storybook@10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))(vitest@4.1.10)
@@ -1507,6 +1510,11 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@storybook/addon-themes@10.5.0':
+    resolution: {integrity: sha512-9dvrN1JcpWt+f+RueMGvdeGTNQJ5y4w931X2HHzE+ItrN2Ogp0vSppb/baUNezeBLqhuUJjPbvyAeAb9v4rong==}
+    peerDependencies:
+      storybook: ^10.5.0
 
   '@storybook/addon-vitest@10.5.0':
     resolution: {integrity: sha512-o/H+ii8o7bu4r1M4pgyFt+DjVaIIccSeaAikpspNHKkKdiJ2GXfkgNwtib8Jru28HaBRfcP5u+m0QE3KBYIQkw==}
@@ -4722,6 +4730,11 @@ snapshots:
       - rollup
       - vite
       - webpack
+
+  '@storybook/addon-themes@10.5.0(storybook@10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))':
+    dependencies:
+      storybook: 10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7)
+      ts-dedent: 2.3.0
 
   '@storybook/addon-vitest@10.5.0(@vitest/browser-playwright@4.1.10)(@vitest/browser@4.1.10)(@vitest/runner@4.1.10)(react@19.2.7)(storybook@10.5.0(@types/react@19.2.17)(prettier@3.9.4)(react@19.2.7))(vitest@4.1.10)':
     dependencies:

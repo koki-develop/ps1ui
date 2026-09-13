@@ -3,6 +3,11 @@
   on `.sb-preparing-story` / `.sb-preparing-docs` — story-switch overlay elements
   at z-index 2147483647 that would flash white during transitions. These live
   outside the ps1ui canvas so base.css can't reach them.
+
+  `var(--ps1ui-color-bg)` still resolves per element, so this overlay tracks
+  whatever `data-ps1ui-theme` is set on `html` (default dark, or whatever the
+  theme toolbar's `withThemeByDataAttribute` decorator sets — see preview.tsx)
+  the same way any other consumer of the token would.
 -->
 <style>
   .sb-preparing-story,
