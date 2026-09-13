@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/koki-develop/ps1ui/compare/core-v0.7.0...core-v0.8.0) (2026-09-13)
+
+
+### Features
+
+* Add light theme with light-dark() tokens and PS1Root theme prop ([8dad6c0](https://github.com/koki-develop/ps1ui/commit/8dad6c0ed4a4d2f99dfe427cff1a086992b76235))
+* Add Switch component ([#94](https://github.com/koki-develop/ps1ui/issues/94)) ([696ba4b](https://github.com/koki-develop/ps1ui/commit/696ba4b240a7b3a360a39a85829d5d6e3ab47191))
+
 ## [0.7.0](https://github.com/koki-develop/ps1ui/compare/core-v0.6.0...core-v0.7.0) (2026-07-31)
 
 
