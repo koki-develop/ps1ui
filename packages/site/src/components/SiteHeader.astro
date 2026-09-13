@@ -1,12 +1,12 @@
 ---
-import { Anchor, Container, Stack } from "@ps1ui/core";
+import { Anchor, Container, Select, Stack } from "@ps1ui/core";
 import { CONTAINER_PX } from "../lib/site";
 import { href } from "../lib/url";
 ---
 
 <header>
   <Container size="xl" px={CONTAINER_PX}>
-    <Stack direction="row" align="center" justify="between" gap="lg">
+    <Stack direction="row" align="center" justify="between" gap="lg" wrap>
       <span class="brand">
         <Anchor href={href()} variant="subtle">PS1 UI</Anchor>
       </span>
@@ -20,6 +20,11 @@ import { href } from "../lib/url";
           </li>
         </ul>
       </nav>
+      <Select id="theme-select" aria-label="Theme" className="theme-select">
+        <option value="dark">dark</option>
+        <option value="light">light</option>
+        <option value="system">system</option>
+      </Select>
     </Stack>
   </Container>
 </header>
@@ -40,4 +45,30 @@ import { href } from "../lib/url";
     gap: var(--ps1ui-space-sm) var(--ps1ui-space-lg);
     font-size: var(--ps1ui-font-size-sm);
   }
+
+  /* Select is a React component, so Astro's scoped attribute never lands on
+     it (same reason BaseLayout targets PS1Root's className globally) — this
+     matches the nav's font-size and stays compact next to it. */
+  :global(.theme-select) {
+    width: auto;
+    font-size: var(--ps1ui-font-size-sm);
+  }
 </style>
+
+<script>
+  import { applyTheme, isPS1RootTheme } from "../lib/theme";
+
+  const select = document.getElementById("theme-select");
+  if (select instanceof HTMLSelectElement) {
+    // Sync the control with the theme already applied to <html> (by
+    // BaseLayout's inline head script, or the "dark" default when no
+    // attribute is present) rather than trusting localStorage directly —
+    // this is what's actually in effect for the page.
+    const current = document.documentElement.dataset.ps1uiTheme;
+    select.value = current && isPS1RootTheme(current) ? current : "dark";
+
+    select.addEventListener("change", () => {
+      if (isPS1RootTheme(select.value)) applyTheme(select.value);
+    });
+  }
+</script>

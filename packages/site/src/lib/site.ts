@@ -8,3 +8,8 @@ export const CONTAINER_PX: Responsive<SpaceScale> = { base: "lg", md: "xl" };
 // Single source for the install command shown on the landing page and the
 // Getting Started page.
 export const INSTALL_COMMAND = "pnpm add @ps1ui/core react react-dom";
+
+// localStorage key the persisted theme selection is stored under. Read by
+// BaseLayout's inline head script (injected there via `define:vars`, since
+// an `is:inline` script can't import) and by src/lib/theme.ts.
+export const THEME_STORAGE_KEY = "ps1ui-theme";

@@ -17,6 +17,17 @@ export function App() {
     </PS1Root>
   );
 }`;
+
+const wholePage = `<html data-ps1ui-theme="system">`;
+
+const nested = `<PS1Root theme="light">
+  {/* everything in here renders with the light palette */}
+  <PS1Root theme="dark">
+    {/* ...except this subtree, back to dark */}
+  </PS1Root>
+</PS1Root>`;
+
+const cssTarget = `build: { cssTarget: ["chrome123", "firefox120", "safari17.5"] }`;
 ---
 
 <BaseLayout
@@ -39,8 +50,8 @@ export function App() {
         <Heading level={2} size="lg">Import the stylesheet</Heading>
         <Text>
           The JS entry ships no styles. Import the CSS once at your app's entry
-          point — it brings the design tokens, the dark canvas, and every
-          component's styles.
+          point — it brings the design tokens, the canvas (dark by default),
+          and every component's styles.
         </Text>
         <CodeBlock language="tsx" code={styles} />
       </Stack>
@@ -56,6 +67,34 @@ export function App() {
           default.
         </Text>
         <CodeBlock language="tsx" code={usage} />
+      </Stack>
+
+      <Stack direction="column" gap="md">
+        <Heading level={2} size="lg">Theming</Heading>
+        <Text>
+          Dark is the default. Put <Code>data-ps1ui-theme="light"</Code> on <Code
+            >&lt;html&gt;</Code
+          > to theme the whole page, or <Code>"system"</Code> to follow the OS instead:
+        </Text>
+        <CodeBlock language="html" code={wholePage} />
+        <Text>
+          To theme just part of a page, wrap that subtree in <Code
+            >&lt;PS1Root theme="light"&gt;</Code
+          > instead — a themed <Code>PS1Root</Code> paints its own canvas and text color too, so the
+          subtree is self-contained, and nesting <Code>PS1Root</Code>s with different themes works
+          as expected:
+        </Text>
+        <CodeBlock language="tsx" code={nested} />
+        <Text>
+          If your bundler minifies CSS with Lightning CSS (Vite's default), check its CSS target.
+          Below Chrome 123 / Firefox 120 / Safari 17.5, Lightning CSS downlevels <Code
+            >light-dark()</Code
+          > into a <Code>prefers-color-scheme</Code>-only fallback, and a per-subtree <Code
+            >PS1Root theme</Code
+          > stops switching — <Code>&lt;html&gt;</Code>-level theming and <Code>"system"</Code> keep
+          working either way. Raise the target to fix it:
+        </Text>
+        <CodeBlock language="ts" code={cssTarget} />
       </Stack>
 
       <Stack direction="column" gap="md">

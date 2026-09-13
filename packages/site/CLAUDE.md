@@ -17,6 +17,7 @@ Astro 7 landing page for `@ps1ui/core`. Deployed to https://koki-develop.github.
 - **No `client:*` unless proven needed** — almost every core component renders statically (CodeBlock's SSR output is complete); hydration ships ~40KB of React runtime. The proven-needed exceptions are Tooltip (`client:load`) and ContributionGraph (`client:visible`), whose demos are React islands under `src/demos/` — each page's header comment records why.
 - **Reset-aware markup**: core's `base.css` un-styles bare `<a>` / `<h*>` / `<button>` / `<ul>` / `<img>` — route through `<Anchor>` / `<Heading>` / `<Button>` / `<CodeBlock>`.
 - `.astro` files are unlinted (oxlint doesn't support them; lefthook is scoped to `packages/core/`).
+- **Theme**: `BaseLayout.astro`'s persisted-theme head script must stay `is:inline` and be the first thing in `<head>` — it applies the stored choice before first paint, ahead of every stylesheet and link. `THEME_STORAGE_KEY` (`src/lib/site.ts`) is the single localStorage key; both the head script and `src/lib/theme.ts` must stay in sync with it. The header `<Select aria-label="Theme">` (`SiteHeader.astro`) is driven by `src/lib/theme.ts`'s `applyTheme` / `isPS1RootTheme`. A demo that nests themed `PS1Root`s must lay them out with `Grid` (or another definite-track layout), never a row `Stack` — a themed `PS1Root` is a container-query context, and a flex row's shrink-to-fit main axis collapses its intrinsic width to 0 (see `ps1root.astro`'s demo).
 
 ## Component pages
 

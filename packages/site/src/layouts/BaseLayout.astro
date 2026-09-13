@@ -9,6 +9,7 @@ import { PS1Root } from "@ps1ui/core";
 import jetbrainsMonoLatinUrl from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { THEME_STORAGE_KEY } from "../lib/site.ts";
 import { href } from "../lib/url.ts";
 
 interface Props {
@@ -35,6 +36,41 @@ const ogImage = new URL(href("og.png"), Astro.site).toString();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
+    {/*
+      Applies a persisted theme choice before first paint.
+
+      The browser paints the <html> canvas using the `color-scheme` meta
+      above the instant it parses it — before any stylesheet (including
+      core's tokens.css, which carries the `[data-ps1ui-theme]` rules) has
+      loaded. If a returning visitor's "light" choice were only applied by
+      later CSS/JS, they'd see one dark frame (the default above) flash to
+      light — a flash of incorrect theme. Running this script inline,
+      synchronously, and before every stylesheet/link below means both the
+      `data-ps1ui-theme` attribute and this meta's content are already
+      correct at first paint.
+
+      `define:vars` injects the storage key as a literal because an
+      `is:inline` script can't use ES imports — src/lib/site.ts's
+      THEME_STORAGE_KEY is the source of truth this must stay in sync with.
+    */}
+    <script is:inline define:vars={{ storageKey: THEME_STORAGE_KEY }}>
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored === "light" || stored === "dark" || stored === "system") {
+          document.documentElement.dataset.ps1uiTheme = stored;
+          const meta = document.querySelector('meta[name="color-scheme"]');
+          if (meta) {
+            meta.setAttribute(
+              "content",
+              stored === "system" ? "light dark" : stored,
+            );
+          }
+        }
+      } catch {
+        // localStorage may throw (private browsing, blocked site data) —
+        // fall back silently to the default dark theme.
+      }
+    </script>
     {/* crossorigin is required even same-origin: font requests use CORS mode,
         and a preload without it is ignored (the font gets fetched twice). */}
     <link
