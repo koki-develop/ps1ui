@@ -1,89 +1,180 @@
-/* Palette hexes are mirrored in .storybook/ps1uiTheme.ts — see note there. */
+/* Palette hexes are mirrored in .storybook/ps1uiTheme.ts — see note there
+   (one manager theme per side of each light-dark() pair; the manager
+   follows the preview's theme toolbar). */
 :root {
+  /* Every `light-dark(LIGHT, DARK)` pair below resolves against the
+     `color-scheme` in effect on the element that substitutes the `var()` —
+     not against this `:root` block. This file deliberately does NOT set
+     `color-scheme` itself, because it is shared by two entries with
+     different defaults: base.css's `html { color-scheme: dark }` rule owns
+     the document-wide default for the full-canvas entries (base.css /
+     styles.css), while components.css imports only this file and ships no
+     document-level `color-scheme` at all — embedded ps1ui follows whatever
+     `color-scheme` the host document already has, light where the host
+     declares none. The `[data-ps1ui-theme]` rules right below are the one
+     addition that ships in both entries: they set `color-scheme` explicitly,
+     scoped by the attribute, so any consumer can opt a subtree into a
+     specific theme regardless of the entry's default. */
+
   --ps1ui-font-mono:
     "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Mono", Consolas,
     monospace;
 
-  --ps1ui-color-bg: #0b0f14;
-  --ps1ui-color-surface: #0f1520;
-  --ps1ui-color-border: #21262d;
-  --ps1ui-color-border-strong: #30363d;
-  --ps1ui-color-fg: #c7d5df;
-  --ps1ui-color-fg-muted: #8b98a5;
-  /* fg-subtle must maintain ≥ 4.5:1 (WCAG AA) vs BOTH --ps1ui-color-bg and --ps1ui-color-surface.
-     Surface is the tighter case; verified by Text.contrast.test.tsx. */
-  --ps1ui-color-fg-subtle: #7a8593;
-  --ps1ui-color-primary: #7ee787;
-  --ps1ui-color-primary-hover: #56d364;
-  --ps1ui-color-primary-active: #3fb950;
-  --ps1ui-color-primary-fg: #0b0f14;
+  --ps1ui-color-bg: light-dark(#ffffff, #0b0f14);
+  --ps1ui-color-surface: light-dark(#f6f8fa, #0f1520);
+  --ps1ui-color-border: light-dark(#d0d7de, #21262d);
+  --ps1ui-color-border-strong: light-dark(#afb8c1, #30363d);
+  --ps1ui-color-fg: light-dark(#1f2328, #c7d5df);
+  --ps1ui-color-fg-muted: light-dark(#59636e, #8b98a5);
+  /* fg-subtle must maintain ≥ 4.5:1 (WCAG AA) vs BOTH --ps1ui-color-bg and
+     --ps1ui-color-surface, in both themes. Surface is the tighter case;
+     verified by Text.contrast.test.tsx. */
+  --ps1ui-color-fg-subtle: light-dark(#656d76, #7a8593);
+  /* Every semantic hue (primary / accent / danger / muted) below is split
+     into three roles, because light theme cannot satisfy one hex for both:
+     - FILL   ({base, hover, active, fg} quartet): background surface for
+       solid Button/Badge, Checkbox/Radio/Switch, and the shared focus-ring /
+       focus-border color. -fg must read ≥ 4.5:1 (WCAG AA) against base/hover
+       /active in both themes, and the fill itself must clear ≥ 3:1 against
+       BOTH --ps1ui-color-bg and --ps1ui-color-surface (the non-text
+       "graphical object" boundary — a fill needs to read as distinct from
+       the canvas, not as legible text). White (or near-black, in dark) text
+       ON a fill caps how dark/light that fill can go: white text needs
+       ≥ 4.5:1, which caps the fill's relative luminance at Y ≤ 0.183.
+       Primary's light fill sits right at that ceiling (≈ 4.55:1 white-on-fill)
+       and gets its brightness from chroma instead of luminance — R and B are
+       pulled down so the green reads vivid at equal luminance. Hover/active
+       darken by scaling the channels down (≈ 5.9:1 and 7.5:1 white-on-fill).
+     - TEXT   (`-text` / `-text-hover` / `-text-active`): the hue used as a
+       foreground color directly on the page canvas or a Card surface
+       (Anchor, Text, Heading, Tab, Details, Badge outline). Each must read
+       ≥ 4.5:1 against BOTH --ps1ui-color-bg and --ps1ui-color-surface, in
+       both themes; verified by Text.contrast.test.tsx / Anchor.contrast.test.tsx.
+     - TEXT-ON-TINT (`-text-on-tint`, one value per hue): the hue used as a
+       foreground color sitting on a translucent tint of its OWN fill color
+       (Badge subtle at rest, Button ghost :hover) — stricter than plain
+       TEXT because the tint darkens (light theme) the surface underneath.
+       Single-valued because neither consumer shifts this color on
+       interaction: Badge subtle's hover/active feedback deepens the
+       background tint only, and Button ghost's :active state uses
+       `-text-active` instead, checked directly against its own 18% tint.
+       Must read ≥ 4.5:1 against --ps1ui-color-bg and --ps1ui-color-surface
+       directly, AND against Badge's 15%-of-base subtle tint and Button
+       ghost's 12%-of-base hover tint composited over either canvas;
+       verified by Badge.contrast.test.tsx and Button.contrast.test.tsx.
+     In dark theme every TEXT and TEXT-ON-TINT value equals the corresponding
+     FILL value one-for-one (text-hover → fill-hover, text-active →
+     fill-active, text-on-tint → fill-base) — one hue reads as one color
+     there. In light theme FILL and TEXT/TEXT-ON-TINT diverge: FILL is capped
+     by the -fg contrast requirement, while TEXT/TEXT-ON-TINT stays dark,
+     capped by legibility on white and on the hue's own tints. */
+  --ps1ui-color-primary: light-dark(#078926, #7ee787);
+  --ps1ui-color-primary-hover: light-dark(#067420, #56d364);
+  --ps1ui-color-primary-active: light-dark(#05631b, #3fb950);
+  --ps1ui-color-primary-fg: light-dark(#ffffff, #0b0f14);
+  --ps1ui-color-primary-text: light-dark(#1a8138, #7ee787);
+  --ps1ui-color-primary-text-hover: light-dark(#176f30, #56d364);
+  --ps1ui-color-primary-text-active: light-dark(#13602a, #3fb950);
+  --ps1ui-color-primary-text-on-tint: light-dark(#177332, #7ee787);
   /* accent — the third semantic hue after primary and danger. Publishes the
-     same {base, hover, active, fg} quartet so any component that supports
-     colour variants can treat accent as first-class. Hover / active darken
-     the orange while keeping ≥ 4.5:1 contrast against --ps1ui-color-accent-fg;
-     verified by Badge.contrast.test.tsx. */
-  --ps1ui-color-accent: #ffa657;
-  --ps1ui-color-accent-hover: #f09045;
-  --ps1ui-color-accent-active: #db7a2f;
-  /* Foreground used on solid accent fills. Same dark-canvas hex as
-     --ps1ui-color-primary-fg / --ps1ui-color-danger-fg so any solid variant
-     across primary/accent/danger reads as one system. */
-  --ps1ui-color-accent-fg: #0b0f14;
+     same FILL quartet plus the TEXT trio and TEXT-ON-TINT singleton
+     documented above, so any component that supports colour variants can
+     treat accent as first-class. FILL hover / active darken the orange
+     while keeping ≥ 4.5:1 contrast against --ps1ui-color-accent-fg, in both
+     themes; verified by Button.contrast.test.tsx. */
+  --ps1ui-color-accent: light-dark(#c65000, #ffa657);
+  --ps1ui-color-accent-hover: light-dark(#a54300, #f09045);
+  --ps1ui-color-accent-active: light-dark(#873600, #db7a2f);
+  /* Foreground used on solid accent fills. Same hex as
+     --ps1ui-color-primary-fg / --ps1ui-color-danger-fg in each theme so any
+     solid variant across primary/accent/danger reads as one system. */
+  --ps1ui-color-accent-fg: light-dark(#ffffff, #0b0f14);
+  --ps1ui-color-accent-text: light-dark(#bf4d00, #ffa657);
+  --ps1ui-color-accent-text-hover: light-dark(#a44300, #f09045);
+  --ps1ui-color-accent-text-active: light-dark(#8d3900, #db7a2f);
+  --ps1ui-color-accent-text-on-tint: light-dark(#a84400, #ffa657);
   /* muted — neutral semantic colour for chips/tags without semantic
-     meaning (draft, archived, unassigned). Published as a full quartet
+     meaning (draft, archived, unassigned). Published as a full FILL quartet
      parallel to primary/accent/danger so components can treat "no
      particular colour" as a first-class choice instead of overloading a
      text-foreground token (--ps1ui-color-fg-muted). --ps1ui-color-muted
-     shares its hex with --ps1ui-color-fg-muted today but is a distinct
-     semantic slot — a future tuning of one does NOT drag the other along.
-     --ps1ui-color-muted must maintain ≥ 4.5:1 vs --ps1ui-color-muted-fg
-     for the solid variant, and ≥ 4.5:1 as a text colour on both
-     --ps1ui-color-bg and --ps1ui-color-surface for outline / subtle
-     variants; hover/active preserve those thresholds. Verified by
+     shares its hex with --ps1ui-color-fg-muted in each theme today but is a
+     distinct semantic slot — a future tuning of one does NOT drag the other
+     along. Unlike primary/accent/danger, muted's FILL and TEXT/TEXT-ON-TINT
+     values are identical in every state and both themes: muted never sits
+     behind white text at a brightness that would force it apart from its
+     legible-as-text value (--ps1ui-color-muted-fg is only ever paired with
+     the solid Badge variant, and the muted fill is dark enough for white
+     text without any light-theme ceiling trade-off). --ps1ui-color-muted
+     must maintain ≥ 4.5:1 vs --ps1ui-color-muted-fg for the solid variant,
+     and ≥ 4.5:1 as a text colour on both --ps1ui-color-bg and
+     --ps1ui-color-surface for outline / subtle variants, in both themes;
+     hover/active preserve those thresholds. Verified by
      Badge.contrast.test.tsx. */
-  --ps1ui-color-muted: #8b98a5;
-  --ps1ui-color-muted-hover: #7d8a97;
-  --ps1ui-color-muted-active: #74808c;
-  --ps1ui-color-muted-fg: #0b0f14;
+  --ps1ui-color-muted: light-dark(#59636e, #8b98a5);
+  --ps1ui-color-muted-hover: light-dark(#4c5561, #7d8a97);
+  --ps1ui-color-muted-active: light-dark(#424a55, #74808c);
+  --ps1ui-color-muted-fg: light-dark(#ffffff, #0b0f14);
+  --ps1ui-color-muted-text: light-dark(#59636e, #8b98a5);
+  --ps1ui-color-muted-text-hover: light-dark(#4c5561, #7d8a97);
+  --ps1ui-color-muted-text-active: light-dark(#424a55, #74808c);
+  --ps1ui-color-muted-text-on-tint: light-dark(#59636e, #8b98a5);
   /* Destructive / error signalling. Hue sits in the rose-coral band the code
      palette already inhabits (--ps1ui-code-keyword / -tag / -deleted) so the
-     surface reads as one system; luminance is tuned so the base color hits
-     ≥ 4.5:1 vs BOTH --ps1ui-color-bg and --ps1ui-color-surface (verified by
-     Text.contrast.test.tsx) and danger-fg on each danger-* fill hits the
-     same threshold (verified by Button.contrast.test.tsx). Hover/active
-     progressively darken while staying above contrast. */
-  --ps1ui-color-danger: #ff7d8d;
-  --ps1ui-color-danger-hover: #f0637a;
-  --ps1ui-color-danger-active: #e04a60;
-  --ps1ui-color-danger-fg: #0b0f14;
+     surface reads as one system. FILL luminance is tuned so danger-fg on
+     each danger-* fill hits ≥ 4.5:1 (verified by Button.contrast.test.tsx)
+     and the fill itself clears ≥ 3:1 vs BOTH --ps1ui-color-bg and
+     --ps1ui-color-surface, in both themes. Hover/active progressively
+     darken while staying above contrast. */
+  --ps1ui-color-danger: light-dark(#e22632, #ff7d8d);
+  --ps1ui-color-danger-hover: light-dark(#ba1f29, #f0637a);
+  --ps1ui-color-danger-active: light-dark(#a40e1f, #e04a60);
+  --ps1ui-color-danger-fg: light-dark(#ffffff, #0b0f14);
+  --ps1ui-color-danger-text: light-dark(#da2430, #ff7d8d);
+  --ps1ui-color-danger-text-hover: light-dark(#bb1f29, #f0637a);
+  --ps1ui-color-danger-text-active: light-dark(#a11b23, #e04a60);
+  --ps1ui-color-danger-text-on-tint: light-dark(#bd1f2a, #ff7d8d);
   --ps1ui-color-focus-ring-soft: color-mix(in srgb, var(--ps1ui-color-primary) 14%, transparent);
   --ps1ui-shadow-focus-ring: 0 0 0 3px var(--ps1ui-color-focus-ring-soft);
 
   /* Syntax-highlight palette for CodeBlock. Every value is verified ≥ 4.5:1 vs
-     BOTH --ps1ui-color-bg and --ps1ui-color-surface by CodeBlock.contrast.test.tsx. */
-  --ps1ui-code-comment: #7a8593;
-  --ps1ui-code-string: #f0c880;
-  --ps1ui-code-keyword: #ff7b95;
-  --ps1ui-code-function: #79c0ff;
-  --ps1ui-code-constant: #ffa657;
-  --ps1ui-code-type: #5eead4;
-  --ps1ui-code-tag: #ff9587;
-  --ps1ui-code-attr: #ffdc99;
-  --ps1ui-code-punctuation: #7a8593;
+     BOTH --ps1ui-color-bg and --ps1ui-color-surface, in both themes, by
+     CodeBlock.contrast.test.tsx. */
+  --ps1ui-code-comment: light-dark(#656d76, #7a8593);
+  --ps1ui-code-string: light-dark(#7a4b00, #f0c880);
+  --ps1ui-code-keyword: light-dark(#cf222e, #ff7b95);
+  --ps1ui-code-function: light-dark(#0550ae, #79c0ff);
+  --ps1ui-code-constant: light-dark(#953800, #ffa657);
+  --ps1ui-code-type: light-dark(#0e7069, #5eead4);
+  --ps1ui-code-tag: light-dark(#b3401f, #ff9587);
+  --ps1ui-code-attr: light-dark(#6d5300, #ffdc99);
+  --ps1ui-code-punctuation: light-dark(#656d76, #7a8593);
   /* Diff-specific: green = added, rose = removed. Kept separate from tag/string so
      the semantic overlap doesn't leak between grammars (a removed diff line has
      nothing to do with an HTML <tag>, and an added line isn't a string literal). */
-  --ps1ui-code-inserted: #7ee787;
-  --ps1ui-code-deleted: #ff8896;
+  --ps1ui-code-inserted: light-dark(#177131, #7ee787);
+  --ps1ui-code-deleted: light-dark(#cf222e, #ff8896);
 
   /* ContributionGraph intensity ramp. Fixed to the primary hue so a graph
-     reads as one system with the rest of the palette; the "no activity"
-     bucket reuses --ps1ui-color-border rather than surface so an empty
-     cell stays distinguishable from the canvas around it. Mixed against
+     reads as one system with the rest of the palette. Mixed against
      --ps1ui-color-surface (not bg) so the ramp holds up when the graph
      sits inside a Card. Consumers can retint the whole ramp by
-     redefining these five variables. */
-  --ps1ui-contribution-l0: var(--ps1ui-color-border);
+     redefining these five variables.
+
+     l0 ("no activity") is NOT simply --ps1ui-color-border: in dark theme the
+     border (#21262d, Y 0.019) is darker than l1 (22% primary over surface),
+     so it doubles as the empty cell and the ramp ascends l0→l4. In light
+     theme --ps1ui-color-border (#d0d7de, Y 0.673) is DARKER than l1
+     (Y 0.688) — reusing it there would make the empty cell read as MORE
+     active than level 1, breaking monotonicity. Light theme instead gets its
+     own light gray, #dee4ea (Y 0.770): 1.20:1 against --ps1ui-color-surface
+     and 1.28:1 against --ps1ui-color-bg, while staying lighter than l1 so
+     luminance strictly descends l0→l4. A lighter gray would separate more
+     from the surface but shrink the l0→l1 step to a barely visible one;
+     #dee4ea trades some of that separation for a step that reads.
+     ContributionGraph.ramp.test.tsx only pins the monotonicity, not these
+     ratios. */
+  --ps1ui-contribution-l0: light-dark(#dee4ea, var(--ps1ui-color-border));
   --ps1ui-contribution-l1: color-mix(
     in srgb,
     var(--ps1ui-color-primary) 22%,
@@ -156,4 +247,90 @@
   --ps1ui-font-size-3xl: 2rem;
 
   --ps1ui-transition-fast: 120ms ease;
+}
+
+/* The public theme switch. `data-ps1ui-theme` works on any element —
+   `<html>` for a whole-page theme, or a `<PS1Root theme="...">` subtree —
+   because all it does is set `color-scheme`; every `light-dark()` token
+   above inherits `color-scheme` down the tree and re-resolves against
+   whatever value is in effect on the element consuming it, which is what
+   scopes the theme with no other rules needed. */
+[data-ps1ui-theme="light"] {
+  color-scheme: light;
+}
+[data-ps1ui-theme="dark"] {
+  color-scheme: dark;
+}
+[data-ps1ui-theme="system"] {
+  color-scheme: light dark;
+}
+
+/* Fallback for browsers with no `light-dark()` support at all (below Chrome
+   123 / Firefox 120 / Safari 17.5 — a lower floor than theming's, which also
+   needs `light-dark()` to re-resolve per `color-scheme`; see the README).
+   Without this block, every `light-dark(...)` value above is invalid at
+   computed-value time in those browsers: `background` falls back to
+   `transparent` and `color` to `inherit`, so the whole palette disappears
+   rather than merely failing to switch. Such browsers get the dark palette
+   unconditionally, with no light/dark switching.
+   One declaration per light-dark() token above, set to that token's DARK
+   literal — tokens built from `var()` / `color-mix()` (the spacing/radius/
+   type-scale tokens and --ps1ui-contribution-l1..l4) resolve fine without
+   `light-dark()` and need no fallback here.
+   scripts/check-light-dark-fallback.mjs fails the build if this block drifts
+   out of lockstep with the light-dark() pairs above — extend both together. */
+@supports not (color: light-dark(#000, #fff)) {
+  :root {
+    --ps1ui-color-bg: #0b0f14;
+    --ps1ui-color-surface: #0f1520;
+    --ps1ui-color-border: #21262d;
+    --ps1ui-color-border-strong: #30363d;
+    --ps1ui-color-fg: #c7d5df;
+    --ps1ui-color-fg-muted: #8b98a5;
+    --ps1ui-color-fg-subtle: #7a8593;
+    --ps1ui-color-primary: #7ee787;
+    --ps1ui-color-primary-hover: #56d364;
+    --ps1ui-color-primary-active: #3fb950;
+    --ps1ui-color-primary-fg: #0b0f14;
+    --ps1ui-color-primary-text: #7ee787;
+    --ps1ui-color-primary-text-hover: #56d364;
+    --ps1ui-color-primary-text-active: #3fb950;
+    --ps1ui-color-primary-text-on-tint: #7ee787;
+    --ps1ui-color-accent: #ffa657;
+    --ps1ui-color-accent-hover: #f09045;
+    --ps1ui-color-accent-active: #db7a2f;
+    --ps1ui-color-accent-fg: #0b0f14;
+    --ps1ui-color-accent-text: #ffa657;
+    --ps1ui-color-accent-text-hover: #f09045;
+    --ps1ui-color-accent-text-active: #db7a2f;
+    --ps1ui-color-accent-text-on-tint: #ffa657;
+    --ps1ui-color-muted: #8b98a5;
+    --ps1ui-color-muted-hover: #7d8a97;
+    --ps1ui-color-muted-active: #74808c;
+    --ps1ui-color-muted-fg: #0b0f14;
+    --ps1ui-color-muted-text: #8b98a5;
+    --ps1ui-color-muted-text-hover: #7d8a97;
+    --ps1ui-color-muted-text-active: #74808c;
+    --ps1ui-color-muted-text-on-tint: #8b98a5;
+    --ps1ui-color-danger: #ff7d8d;
+    --ps1ui-color-danger-hover: #f0637a;
+    --ps1ui-color-danger-active: #e04a60;
+    --ps1ui-color-danger-fg: #0b0f14;
+    --ps1ui-color-danger-text: #ff7d8d;
+    --ps1ui-color-danger-text-hover: #f0637a;
+    --ps1ui-color-danger-text-active: #e04a60;
+    --ps1ui-color-danger-text-on-tint: #ff7d8d;
+    --ps1ui-code-comment: #7a8593;
+    --ps1ui-code-string: #f0c880;
+    --ps1ui-code-keyword: #ff7b95;
+    --ps1ui-code-function: #79c0ff;
+    --ps1ui-code-constant: #ffa657;
+    --ps1ui-code-type: #5eead4;
+    --ps1ui-code-tag: #ff9587;
+    --ps1ui-code-attr: #ffdc99;
+    --ps1ui-code-punctuation: #7a8593;
+    --ps1ui-code-inserted: #7ee787;
+    --ps1ui-code-deleted: #ff8896;
+    --ps1ui-contribution-l0: var(--ps1ui-color-border);
+  }
 }

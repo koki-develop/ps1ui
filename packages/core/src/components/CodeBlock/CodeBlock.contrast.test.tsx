@@ -1,13 +1,16 @@
 // Contrast regression tests. Loads the real CSS so axe's color-contrast rule can
 // compute ratios against the actual painted colors. Each sample is picked to emit
 // as many distinct Prism token classes as possible so every --ps1ui-code-* value is
-// exercised at least once against both --ps1ui-color-bg and --ps1ui-color-surface.
+// exercised at least once against both --ps1ui-color-bg and --ps1ui-color-surface,
+// in both themes (`light-dark()` resolves each token differently per
+// `color-scheme`).
 
 import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import { THEMES, ThemedCanvas } from "../../testing/theme";
 import { CodeBlock } from "./CodeBlock";
 
 // Combined sample designed to cover: comment, keyword, string, number, boolean,
@@ -31,11 +34,13 @@ const DIFF_SAMPLE = `- const greeting = "hello";
 + const greeting = "hello, world";
   console.log(greeting);`;
 
-const CASES = [
+const BASE_CASES = [
   { name: "typescript", language: "typescript", code: TS_SAMPLE },
   { name: "html (markup)", language: "markup", code: HTML_SAMPLE },
   { name: "diff", language: "diff", code: DIFF_SAMPLE },
 ] as const;
+
+const CASES = THEMES.flatMap((theme) => BASE_CASES.map((c) => ({ theme, ...c })));
 
 describe("CodeBlock layout", () => {
   test("resists inherited text-align (stays left-aligned inside a centered container)", async () => {
@@ -101,33 +106,39 @@ describe("CodeBlock layout", () => {
 
 describe("CodeBlock contrast", () => {
   describe("on --ps1ui-color-bg (page canvas)", () => {
-    test.for(CASES)("$name passes WCAG contrast against bg", async ({ language, code }) => {
-      // CodeBlock's own `background: var(--ps1ui-color-surface)` normally covers
-      // the outer wrapper, so a naive test that only sets the wrapper bg would
-      // silently measure contrast vs surface twice. Explicitly override the pre's
-      // background to transparent so the outer bg is what axe actually sees behind
-      // the highlighted tokens.
-      const screen = await render(
-        <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
-          <CodeBlock language={language} style={{ background: "transparent", border: "none" }}>
-            {code}
-          </CodeBlock>
-        </div>,
-      );
-      await expectNoAxeViolations(screen.container);
-    });
+    test.for(CASES)(
+      "theme=$theme / $name passes WCAG contrast against bg",
+      async ({ theme, language, code }) => {
+        // CodeBlock's own `background: var(--ps1ui-color-surface)` normally covers
+        // the outer wrapper, so a naive test that only sets the wrapper bg would
+        // silently measure contrast vs surface twice. Explicitly override the pre's
+        // background to transparent so the outer bg is what axe actually sees behind
+        // the highlighted tokens.
+        const screen = await render(
+          <ThemedCanvas theme={theme}>
+            <CodeBlock language={language} style={{ background: "transparent", border: "none" }}>
+              {code}
+            </CodeBlock>
+          </ThemedCanvas>,
+        );
+        await expectNoAxeViolations(screen.container);
+      },
+    );
   });
 
   describe("on --ps1ui-color-surface (CodeBlock's own surface bg)", () => {
-    test.for(CASES)("$name passes WCAG contrast against surface", async ({ language, code }) => {
-      // CodeBlock.css sets `background: var(--ps1ui-color-surface)`, so axe
-      // naturally sees the surface behind the tokens here without any override.
-      const screen = await render(
-        <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
-          <CodeBlock language={language}>{code}</CodeBlock>
-        </div>,
-      );
-      await expectNoAxeViolations(screen.container);
-    });
+    test.for(CASES)(
+      "theme=$theme / $name passes WCAG contrast against surface",
+      async ({ theme, language, code }) => {
+        // CodeBlock.css sets `background: var(--ps1ui-color-surface)`, so axe
+        // naturally sees the surface behind the tokens here without any override.
+        const screen = await render(
+          <ThemedCanvas theme={theme}>
+            <CodeBlock language={language}>{code}</CodeBlock>
+          </ThemedCanvas>,
+        );
+        await expectNoAxeViolations(screen.container);
+      },
+    );
   });
 });

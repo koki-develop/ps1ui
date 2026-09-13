@@ -88,6 +88,19 @@ export const emulateForcedColors: BrowserCommand<[active: boolean]> = async (con
   await context.page.emulateMedia({ forcedColors: active ? "active" : null });
 };
 
+// `prefers-color-scheme` can't be flipped from inside the page either — same
+// `page.emulateMedia` mechanism as forced-colors above. `null` resets to the
+// real environment default; pair every emulate call with a `null` release
+// (e.g. in `afterEach`) since emulation is page-global and Browser Mode
+// shares the page per FILE (see src/testing/color-scheme.ts).
+export const emulateColorScheme: BrowserCommand<[scheme: "light" | "dark" | null]> = async (
+  context,
+  scheme,
+) => {
+  assertPlaywrightProvider(context, "emulateColorScheme");
+  await context.page.emulateMedia({ colorScheme: scheme });
+};
+
 // `commands.pointerDown(selector)` on the client calls this WITHOUT the leading
 // `context` argument (Vitest's RPC layer injects that server-side) — strip it here so
 // the derived client type matches what's actually callable.
@@ -112,4 +125,10 @@ export type PseudoStateCommands = {
 // src/testing/forced-colors.ts's `declare module "vitest/browser"`.
 export type ForcedColorsCommands = {
   emulateForcedColors: ClientCommand<typeof emulateForcedColors>;
+};
+
+// Same derivation pattern as PseudoStateCommands, consumed by
+// src/testing/color-scheme.ts's `declare module "vitest/browser"`.
+export type ColorSchemeCommands = {
+  emulateColorScheme: ClientCommand<typeof emulateColorScheme>;
 };

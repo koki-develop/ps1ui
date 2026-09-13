@@ -4,7 +4,8 @@
 // sees the resolved colors. Text.contrast.test.tsx already covers the default
 // primary color on bg / surface via the shared Text primary variant; hover /
 // active tokens are unique to interactive components and are what this file
-// locks in.
+// locks in. Every pair is verified in both themes, since `light-dark()`
+// resolves each token differently per `color-scheme`.
 //
 // :focus-visible is intentionally NOT in the state list — the Anchor CSS only
 // touches outline in that state, so color-contrast is byte-identical to default.
@@ -17,27 +18,24 @@ import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
 import { withPseudoState } from "../../testing/pseudo-state";
+import { THEMES, ThemedCanvas } from "../../testing/theme";
 import { Card } from "../Card/Card";
 import { Anchor, type AnchorVariant } from "./Anchor";
 
 const VARIANTS = ["primary", "subtle"] as const satisfies readonly AnchorVariant[];
 const STATES = ["default", "hover", "active"] as const;
 
-const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
+const CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) => STATES.map((state) => ({ theme, variant, state }))),
+);
 
 describe("Anchor contrast", () => {
   describe("on --ps1ui-color-bg (page canvas)", () => {
     test.for(CASES)(
-      "variant=$variant / state=$state passes WCAG contrast against bg",
-      async ({ variant, state }) => {
+      "theme=$theme / variant=$variant / state=$state passes WCAG contrast against bg",
+      async ({ theme, variant, state }) => {
         const screen = await render(
-          <div
-            style={{
-              background: "var(--ps1ui-color-bg)",
-              color: "var(--ps1ui-color-fg)",
-              padding: 20,
-            }}
-          >
+          <ThemedCanvas theme={theme}>
             <Anchor
               variant={variant}
               href="/x"
@@ -46,7 +44,7 @@ describe("Anchor contrast", () => {
             >
               The quick brown fox jumps over the lazy dog
             </Anchor>
-          </div>,
+          </ThemedCanvas>,
         );
         if (state === "default") {
           await expectNoAxeViolations(screen.container);
@@ -62,24 +60,20 @@ describe("Anchor contrast", () => {
   // Locks in the underline-follows-color behavior for subtle: on hover / active
   // the text-decoration-color must shift with `color`, not stay pinned to the
   // base fg-subtle. Expected colors are derived from the CSS vars via probe
-  // elements so the assertions don't hardcode hex values.
+  // elements so the assertions don't hardcode hex values. Verified in both
+  // themes since the underlying tokens are `light-dark()` pairs.
   describe("subtle underline color tracks state", () => {
-    const cases = [
-      { state: "hover", expectVar: "--ps1ui-color-primary" },
-      { state: "active", expectVar: "--ps1ui-color-primary-active" },
+    const baseCases = [
+      { state: "hover", expectVar: "--ps1ui-color-primary-text" },
+      { state: "active", expectVar: "--ps1ui-color-primary-text-active" },
     ] as const;
+    const cases = THEMES.flatMap((theme) => baseCases.map((c) => ({ theme, ...c })));
 
     test.for(cases)(
-      "subtle / $state → text-decoration-color = var($expectVar)",
-      async ({ state, expectVar }) => {
+      "theme=$theme / subtle / $state → text-decoration-color = var($expectVar)",
+      async ({ theme, state, expectVar }) => {
         const screen = await render(
-          <div
-            style={{
-              background: "var(--ps1ui-color-bg)",
-              color: "var(--ps1ui-color-fg)",
-              padding: 20,
-            }}
-          >
+          <ThemedCanvas theme={theme}>
             <Anchor
               variant="subtle"
               href="/x"
@@ -90,7 +84,7 @@ describe("Anchor contrast", () => {
             </Anchor>
             <span data-testid="dec-expected" style={{ color: `var(${expectVar})` }} />
             <span data-testid="dec-base" style={{ color: "var(--ps1ui-color-fg-subtle)" }} />
-          </div>,
+          </ThemedCanvas>,
         );
         const link = screen.container.querySelector<HTMLElement>('[data-testid="dec-anchor"]');
         const expected = screen.container.querySelector<HTMLElement>(
@@ -115,10 +109,10 @@ describe("Anchor contrast", () => {
 
   describe("on --ps1ui-color-surface (inside Card)", () => {
     test.for(CASES)(
-      "variant=$variant / state=$state passes WCAG contrast against surface",
-      async ({ variant, state }) => {
+      "theme=$theme / variant=$variant / state=$state passes WCAG contrast against surface",
+      async ({ theme, variant, state }) => {
         const screen = await render(
-          <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
+          <ThemedCanvas theme={theme}>
             <Card>
               <Anchor
                 variant={variant}
@@ -129,7 +123,7 @@ describe("Anchor contrast", () => {
                 The quick brown fox jumps over the lazy dog
               </Anchor>
             </Card>
-          </div>,
+          </ThemedCanvas>,
         );
         if (state === "default") {
           await expectNoAxeViolations(screen.container);

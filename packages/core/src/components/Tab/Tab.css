@@ -36,8 +36,13 @@
   box-shadow: var(--ps1ui-shadow-focus-ring);
 }
 
+/* Selected-tab text is the TEXT role — the label paints directly on the
+   tablist's canvas/surface, never as a fill — so it reads from
+   --ps1ui-color-primary-text*, not the base fill token. The indicator border
+   below stays on the FILL --ps1ui-color-primary: a border is a graphical
+   boundary, not text. */
 .ps1ui-tab[aria-selected="true"] {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
 }
 
 /* Selected + hover stays on the primary hue — the base `:hover` rule above
@@ -46,7 +51,7 @@
    "the active tab lost its accent". Matches the Radio pattern where
    `:checked:hover` shifts to primary-hover rather than falling back to fg. */
 .ps1ui-tab[aria-selected="true"]:hover:not(:disabled) {
-  color: var(--ps1ui-color-primary-hover);
+  color: var(--ps1ui-color-primary-text-hover);
 }
 
 /* Selected-state indicator. Horizontal tabs get a bottom border that overlaps

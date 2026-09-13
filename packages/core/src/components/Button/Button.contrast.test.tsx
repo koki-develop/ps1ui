@@ -4,7 +4,9 @@
 // mouse button, and real Tab-key focus (see src/testing/pseudo-state.ts) so axe's
 // color-contrast rule sees the resolved colors of those transient states. The
 // sanity check that withPseudoState actually shifts styles lives once in
-// src/testing/pseudo-state.test.tsx.
+// src/testing/pseudo-state.test.tsx. Every (variant × state) pair is verified in
+// both themes, since `light-dark()` resolves each token differently per
+// `color-scheme`.
 
 import "../../styles/styles.css";
 
@@ -13,6 +15,7 @@ import { render } from "vitest-browser-react";
 import { server } from "vitest/browser";
 import { expectNoAxeViolations } from "../../testing/axe";
 import { withPseudoState } from "../../testing/pseudo-state";
+import { THEMES, ThemedCanvas } from "../../testing/theme";
 import { Button, type ButtonVariant } from "./Button";
 
 const VARIANTS = [
@@ -23,12 +26,14 @@ const VARIANTS = [
 ] as const satisfies readonly ButtonVariant[];
 const STATES = ["default", "hover", "active", "focus-visible"] as const;
 
-const CASES = VARIANTS.flatMap((variant) => STATES.map((state) => ({ variant, state })));
+const CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) => STATES.map((state) => ({ theme, variant, state }))),
+);
 
 describe("Button contrast", () => {
   test.for(CASES)(
-    "variant=$variant / state=$state passes WCAG contrast",
-    async ({ variant, state }, ctx) => {
+    "theme=$theme / variant=$variant / state=$state passes WCAG contrast",
+    async ({ theme, variant, state }, ctx) => {
       // macOS Safari's default "Full Keyboard Access" setting limits Tab to
       // text boxes and lists — <button> (and <a>) are excluded from the Tab
       // sequence unless the user opts in via System Settings or Safari's own
@@ -44,11 +49,11 @@ describe("Button contrast", () => {
       );
 
       const screen = await render(
-        <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
+        <ThemedCanvas theme={theme}>
           <Button variant={variant} data-testid="ctr-btn" style={{ transition: "none" }}>
             The quick brown fox jumps over the lazy dog
           </Button>
-        </div>,
+        </ThemedCanvas>,
       );
       if (state === "default") {
         await expectNoAxeViolations(screen.container);

@@ -2,20 +2,33 @@
 //
 //   dist/base.css        → ambient env + reset (element/pseudo/attribute selectors)
 //   dist/components.css  → component visuals only — every top-level selector must
-//                          be `:root` (from tokens.css) or start with `.ps1ui-`
+//                          be `:root` (from tokens.css), start with `.ps1ui-`, or
+//                          start with `[data-ps1ui-theme` (the theme-switch rules,
+//                          also from tokens.css). Additionally, `color-scheme` may
+//                          only be declared on a `[data-ps1ui-theme...]` rule —
+//                          never on `:root` or a `.ps1ui-*` rule — because
+//                          components.css is the embed entry and must follow the
+//                          host document's `color-scheme` by default (see
+//                          tokens.css's `:root` comment); only the public
+//                          `[data-ps1ui-theme]` switch may override it.
 //   dist/styles.css      → base + components (full canvas)
 //
 // If the reset accidentally leaks into components.css, consumers embedding
 // PS1 UI components into a foreign design system get UA-margin wipes and
 // form-control font takeovers that fight the host system. This script fails
-// the build in that case.
+// the build in that case. Likewise, if `color-scheme` is declared on `:root`
+// (or any `.ps1ui-*` rule) in tokens.css or component CSS, it leaks onto the
+// host's `<html>` through components.css, darkening the host's own UA form
+// controls / scrollbars and flipping the host's `light-dark()` colors — this
+// script fails the build in that case too.
 //
-// This is a STRUCTURAL check (PostCSS AST walk over allowed selector prefixes),
-// not a marker-string grep — a grep for a couple of reset-only declarations
-// false-positives the moment a real component legitimately uses one of those
-// properties (e.g. a Button setting per-component -webkit-tap-highlight-color,
-// or a FileInput styling ::file-selector-button) and only catches leaks that
-// happen to include those specific strings.
+// This is a STRUCTURAL check (PostCSS AST walk over allowed selector prefixes
+// and declarations), not a marker-string grep — a grep for a couple of
+// reset-only declarations false-positives the moment a real component
+// legitimately uses one of those properties (e.g. a Button setting
+// per-component -webkit-tap-highlight-color, or a FileInput styling
+// ::file-selector-button) and only catches leaks that happen to include those
+// specific strings.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -52,6 +65,9 @@ const isAllowedComponentsSelector = (selector) => {
   if (first.startsWith(".ps1ui-")) return true;
   // :root { ... } from tokens.css lives in components.css too.
   if (first === ":root") return true;
+  // The `[data-ps1ui-theme="..."]` theme-switch rules from tokens.css
+  // legitimately live in components.css alongside :root.
+  if (first.startsWith("[data-ps1ui-theme")) return true;
   return false;
 };
 
@@ -99,9 +115,40 @@ for (const rule of walkTopLevelRules(componentsAst)) {
 
 if (violations.size > 0) {
   errors.push(
-    `dist/components.css contains ${violations.size} selector(s) that don't start with \`.ps1ui-\` or \`:root\` — a global reset has leaked in:`,
+    `dist/components.css contains ${violations.size} selector(s) that don't start with \`.ps1ui-\`, aren't \`:root\`, and don't start with \`[data-ps1ui-theme\` — a global reset has leaked in:`,
   );
   for (const [sel, line] of violations) {
+    errors.push(`    line ${line}: ${sel}`);
+  }
+}
+
+// -- components.css: only [data-ps1ui-theme...] may declare color-scheme ----
+// components.css is the embed entry and must follow the host document's
+// `color-scheme` by default — only the public `[data-ps1ui-theme]` switch is
+// allowed to set it. A `:root` or `.ps1ui-*` rule declaring `color-scheme`
+// means a document-wide default has leaked into the embed entry.
+
+const colorSchemeViolations = new Map(); // selector -> line
+
+for (const rule of walkTopLevelRules(componentsAst)) {
+  let declaresColorScheme = false;
+  rule.walkDecls("color-scheme", () => {
+    declaresColorScheme = true;
+  });
+  if (!declaresColorScheme) continue;
+  for (const sel of splitSelectors(rule.selector)) {
+    if (sel === ":root" || sel.startsWith(".ps1ui-")) {
+      const line = rule.source?.start?.line ?? 0;
+      if (!colorSchemeViolations.has(sel)) colorSchemeViolations.set(sel, line);
+    }
+  }
+}
+
+if (colorSchemeViolations.size > 0) {
+  errors.push(
+    `dist/components.css contains ${colorSchemeViolations.size} \`:root\`/\`.ps1ui-*\` rule(s) declaring \`color-scheme\` — only \`[data-ps1ui-theme...]\` rules may set it:`,
+  );
+  for (const [sel, line] of colorSchemeViolations) {
     errors.push(`    line ${line}: ${sel}`);
   }
 }
@@ -150,5 +197,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  "check-css-split ok (dist/components.css contains only :root and .ps1ui-* selectors; reset present in dist/base.css and dist/styles.css)",
+  "check-css-split ok (dist/components.css contains only :root, [data-ps1ui-theme], and .ps1ui-* selectors, and only [data-ps1ui-theme] rules declare color-scheme; reset present in dist/base.css and dist/styles.css)",
 );

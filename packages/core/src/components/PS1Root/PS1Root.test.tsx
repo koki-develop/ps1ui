@@ -3,8 +3,9 @@ import "../../styles/styles.css";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import { resolveColorTokenIn } from "../../testing/color";
 import { Text } from "../Text/Text";
-import { PS1Root } from "./PS1Root";
+import { PS1Root, type PS1RootTheme } from "./PS1Root";
 
 describe("PS1Root", () => {
   describe("rendering", () => {
@@ -39,6 +40,28 @@ describe("PS1Root", () => {
       await expect.element(el).toHaveClass("ps1ui-root");
       await expect.element(el).toHaveClass("extra");
       await expect.element(el).toHaveClass("other");
+    });
+  });
+
+  describe("theme", () => {
+    const THEMES = ["light", "dark", "system"] as const satisfies readonly PS1RootTheme[];
+
+    test.for(THEMES.map((theme) => ({ theme })))(
+      "theme=$theme renders the data-ps1ui-theme attribute",
+      async ({ theme }) => {
+        const screen = await render(
+          <PS1Root data-testid="root" theme={theme}>
+            x
+          </PS1Root>,
+        );
+        await expect.element(screen.getByTestId("root")).toHaveAttribute("data-ps1ui-theme", theme);
+      },
+    );
+
+    test("omits data-ps1ui-theme when theme is not given", async () => {
+      const screen = await render(<PS1Root data-testid="root">x</PS1Root>);
+      const el = screen.getByTestId("root").element();
+      expect(el.hasAttribute("data-ps1ui-theme")).toBe(false);
     });
   });
 
@@ -90,6 +113,46 @@ describe("PS1Root", () => {
       const cs = getComputedStyle(el);
       expect(cs.containerName).toBe("ps1ui-root");
     });
+
+    // An untheme'd PS1Root is a pure containment wrapper — no canvas of its
+    // own — so a `theme`-bearing sibling below has something to visibly
+    // contrast against. See PS1Root.css's `.ps1ui-root[data-ps1ui-theme]`
+    // comment for why the canvas/ink paint is scoped to the theme attribute.
+    test("an untheme'd root paints no background", async () => {
+      const screen = await render(<PS1Root data-testid="root">x</PS1Root>);
+      const el = screen.getByTestId("root").element() as HTMLDivElement;
+      expect(getComputedStyle(el).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    });
+
+    // A themed root paints its own canvas and text color so the subtree is
+    // self-contained (see PS1Root.css). Resolve the expected values via
+    // resolveColorTokenIn on the element itself rather than hardcoding rgb()
+    // literals — the probe inherits the same `color-scheme` this element's
+    // `data-ps1ui-theme` just set, so it resolves the same `light-dark()`
+    // token substitution the element's own background/color declarations do.
+    test('theme="light" root paints the light bg/fg tokens', async () => {
+      const screen = await render(
+        <PS1Root data-testid="root" theme="light">
+          x
+        </PS1Root>,
+      );
+      const el = screen.getByTestId("root").element() as HTMLDivElement;
+      const cs = getComputedStyle(el);
+      expect(cs.backgroundColor).toBe(resolveColorTokenIn(el, "--ps1ui-color-bg"));
+      expect(cs.color).toBe(resolveColorTokenIn(el, "--ps1ui-color-fg"));
+    });
+
+    test('theme="dark" root paints the dark bg/fg tokens', async () => {
+      const screen = await render(
+        <PS1Root data-testid="root" theme="dark">
+          x
+        </PS1Root>,
+      );
+      const el = screen.getByTestId("root").element() as HTMLDivElement;
+      const cs = getComputedStyle(el);
+      expect(cs.backgroundColor).toBe(resolveColorTokenIn(el, "--ps1ui-color-bg"));
+      expect(cs.color).toBe(resolveColorTokenIn(el, "--ps1ui-color-fg"));
+    });
   });
 
   describe("passthrough", () => {
@@ -127,6 +190,27 @@ describe("PS1Root", () => {
       );
       expect(captured).not.toBeNull();
       expect((captured as unknown as HTMLDivElement).tagName.toLowerCase()).toBe("div");
+    });
+
+    // Regression cover: an omitted `theme` prop must not clobber a
+    // passthrough `data-ps1ui-theme` attribute supplied via rest props. See
+    // the precedence comment on PS1Root.tsx's implementation.
+    test("preserves a passthrough data-ps1ui-theme attribute when theme is not given", async () => {
+      const screen = await render(
+        <PS1Root data-testid="root" data-ps1ui-theme="light">
+          x
+        </PS1Root>,
+      );
+      await expect.element(screen.getByTestId("root")).toHaveAttribute("data-ps1ui-theme", "light");
+    });
+
+    test("the theme prop wins over a passthrough data-ps1ui-theme attribute when both are given", async () => {
+      const screen = await render(
+        <PS1Root data-testid="root" data-ps1ui-theme="light" theme="dark">
+          x
+        </PS1Root>,
+      );
+      await expect.element(screen.getByTestId("root")).toHaveAttribute("data-ps1ui-theme", "dark");
     });
   });
 

@@ -29,6 +29,7 @@ import "../../styles/styles.css";
 
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { resolveColorToken } from "../../testing/color";
 import { Switch } from "./Switch";
 
 const TRACK_WIDTH = 28;
@@ -37,15 +38,6 @@ const BORDER = 1;
 const THUMB_SIZE = 10;
 const THUMB_INSET = 2;
 const TRAVEL = 12;
-
-/** Resolve a `--ps1ui-*` colour token to the `rgb(...)` form getComputedStyle reports. */
-function tokenRgb(name: string): string {
-  const hex = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  const match = /^#([0-9a-f]{6})$/i.exec(hex);
-  if (!match) throw new Error(`expected a 6-digit hex token for ${name}, got "${hex}"`);
-  const value = Number.parseInt(match[1]!, 16);
-  return `rgb(${(value >> 16) & 0xff}, ${(value >> 8) & 0xff}, ${value & 0xff})`;
-}
 
 function switchIn(container: HTMLElement): HTMLInputElement {
   const el = container.querySelector<HTMLInputElement>("input.ps1ui-switch");
@@ -110,7 +102,7 @@ describe("Switch thumb geometry", () => {
   ])("$name thumb is painted in $token", async ({ props, token }) => {
     const screen = await render(<Switch aria-label="notifications" {...props} />);
     const s = getComputedStyle(switchIn(screen.container), "::after");
-    expect(s.backgroundColor).toBe(tokenRgb(token));
+    expect(s.backgroundColor).toBe(resolveColorToken(token));
   });
 
   test("thumb inherits the pseudo-element initial box-sizing (content-box)", async () => {

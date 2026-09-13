@@ -137,8 +137,12 @@
    all. The primary tint therefore arrives on BOTH the background and the label,
    and at a stronger mix than --secondary's 6% supporting wash — a wash that
    faint on a borderless target reads as a rendering artifact rather than
-   feedback. Contrast at both states is verified in Button.contrast.test.tsx
-   (hover ≈ 9.9:1, active ≈ 5.7:1 against the tinted background). */
+   feedback. The label color on each state is the TEXT-role token for that
+   state's own tint: hover reads --ps1ui-color-primary-text-on-tint (tuned for
+   legibility ON the 12% tint it sits on), active reads
+   --ps1ui-color-primary-text-active (tuned for the 18% tint). Contrast at
+   both states, against the tinted background, is verified in both themes by
+   Button.contrast.test.tsx. */
 .ps1ui-button--ghost {
   background: transparent;
   color: var(--ps1ui-color-fg);
@@ -151,11 +155,11 @@
 }
 .ps1ui-button--ghost:hover:not(:disabled) {
   background: color-mix(in srgb, var(--ps1ui-color-primary) 12%, transparent);
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text-on-tint);
 }
 .ps1ui-button--ghost:active:not(:disabled) {
   background: color-mix(in srgb, var(--ps1ui-color-primary-active) 18%, transparent);
-  color: var(--ps1ui-color-primary-active);
+  color: var(--ps1ui-color-primary-text-active);
 }
 /* Unlike the other three, disabled does NOT paint a border here. An outline
    that appears only once the control becomes unavailable would make the

@@ -1,5 +1,5 @@
 export { PS1Root } from "./components/PS1Root/PS1Root";
-export type { PS1RootProps } from "./components/PS1Root/PS1Root";
+export type { PS1RootProps, PS1RootTheme } from "./components/PS1Root/PS1Root";
 
 export type { Breakpoint, Responsive } from "./utils/responsive";
 

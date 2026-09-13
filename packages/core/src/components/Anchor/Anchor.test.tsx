@@ -677,7 +677,7 @@ describe("Anchor", () => {
             >
               live
             </Anchor>
-            <span data-testid="dec-hover" style={{ color: "var(--ps1ui-color-primary)" }} />
+            <span data-testid="dec-hover" style={{ color: "var(--ps1ui-color-primary-text)" }} />
             <span data-testid="dec-base" style={{ color: "var(--ps1ui-color-fg-subtle)" }} />
           </>,
         );

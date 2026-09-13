@@ -170,17 +170,22 @@
   outline-offset: 2px;
 }
 
-/* --_anchor-underline defaults to currentColor, so setting only `color` per state
-   also shifts the underline. subtle's default intentionally decouples the two — the
-   underline is dimmer than the text — hence the explicit override there. */
+/* Primary here is the TEXT role (a link's colour is a foreground colour on
+   the page canvas or a Card surface), so every state below reads from the
+   --ps1ui-color-primary-text* trio, not the fill tokens. The focus outline
+   above stays on the FILL --ps1ui-color-primary — a focus ring is a
+   graphical boundary, not text. --_anchor-underline defaults to currentColor,
+   so setting only `color` per state also shifts the underline. subtle's
+   default intentionally decouples the two — the underline is dimmer than the
+   text — hence the explicit override there. */
 .ps1ui-anchor--primary {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
 }
 .ps1ui-anchor--primary:hover {
-  color: var(--ps1ui-color-primary-hover);
+  color: var(--ps1ui-color-primary-text-hover);
 }
 .ps1ui-anchor--primary:active {
-  color: var(--ps1ui-color-primary-active);
+  color: var(--ps1ui-color-primary-text-active);
 }
 
 .ps1ui-anchor--subtle {
@@ -190,10 +195,10 @@
 /* Reset the underline to currentColor so it follows the hover/active color
    shift; without this it would stay pinned to fg-subtle from the rule above. */
 .ps1ui-anchor--subtle:hover {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
   --_anchor-underline: currentColor;
 }
 .ps1ui-anchor--subtle:active {
-  color: var(--ps1ui-color-primary-active);
+  color: var(--ps1ui-color-primary-text-active);
   --_anchor-underline: currentColor;
 }

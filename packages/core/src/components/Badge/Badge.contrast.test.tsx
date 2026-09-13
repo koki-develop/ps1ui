@@ -4,18 +4,24 @@
 // real component CSS and wraps each (variant × color) combination against
 // both the page canvas (--ps1ui-color-bg) and a Card surface
 // (--ps1ui-color-surface) so axe's color-contrast rule sees the resolved
-// colors of each pair. The two size-axis blocks at the bottom ride along
-// here for the same reason — they need resolved computed styles, and
-// spinning up a fourth Badge test file for two assertions would buy nothing.
+// colors of each pair, in both themes (`light-dark()` resolves each token
+// differently per `color-scheme`). The two size-axis blocks at the bottom
+// ride along here for the same reason — they need resolved computed styles,
+// and spinning up a fourth Badge test file for two assertions would buy
+// nothing; they assert geometry only (font metrics, target size) so they are
+// NOT crossed with theme — no color enters either assertion.
 //
-// Text.contrast.test.tsx already covers the raw fg colors on canvas and
-// surface (variants: body/muted/subtle/primary/accent/danger). Badge
-// introduces two new families that Text does not:
-//   - solid: fg=--_solid-fg on bg=--_base (a per-color fg-on-color pair)
-//   - subtle: fg=--_fg on a color-mix(base 15%, transparent) tinted bg
-// This file covers those explicitly; the outline variant is included for
-// defensive parity (its fg colors are the same as Text's, but its border
-// contribution to perceived colour is worth pinning).
+// Text.contrast.test.tsx already covers the TEXT-role tokens
+// (--ps1ui-color-<hue>-text) on canvas and surface (variants:
+// body/muted/subtle/primary/accent/danger) — outline reuses that same
+// role (--_badge-text), so it is included here for defensive parity (its
+// border contribution to perceived colour is worth pinning even though its
+// text color is not new). Badge introduces two families Text does not:
+//   - solid: fg=--_badge-solid-fg on bg=--_badge-base (a per-color fg-on-color pair)
+//   - subtle: fg=--_badge-text-on-tint (the TEXT-ON-TINT role, stricter than
+//     plain TEXT — see tokens.css) on a color-mix(base 15%, transparent)
+//     tinted bg
+// This file covers those explicitly.
 //
 // Interactive states (hover / active / focus-visible) are not exercised
 // here: their treatment is the same colour-mix formula shifted per state,
@@ -36,6 +42,7 @@ import "../../styles/styles.css";
 import { describe, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
 import { expectNoAxeViolations } from "../../testing/axe";
+import { THEMES, ThemedCanvas } from "../../testing/theme";
 import { Card } from "../Card/Card";
 import { Badge, type BadgeColor, type BadgeSize, type BadgeVariant } from "./Badge";
 
@@ -62,19 +69,21 @@ const BOLD_WEIGHT = 700;
 // not that the CSS regressed.
 const MIN_TARGET_PX = 24;
 
-const CASES = VARIANTS.flatMap((variant) => COLORS.map((color) => ({ variant, color })));
+const CASES = THEMES.flatMap((theme) =>
+  VARIANTS.flatMap((variant) => COLORS.map((color) => ({ theme, variant, color }))),
+);
 
 describe("Badge contrast", () => {
   describe("on --ps1ui-color-bg (page canvas)", () => {
     test.for(CASES)(
-      "variant=$variant / color=$color passes WCAG contrast against bg",
-      async ({ variant, color }) => {
+      "theme=$theme / variant=$variant / color=$color passes WCAG contrast against bg",
+      async ({ theme, variant, color }) => {
         const screen = await render(
-          <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
+          <ThemedCanvas theme={theme}>
             <Badge variant={variant} color={color}>
               The quick brown fox jumps over the lazy dog
             </Badge>
-          </div>,
+          </ThemedCanvas>,
         );
         await expectNoAxeViolations(screen.container);
       },
@@ -83,16 +92,16 @@ describe("Badge contrast", () => {
 
   describe("on --ps1ui-color-surface (inside Card)", () => {
     test.for(CASES)(
-      "variant=$variant / color=$color passes WCAG contrast against surface",
-      async ({ variant, color }) => {
+      "theme=$theme / variant=$variant / color=$color passes WCAG contrast against surface",
+      async ({ theme, variant, color }) => {
         const screen = await render(
-          <div style={{ background: "var(--ps1ui-color-bg)", padding: 20 }}>
+          <ThemedCanvas theme={theme}>
             <Card>
               <Badge variant={variant} color={color}>
                 The quick brown fox jumps over the lazy dog
               </Badge>
             </Card>
-          </div>,
+          </ThemedCanvas>,
         );
         await expectNoAxeViolations(screen.container);
       },

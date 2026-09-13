@@ -136,7 +136,9 @@
    alias `TypographyVariant` in utils/typography.ts). The declarations are
    restated here rather than shared with a grouped selector so each
    component's stylesheet stays self-contained, matching every other
-   component in this package. */
+   component in this package. primary/accent/danger read from the TEXT role
+   (--ps1ui-color-<hue>-text) — a Heading paints a hue directly on the page
+   canvas or a Card surface, never as a fill. */
 .ps1ui-heading--body {
   color: var(--ps1ui-color-fg);
 }
@@ -147,11 +149,11 @@
   color: var(--ps1ui-color-fg-subtle);
 }
 .ps1ui-heading--primary {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
 }
 .ps1ui-heading--accent {
-  color: var(--ps1ui-color-accent);
+  color: var(--ps1ui-color-accent-text);
 }
 .ps1ui-heading--danger {
-  color: var(--ps1ui-color-danger);
+  color: var(--ps1ui-color-danger-text);
 }

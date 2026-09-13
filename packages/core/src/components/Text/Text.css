@@ -208,12 +208,15 @@
 .ps1ui-text--subtle {
   color: var(--ps1ui-color-fg-subtle);
 }
+/* primary/accent/danger read from the TEXT role (--ps1ui-color-<hue>-text) —
+   Text renders a hue directly on the page canvas or a Card surface, never as
+   a fill, so it never reads the base --ps1ui-color-<hue> token. */
 .ps1ui-text--primary {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
 }
 .ps1ui-text--accent {
-  color: var(--ps1ui-color-accent);
+  color: var(--ps1ui-color-accent-text);
 }
 .ps1ui-text--danger {
-  color: var(--ps1ui-color-danger);
+  color: var(--ps1ui-color-danger-text);
 }

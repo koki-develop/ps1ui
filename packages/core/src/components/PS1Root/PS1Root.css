@@ -12,3 +12,27 @@
 .ps1ui-root {
   container: ps1ui-root / inline-size;
 }
+
+/* A themed root paints its own canvas and ink. `color` is an inherited
+   property and the bare root has no background at all, so without this, a
+   `theme`-bearing PS1Root would only ever flip `color-scheme` (see
+   tokens.css) while its actual background and computed `color` kept coming
+   from OUTSIDE the scope — leaking the outer theme's canvas/text into a
+   subtree whose tokens (borders, fills, focus rings, ...) had already
+   switched. That breaks anything reading `color: inherit` (Anchor subtle,
+   Divider, CodeBlock's inner `code`) and, with no canvas underneath, can sit
+   a themed subtree's text on the wrong-theme page background.
+   Scoped to `[data-ps1ui-theme]` specifically, not the bare `.ps1ui-root`:
+   a bare PS1Root stays ink-free (it's a pure containment wrapper), and the
+   bare attribute (e.g. hand-authored on a foreign element via
+   components.css) stays a pure `color-scheme` switch with no painted
+   surface — callers embedding ps1ui into their own design system must be
+   able to theme without ps1ui painting their element. Both tokens below
+   resolve on this very element, whose `color-scheme` this attribute just
+   set (see tokens.css), so they are already the scope's own values. On a
+   themed `<html>` this duplicates base.css's canvas rules harmlessly — same
+   values, painted twice. */
+.ps1ui-root[data-ps1ui-theme] {
+  background: var(--ps1ui-color-bg);
+  color: var(--ps1ui-color-fg);
+}

@@ -46,8 +46,10 @@
   content: "▾";
 }
 
+/* TEXT role — the summary label paints directly on --ps1ui-details's surface,
+   never as a fill. */
 .ps1ui-details__summary:hover {
-  color: var(--ps1ui-color-primary);
+  color: var(--ps1ui-color-primary-text);
 }
 
 /* Focus ring lives on the summary (the interactive element), not on details

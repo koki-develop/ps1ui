@@ -149,8 +149,8 @@ describe("Button variant chrome", () => {
   // AND the label itself takes the primary hue. Assert both — either one alone
   // regressing would leave a control that reads as inert text.
   test.for([
-    { state: "hover", token: "--ps1ui-color-primary" },
-    { state: "active", token: "--ps1ui-color-primary-active" },
+    { state: "hover", token: "--ps1ui-color-primary-text-on-tint" },
+    { state: "active", token: "--ps1ui-color-primary-text-active" },
   ] as const)(
     "ghost announces itself on $state with both a background tint and the $token label",
     async ({ state, token }) => {

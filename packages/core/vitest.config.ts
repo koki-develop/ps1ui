@@ -7,6 +7,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 import {
   bringPageToFront,
+  emulateColorScheme,
   emulateForcedColors,
   pointerDown,
   pointerUp,
@@ -63,6 +64,7 @@ function browserBase() {
       pointerDown,
       releasePointer: pointerUp,
       emulateForcedColors,
+      emulateColorScheme,
       bringPageToFront,
       resetPointer,
     },

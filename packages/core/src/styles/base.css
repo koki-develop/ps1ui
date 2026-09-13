@@ -65,6 +65,12 @@ ul {
 }
 
 html {
+  /* base.css / styles.css are the full-canvas entries, so they own the
+     document's default color scheme. components.css deliberately does NOT
+     set this (see tokens.css's `:root` comment) — embedded ps1ui follows
+     whatever `color-scheme` the host document already has, light where the
+     host declares none, and a host that wants dark ps1ui puts
+     `data-ps1ui-theme="dark"` on `<html>` or a wrapper. */
   color-scheme: dark;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;

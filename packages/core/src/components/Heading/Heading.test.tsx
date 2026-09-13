@@ -70,13 +70,17 @@ const WEIGHT_VALUE = {
 // of tokens.css resolved to rgb(). Kept as a table for the same reason as
 // FONT_SIZE_PX below — it pins the variant → token mapping in Heading.css, so
 // pointing a variant at the wrong token fails here and not only in VRT.
+// No theme wrapper here, so this reads the default (dark) `color-scheme`;
+// dark is the one theme where every hue's TEXT token equals its FILL token,
+// so primary/accent/danger below resolve through --ps1ui-color-<hue>-text
+// but still land on the same hex as the (unsplit) fill token.
 const VARIANT_COLOR = {
-  body: "rgb(199, 213, 223)", // --ps1ui-color-fg        #c7d5df
-  muted: "rgb(139, 152, 165)", // --ps1ui-color-fg-muted  #8b98a5
-  subtle: "rgb(122, 133, 147)", // --ps1ui-color-fg-subtle #7a8593
-  primary: "rgb(126, 231, 135)", // --ps1ui-color-primary   #7ee787
-  accent: "rgb(255, 166, 87)", // --ps1ui-color-accent    #ffa657
-  danger: "rgb(255, 125, 141)", // --ps1ui-color-danger    #ff7d8d
+  body: "rgb(199, 213, 223)", // --ps1ui-color-fg          #c7d5df
+  muted: "rgb(139, 152, 165)", // --ps1ui-color-fg-muted    #8b98a5
+  subtle: "rgb(122, 133, 147)", // --ps1ui-color-fg-subtle   #7a8593
+  primary: "rgb(126, 231, 135)", // --ps1ui-color-primary-text #7ee787
+  accent: "rgb(255, 166, 87)", // --ps1ui-color-accent-text  #ffa657
+  danger: "rgb(255, 125, 141)", // --ps1ui-color-danger-text  #ff7d8d
 } as const satisfies Record<HeadingVariant, string>;
 
 // Expected computed font-size: the rem values of --ps1ui-font-size-* tokens

@@ -125,12 +125,20 @@
 
 /* --------------------------------------------------------------------------
    Colour palettes. Each color publishes:
-     --_badge-base:         fill / border source at rest
-     --_badge-base-hover:   fill / border source when interactive :hover
-     --_badge-base-active:  fill / border source when interactive :active
-     --_badge-solid-fg:     text on solid fills (must contrast against
-                            --_badge-base at rest AND at every interactive
-                            state, since the fg does not change per state)
+     --_badge-base:          fill / border source at rest
+     --_badge-base-hover:    fill / border source when interactive :hover
+     --_badge-base-active:   fill / border source when interactive :active
+     --_badge-solid-fg:      text on solid fills (must contrast against
+                             --_badge-base at rest AND at every interactive
+                             state, since the fg does not change per state)
+     --_badge-text:          TEXT role — outline's label/border sits directly
+                             on the page canvas or a Card surface, never on a
+                             fill, so it reads --ps1ui-color-<hue>-text.
+     --_badge-text-on-tint:  TEXT-ON-TINT role — subtle's label sits on a
+                             translucent tint of --_badge-base (15% at rest),
+                             which is a stricter contrast case than plain
+                             canvas text, so it reads
+                             --ps1ui-color-<hue>-text-on-tint instead.
    The four hover/active tokens all resolve to first-class semantic-colour
    tokens in tokens.css (primary-hover, danger-active, accent-hover,
    muted-hover, ...). Solid interactive states just swap the base variable
@@ -142,6 +150,8 @@
   --_badge-base-hover: var(--ps1ui-color-primary-hover);
   --_badge-base-active: var(--ps1ui-color-primary-active);
   --_badge-solid-fg: var(--ps1ui-color-primary-fg);
+  --_badge-text: var(--ps1ui-color-primary-text);
+  --_badge-text-on-tint: var(--ps1ui-color-primary-text-on-tint);
 }
 
 .ps1ui-badge--accent {
@@ -149,6 +159,8 @@
   --_badge-base-hover: var(--ps1ui-color-accent-hover);
   --_badge-base-active: var(--ps1ui-color-accent-active);
   --_badge-solid-fg: var(--ps1ui-color-accent-fg);
+  --_badge-text: var(--ps1ui-color-accent-text);
+  --_badge-text-on-tint: var(--ps1ui-color-accent-text-on-tint);
 }
 
 .ps1ui-badge--danger {
@@ -156,6 +168,8 @@
   --_badge-base-hover: var(--ps1ui-color-danger-hover);
   --_badge-base-active: var(--ps1ui-color-danger-active);
   --_badge-solid-fg: var(--ps1ui-color-danger-fg);
+  --_badge-text: var(--ps1ui-color-danger-text);
+  --_badge-text-on-tint: var(--ps1ui-color-danger-text-on-tint);
 }
 
 .ps1ui-badge--muted {
@@ -163,18 +177,24 @@
   --_badge-base-hover: var(--ps1ui-color-muted-hover);
   --_badge-base-active: var(--ps1ui-color-muted-active);
   --_badge-solid-fg: var(--ps1ui-color-muted-fg);
+  --_badge-text: var(--ps1ui-color-muted-text);
+  --_badge-text-on-tint: var(--ps1ui-color-muted-text-on-tint);
 }
 
 /* --------------------------------------------------------------------------
-   Variants read from --_badge-base for colour. For outline / subtle the
-   text colour reuses --_badge-base rather than a separate --_badge-fg,
-   because a "coloured chip" reads as one colour: the border tint, the
-   subtle-bg tint, and the text tint all sit on the same hue.
+   Variants read from --_badge-base for the fill/border chrome, and from
+   --_badge-text / --_badge-text-on-tint for the label — never from
+   --_badge-base directly, since a hue used as text needs a darker (light
+   theme) value than the same hue used as a fill. outline's border still
+   reads --_badge-text (not --_badge-base) so the chip's border and label
+   match colour-for-colour and the chip keeps reading as one colour, just
+   drawn from the TEXT role since neither has a translucent tint under it.
 
    Subtle bg is a color-mix over transparent (not over surface) so a
    subtle badge stacks correctly on both the page canvas
    (--ps1ui-color-bg) and any surface (--ps1ui-color-surface, e.g.
-   inside a Card) without hardcoding either. */
+   inside a Card) without hardcoding either — which is exactly why its
+   label needs the stricter TEXT-ON-TINT token instead of TEXT. */
 .ps1ui-badge--solid {
   background: var(--_badge-base);
   color: var(--_badge-solid-fg);
@@ -183,13 +203,13 @@
 
 .ps1ui-badge--outline {
   background: transparent;
-  color: var(--_badge-base);
-  border-color: var(--_badge-base);
+  color: var(--_badge-text);
+  border-color: var(--_badge-text);
 }
 
 .ps1ui-badge--subtle {
   background: color-mix(in srgb, var(--_badge-base) 15%, transparent);
-  color: var(--_badge-base);
+  color: var(--_badge-text-on-tint);
   border-color: color-mix(in srgb, var(--_badge-base) 30%, transparent);
 }
 
