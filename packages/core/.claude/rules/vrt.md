@@ -19,7 +19,8 @@ The `vrt` Vitest project uses Vitest 4's `toMatchScreenshot` (pixelmatch, `thres
 
 ## Authoring
 
-- Wrap every capture in `VrtFrame` (`src/testing/vrt.tsx`): screenshot target is `data-testid="vrt-frame"`, pseudo-state hook is `data-testid="vrt-target"`. Use `withPseudoState` for hover/focus states — copy the template from any existing `.vrt.test.tsx`.
+- Wrap every capture in `VrtFrame` (`src/testing/vrt.tsx`): screenshot target is `data-testid="vrt-frame"`, pseudo-state hook is `data-testid="vrt-target"`. `VrtFrame` requires a `theme` prop (`THEMES`, `src/testing/theme.tsx`) — cross every case with both themes and prefix each screenshot name with `${theme}-…` so the two themes never collide. Use `withPseudoState` for hover/focus states — copy the template from any existing `.vrt.test.tsx`.
+- A query-container child (e.g. a nested `PS1Root`) inside `VrtFrame` needs a pinned `width` on the frame — `VrtFrame`'s `inline-block` box is a shrink-to-fit parent, which collapses the child's intrinsic inline size to 0 (see `PS1Root.vrt.test.tsx`).
 - The tester viewport is 414px wide; frame content past it rasterises as black void in captures (the element screenshot spans the full frame box, but nothing outside the viewport is painted). Keep `VrtFrame` `width` ≤ 374 (414 minus the frame's 2×20px padding) unless the cut-off region is deliberately empty.
 - Typography-only components (Text, Heading, Label): cover each axis independently at defaults — don't cartesian-product the axes.
 - Responsive components: one capture per breakpoint band; the below-sm capture uses `stageWidth: 320`, doubling as the WCAG 2.2 reflow baseline.

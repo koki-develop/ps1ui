@@ -23,7 +23,7 @@ const VARIANTS = ["primary", "secondary"] as const satisfies readonly ButtonVari
 ## Three layers of a11y coverage
 
 - **Unit** (`*.test.tsx`) — semantic a11y (ARIA, labels, state changes). CSS is not loaded here, so no color-contrast. Use `expectNoAxeViolations` (`src/testing/axe.ts`; thin axe-core wrapper, options as 2nd arg) for dynamic states unreachable from a static story.
-- **Contrast** (`*.contrast.test.tsx`) — imports `styles.css` and wraps variants in bg tokens so axe computes real ratios. **A new (fg-token, bg-token) pair not covered by `Text.contrast.test.tsx` needs its own contrast test.**
+- **Contrast** (`*.contrast.test.tsx`) — imports `styles.css` and wraps variants in bg tokens so axe computes real ratios. Every contrast test crosses its cases with `THEMES` (`src/testing/theme.tsx`) via `ThemedCanvas`, since `light-dark()` resolves each token differently per theme. **A new (fg-token, bg-token) pair not covered by `Text.contrast.test.tsx` needs its own contrast test, covering both themes.**
 - **Storybook stories** — visual a11y; axe runs per story and violations fail the test (`parameters.a11y.test: "error"`). Add a story for any visually-distinct combination. Both `@storybook/addon-vitest` and `@storybook/addon-a11y` must stay in `.storybook/main.ts`'s `addons` — dropping one silently disables its checks.
 
 `src/testing/**` is intentionally not re-exported from `src/index.ts` — it must never ship in `dist/`.
@@ -31,3 +31,7 @@ const VARIANTS = ["primary", "secondary"] as const satisfies readonly ButtonVari
 ## Forced colors (Windows High Contrast)
 
 Forced-colors mode strips `box-shadow` and repaints backgrounds; border colors survive. A single grouped `@media (forced-colors: active)` rule in `src/styles/components.css` restores focus outlines — **a new box-shadow-focus component must add its class to that selector**. All forced-colors tests live in `src/styles/forced-colors.test.tsx` (emulation is page-global; Browser Mode isolates per file). Assert geometry only, never colors.
+
+## Color scheme emulation
+
+`theme="system"` cases (resolving against the OS/browser's `prefers-color-scheme`) use the `emulateColorScheme` / `disableColorSchemeEmulation` browser commands (`src/testing/color-scheme.ts`) rather than a real OS preference change. Emulation is page-global — same constraint as forced-colors — so every such test lives in `src/styles/theme.test.tsx` and always releases emulation in `afterEach`.

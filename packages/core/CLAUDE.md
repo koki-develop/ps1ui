@@ -1,13 +1,13 @@
 # @ps1ui/core — CLAUDE.md
 
-React UI component library for a monospace design system (dark canvas, JetBrains Mono). All commands run from this directory (`packages/core`).
+React UI component library for a monospace design system (light/dark themes, dark by default; JetBrains Mono). All commands run from this directory (`packages/core`).
 
 Domain-specific conventions live in `.claude/rules/` (testing / vrt / responsive / styles) and load when you touch matching files. Long-form rationale lives in header comments of the files involved — read those before changing build config or styles.
 
 ## Commands
 
 - `pnpm build` — `check` + `build:js` (tsdown) + `build:css` (postcss) + `check:dist`
-- `pnpm check` — `typecheck` + `check:palette` + `check:languages` + `check:responsive-property-coverage`
+- `pnpm check` — `typecheck` + `check:palette` + `check:languages` + `check:responsive-property-coverage` + `check:light-dark-fallback`
 - `pnpm lint` / `pnpm lint:fix` — oxlint; `pnpm fmt` / `pnpm fmt:check` — oxfmt
 - `pnpm test` — Vitest watch; `pnpm test run` for one-shot; `pnpm test:ci` — unit + storybook projects
 - `pnpm test:coverage` — unit + storybook, Chromium only, 100% line thresholds (vrt excluded on purpose)
@@ -42,6 +42,12 @@ Each component: `src/components/<Name>/` with `<Name>.tsx / .css / .test.tsx / .
 - Give every own prop (the non-passthrough ones) a one-line `/** ... */` doc comment — `@ps1ui/site`'s auto-generated Props tables and IDE hovers render it. Defaults applied outside destructuring (CSS custom-property fallbacks) are declared with an `@default` tag, never repeated in the prose.
 - Polymorphic `as` + `disabled`: rejected at the type level only (`Button.test-d.tsx`); no runtime guard on purpose.
 - 100% line coverage is enforced but isn't behavior coverage — **every observable behavior a change introduces needs a direct assertion** (computed styles via `withPseudoState`, classes, attributes, handlers). If genuinely untestable, say why in a comment.
+
+### Theming rules
+
+- Use only `--ps1ui-*` color tokens — never a hardcoded hex — so the component themes automatically (`.claude/rules/styles.md`).
+- A semantic hue used as text takes `--ps1ui-color-<hue>-text*` (or `-text-on-tint` on a translucent tint of itself) — never the fill token (`.claude/rules/styles.md`).
+- Anything that uses `color-mix(..., transparent)` with a hue as text needs a contrast test covering both themes (`.claude/rules/testing.md`).
 
 ## TypeScript
 
