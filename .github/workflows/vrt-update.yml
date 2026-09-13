@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   update:
-    timeout-minutes: 15
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions:
       # Needed by create-pull-request to push the branch and by `gh pr
