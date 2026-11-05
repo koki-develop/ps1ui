@@ -104,3 +104,5 @@ minimumReleaseAgeExclude:
   - "@astrojs/compiler-binding@0.3.1"
   - "@astrojs/compiler-rs@0.3.1"
   - "@astrojs/markdown-satteri@0.3.4"
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
