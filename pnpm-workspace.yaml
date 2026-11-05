@@ -85,7 +85,8 @@ minimumReleaseAgeExclude:
   - "storybook@10.5.0"
   - "tsdown@0.22.4"
   - "typescript@7.0.2"
-  - "vite@8.1.4"
+  # Renovate security update: vite@8.1.6
+  - "vite@8.1.4 || 8.1.6"
   - "yuku-codegen@0.5.47"
   - "yuku-parser@0.5.47"
 
